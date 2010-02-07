@@ -1,0 +1,52 @@
+\documentclass{article}
+
+\usepackage{amsmath}
+%--------------------------------------------------
+% Plotting graphical models
+%-------------------------------------------------- 
+\usepackage{pst-all} % PSTricks
+\usepackage{com.braju.graphicalmodels} % Email author to get this package
+\catcode`\@=11%
+
+\begin{document}
+\author{Ruey-Cheng Chen, Reid Swanson, and Andrew Gordon}
+\title{Sentence-Level LDA Model: Cheat sheet}
+\date{\today}
+\maketitle
+
+\section{Bigram LDA}
+
+\paragraph{Gibbs Sampler:}  The final conditional probability is:
+\begin{equation}
+    \Pr(z_i = j|\mathbf{z}_{-i}, \mathbf{w}) =
+    \frac{\beta + n^{(w_{i-1},w_i)}_{-i,j}}{V^2 \beta + \sum_{(a,b)} n^{(a,b)}_{-i,j}} 
+    \frac{\alpha + n^{(d_i)}_{-i,j}}{K \alpha + \sum_k n^{(d_i)}_{-i,k}}
+\end{equation}
+
+The difference between the original LDA and bigram-LDA lies merely in the dimenionality of the
+lookup table $\phi^{(j)}$ and the way word counts are accumulated.
+
+\section{Sentence-Layered LDA}
+
+\paragraph{Gibbs Sampler.}  Putting everything all together, we have:
+\begin{eqnarray}
+  \Pr(z_i = j|\mathbf{z}_{-i}, \mathbf{w}, \mathbf{x}) &\propto&
+    \frac{\beta + n_{-i,j}^{(w_i)}}{V \beta + n_{-i,j}^{(\cdot)}} 
+    \frac{\delta + n_{-i,x}^{(j)}}{T \delta + n_{-i,x}^{(\cdot)}}, \\
+  \Pr(x = l|\mathbf{x}',\mathbf{z}) &\propto&
+    \frac{\mathcal{B}(\{\delta + n_l^{(z)}; \forall z\})}{\mathcal{B}(\{\delta + n_{-x,l}^{(z)}; \forall z\})}
+    \frac{\alpha + n_{-x,d}^{(l)}}{S \alpha + n_{-x,d}^{(\cdot)}}.
+\end{eqnarray}
+
+The resulting Gibbs sampling algorithm becomes extremely simple.
+
+\begin{enumerate}
+  \item Randomly initialize $\mathbf{x}$ and $\mathbf{z}$ by the specified generative model.
+  \item For each sentence $x$ in each document $d$, \begin{enumerate}
+    \item Estimate $\Pr(z_i = j|\mathbf{z}_{-i}, \mathbf{w}, \mathbf{x})$ for all $i$.
+    \item Estimate $\Pr(x = l|\mathbf{x}',\mathbf{z})$.
+  \end{enumerate}
+  \item Check for convergence.  Repeat the last step otherwise.
+\end{enumerate}
+
+\end{document}

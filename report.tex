@@ -1,0 +1,684 @@
+%--------------------------------------------------
+% \documentclass{article}
+% 
+% \usepackage{amsmath}
+% %--------------------------------------------------
+% % Plotting graphical models
+% %-------------------------------------------------- 
+% \usepackage{pst-all} % PSTricks
+% \usepackage{com.braju.graphicalmodels} % Email author to get this package
+% \catcode`\@=11%
+% 
+% \begin{document}
+% \author{Ruey-Cheng Chen, Reid Swanson, and Andrew Gordon}
+% \title{Sentence-Level LDA Model}
+% \date{\today}
+% \maketitle
+%-------------------------------------------------- 
+
+%--------------------------------------------------
+% \section{Bigram LDA}
+% 
+% %--------------------------------------------------
+% % Bigram LDA
+% %-------------------------------------------------- 
+% \begin{figure}[ht!]
+%   \centering
+%   \psset{xunit=10mm,yunit=10mm}
+%   \begin{pspicture}(0,0)(10,11)%\showgrid  % Uncomment to show grid!
+%     \SpecialCoor  % (a|b) means x-coord from 'a' and y-coord from 'b'.
+%     \psset{arrowscale=1.5}
+% 
+%     \rput(1.25,6.0){\GM@node{z1}}\GM@label[angle=50]{z1}{$z_1$}
+%     \rput(1.25,4.0){\GM@node[observed=true]{w1}}\GM@label[angle=45]{w1}{$w_1$}
+%     \rput(1.25,2.0){\GM@node[observed=true]{w0}}\GM@label[angle=45]{w0}{$w_0$}
+%     \rput(z1){ 
+%       \rput(1.5,0){\GM@ldots{zd}} 
+%       \rput(1.5,-2.0){\GM@ldots{wd}}}
+%     \rput(zd){
+%       \rput(1.5,0){\GM@node{zz}}\GM@label[angle=45]{zz}{$z_{i-1}$} 
+%       \rput(1.5,-2.0){\GM@node[observed=true]{ww}}\GM@label[angle=45]{ww}{$w_{i-1}$}}
+%     \rput(zz){
+%       \rput(1.5,0){\GM@node{z}}\GM@label[angle=45]{z}{$z_i$}
+%       \rput(1.5,-2.0){\GM@node[observed=true]{w}}\GM@label[angle=45]{w}{$w_i$}}
+%     \rput(z){
+%       \rput(1.5,0){\GM@ldots{zd2}}
+%       \rput(1.5,-2.0){\GM@ldots{wd2}}}
+%     \rput(zd2){
+%       \rput(1.5,0){\GM@node{zn}}\GM@label[angle=45]{zn}{$z_n$}
+%       \rput(1.5,-2.0){\GM@node[observed=true]{wn}}\GM@label[angle=45]{wn}{$w_n$}}
+% 
+%     \rput(5.0,10.0){\GM@parameter{alpha}}\GM@label[angle=45]{alpha}{$\alpha$}
+%     \rput(alpha|0,8.0){\GM@node{theta}}\GM@label[angle=45]{theta}{$\theta$}
+%     \rput(0.25,3.25){\GM@plate{9.5}{5.5}{$L$}}
+%     
+%     \ncline[arrows=->]{z1}{w1}
+%     \ncline[arrows=->]{zz}{ww}
+%     \ncline[arrows=->]{z}{w}
+%     \ncline[arrows=->]{zn}{wn}
+%     \ncline[arrows=->]{w0}{w1}
+%     \ncline[arrows=->]{w1}{wd}
+%     \ncline[arrows=->]{wd}{ww}
+%     \ncline[arrows=->]{ww}{w}
+%     \ncline[arrows=->]{w}{wd2}
+%     \ncline[arrows=->]{wd2}{wn}
+% 
+%     \rput(w|0,2.0){\GM@node{phi}}\GM@label[angle=50]{phi}{$\phi$}
+%     \rput(phi){
+%       \rput(3.0,0){\GM@parameter{beta}}\GM@label[angle=45]{beta}{$\beta$}
+%       \rput(-1.0,-0.75){\GM@plate{2.0}{1.5}{$TW$}}}
+% 
+%     \ncline[arrows=->]{alpha}{theta}
+%     \ncline[arrows=->]{theta}{z1}
+%     \ncline[arrows=->]{theta}{zz}
+%     \ncline[arrows=->]{theta}{z}
+%     \ncline[arrows=->]{theta}{zn}
+%     \ncline[arrows=->]{phi}{w1}
+%     \ncline[arrows=->]{phi}{ww}
+%     \ncline[arrows=->]{phi}{w}
+%     \ncline[arrows=->]{phi}{wn}
+%     \ncline[arrows=->]{beta}{phi}
+%   \end{pspicture}
+%   \caption{Bigram LDA model in plate notation.}
+% \end{figure}
+% 
+% We begin with Equation (2) in Griffiths' work:
+% \begin{eqnarray*}
+%     && \Pr(z_i = j|\mathbf{z}_{-i}, \mathbf{w}) \nonumber \\
+%     &=& \Pr(z_i = j|\mathbf{z}_{-i},w_i,\mathbf{w}_{-i}) \nonumber \\
+%     &\propto& \Pr(w_i|z_i = j,\mathbf{z}_{-i},\mathbf{w}_{-i}) \Pr(z_i = j|\mathbf{z}_{-i}, \mathbf{w}_{-i}) \\
+%     &=& \Pr(w_i|z_i = j,z_{i-1},\mathbf{z}_-,w_{i-1},\mathbf{w}_-) \Pr(z_i = j|z_{i-1},\mathbf{z}_-,w_{i-1},\mathbf{w}_-),
+% \end{eqnarray*}
+% where $\mathbf{z}_-$ and $\mathbf{w}_-$ represent all $z$'s without $z_i$ and
+% $z_{i-1}$, and all $w$'s without $w_i$ and $w_{i-1}$, respectively.
+% 
+% \paragraph{Dissecting $\Pr(w_i|z_i = j,z_{i-1},\mathbf{z}_-,w_{i-1},\mathbf{w}_-)$:}
+% To get rid of $z_{i-1}$, $\mathbf{z}_-$, and $\mathbf{w}_-$ in the first term,
+% we need to expand the probability by introducing $\phi$ into the equation, split the
+% terms, and then integrate out the whole thing, shown as what follows.
+% \begin{eqnarray*}
+%     &&\Pr(w_i|z_i = j,z_{i-1},\mathbf{z}_-,w_{i-1},\mathbf{w}_-) \nonumber \\
+%     &=& \int \Pr(w_i|z_i = j,z_{i-1},\mathbf{z}_-,w_{i-1},\mathbf{w}_-,\phi^{(j)}) \nonumber \\
+%     && \quad \Pr(\phi^{(j)}|z_i = j,z_{i-1},\mathbf{z}_-,w_{i-1},\mathbf{w}_-)\mathrm{d}\phi^{(j)}\\
+%     &=& \int \Pr(w_i|z_i = j,w_{i-1},\phi^{(j)}) \nonumber \\
+%     && \quad \Pr(\phi^{(j)}|z_{i-1},\mathbf{z}_-,w_{i-1},\mathbf{w}_-)\mathrm{d}\phi^{(j)}\\
+% \end{eqnarray*}
+% 
+% The second term inside the integral is basically a Dirichlet.  Specificly, we have:
+% \begin{equation}
+% \Pr(\phi^{(j)}|z_{i-1},\mathbf{z}_-,w_{i-1},\mathbf{w}_-) \sim \mathrm{Dirichlet}(\beta + n^{(a,b)}_{-i,j}).
+% \end{equation}
+% 
+% This can be shown by applying Bayes's theorem and losing all the conditionally-independent variables, we have:
+% \begin{eqnarray*}
+%     \Pr(\phi^{(j)}|z_{i-1},\mathbf{z}_-,w_{i-1},\mathbf{w}_-) &\propto& \Pr(w_{i-1}|\mathbf{w}_-,z_{i-1},\mathbf{z}_-,\phi^{(j)})\\
+%     && \times \Pr(\mathbf{w}_-|z_{i-1},\mathbf{z}_-,\phi^{(j)}) \times \Pr(\phi^{(j)}|z_{i-1},\mathbf{z}_-) \\
+%     &=& \Pr(w_{i-1}|\mathbf{w}_-,z_{i-1},\mathbf{z}_-,\phi^{(j)}) \\
+%     && \times \Pr(\mathbf{w}_-|z_{i-1},\mathbf{z}_-,\phi^{(j)}) \times \Pr(\phi^{(j)}) \\
+%     &=& \prod_{k=1}^{i-1} \Pr(w_k|w_{k-1},z_k,\phi^{(j)}) \Pr(\phi^{(j)}) \\
+%     &=& \prod_{(a,b) \in V^2} \left[\phi^{(j)}_{a,b}\right]^{n^{(a,b)}_{-i,j}} \Pr(\phi^{(j)})
+% \end{eqnarray*}
+% 
+% Since $\Pr(\phi^{(j)}) \sim \mathrm{Dirichlet}(\beta)$ and the left-hand side
+% of the equation is actually a probability distribution \footnote{Here we use a
+% symmetric Dirichlet prior, as what was done in Griffiths} (which implies the
+% integral of the right-hand side over all $\phi^{(j)}$ equals to 1), we have the
+% left-hand side a distribution draw from the Dirichlet prior shown in equation
+% (1).
+% 
+% Now let us get back to the integral.
+% \begin{eqnarray*}
+%     && \int \Pr(w_i|z_i = j,w_{i-1},\phi^{(j)}) \Pr(\phi^{(j)}|z_{i-1},\mathbf{z}_-,w_{i-1},\mathbf{w}_-)\mathrm{d}\phi^{(j)}\\
+%     &=& \int \phi^{(j)}_{w_{i-1},w_i} \Pr(\phi^{(j)}|z_{i-1},\mathbf{z}_-,w_{i-1},\mathbf{w}_-)\mathrm{d}\phi^{(j)}\\
+%     &=& \int \phi^{(j)}_{w_{i-1},w_i} \frac{\Gamma(\sum_{(a,b)}\beta + n^{(a,b)}_{-i,j})}{\prod_{(a,b)} \Gamma(\beta + n^{(a,b)}_{-i,j})}
+%     \prod_{(a,b)} \left[\phi^{(j)}_{(a,b)}\right]^{\beta + n^{(a,b)}_{-i,j} - 1}\mathrm{d}\phi^{(j)}\\
+%     &=& \frac{\beta + n^{(w_{i-1},w_i)}_{-i,j}}{V^2 \beta + \sum_{(a,b)} n^{(a,b)}_{-i,j}} \int \frac{\Gamma(V^2 \beta + \sum_{(a,b)} n^{(a,b)}_{j})}{\prod_{(a,b)} \Gamma(\beta + n^{(a,b)}_{j})}
+%     \prod_{(a,b)} \left[\phi^{(j)}_{(a,b)}\right]^{\beta + n^{(a,b)}_{j} - 1}\mathrm{d}\phi^{(j)}\\
+%     &=& \frac{\beta + n^{(w_{i-1},w_i)}_{-i,j}}{V^2 \beta + \sum_{(a,b)} n^{(a,b)}_{-i,j}} \\
+% \end{eqnarray*}
+% 
+% The second last equation holds simply because $\Gamma(k+1) = k \Gamma(k)$ and:
+% \begin{equation}
+% n^{(a,b)}_{j} = \left\{ \begin{array}{l}
+% n^{(a,b)}_{-i,j} + 1\quad{\textrm{,$(a,b)=(w_{i-1},w_i)$}}\\
+% n^{(a,b)}_{-i,j}\quad{\textrm{,otherwise}}\\
+% \end{array} \right.
+% \end{equation}
+% 
+% \paragraph{Dissecting $\Pr(z_i = j|z_{i-1},\mathbf{z}_-,w_{i-1},\mathbf{w}_-)$:}  
+% By using the same trick as we
+% do in the previous section, we get rid of redundant variables by introducing
+% $\theta$ into the equation.  We have:
+% \begin{eqnarray*}
+%     \Pr(z_i = j|z_{i-1},\mathbf{z}_-,w_{i-1},\mathbf{w}_-) &=& \Pr(z_i = j|z_{i-1},\mathbf{z}_-) \\
+%     &=& \int \Pr(z_i = j|z_{i-1},\mathbf{z}_-,\theta) \Pr(\theta|z_{i-1},\mathbf{z}_-) \mathrm{d}\theta\\
+%     &=& \int \Pr(z_i = j|\theta) \Pr(\theta|\mathbf{z}_-) \mathrm{d}\theta\\
+% \end{eqnarray*}
+% 
+% It turns out the integral remains intact as what was in Griffiths' work.  In fact, the final term would be:
+% \[ \Pr(z_i = j|z_{i-1},\mathbf{z}_-) = \frac{\alpha + n^{(d_i)}_{-i,j}}{K \alpha + \sum_k n^{(d_i)}_{-i,k}} \]
+% 
+% \paragraph{Gibbs Sampler:}  The final conditional probability is:
+% \begin{equation}
+%     \Pr(z_i = j|\mathbf{z}_{-i}, \mathbf{w}) =
+%     \frac{\beta + n^{(w_{i-1},w_i)}_{-i,j}}{V^2 \beta + \sum_{(a,b)} n^{(a,b)}_{-i,j}} 
+%     \frac{\alpha + n^{(d_i)}_{-i,j}}{K \alpha + \sum_k n^{(d_i)}_{-i,k}}
+% \end{equation}
+% 
+% The difference between the original LDA and bigram-LDA lies merely in the dimenionality of the
+% lookup table $\phi^{(j)}$ and the way word counts are accumulated.
+%-------------------------------------------------- 
+
+\begin{abstract}
+(Page 1, top) { \it Here we summarize the contribution of this work.
+Supposedly, this work is regarded as an application of topic models over the
+sentence level. }
+
+\end{abstract}
+
+\section{Introduction}
+
+Topic models were first introduced in the NLP community as a mean of
+formalizing the inference of latent semantics from the surface data.  We have
+seen a large body of research work that made use of such a technique and
+benefit from all kinds of sucessful implications branched from the original
+model.  Generally, most of these previous efforts begun with the assumption
+that a document is in principle a bag of topics.  The words that we observed
+were indirectly inferred by the underlying distribution of these background
+concepts.  The process to go from a pseudo (or {\emph prototypical}) document ,
+composed of latent semantics, to a realization of documents, a collection of
+words, is described as a statistical generation process that relied on a number
+of discrete distributions: the document-level topic distribution, and the
+topic-specific distribution.  Such an arrangement earned great success in
+various document-specific tasks.  However, when applying the topic modeling
+techniques to text data that comes with sentence structures, we could not stand
+but ask ourselves: How do we address the document-sentence and the
+sentence-word hierarchical relationship in a topic model where the notion of
+sentence (or smaller text units) were completely missing?  
+
+The answer is: We do not.  In pLSA or LDA, we either end up modeling sentences
+the way we do documents (as if the sentences were smaller topics containers)
+and deliberately omit the document-level information, or we completely ignore
+the sentence structures and go with the original settings.  Either way we lose
+a certain amount of information.  We find it rather cumbersome for topic models
+being restricted to the implication on only one level of granularity.  A number
+of NLP applications would essential benefit from any kind of adaptation of LDA
+to model the sentence-word or document-sentence relationship.
+
+(Pages 1 and 2, one and a half pages) { \it Here we start with a short summary
+about the following points: \begin{itemize} \item Sentence-level topic modeling
+is useful.  \item LDA doesn't work well due to a number of reasons (name them
+all).  \item Observations that we had to figure out how to improve the topic
+model.  \item We try to adapt the existing topic model into the sentence data.
+\item We get better results.  \end{itemize} We need to address the difference
+between our model, hLDA and Pachinko Allocation Model (PAM). }
+
+\section{Model}
+\subsection{Sentence-Layered LDA}
+
+We propose an generative topic model called {\emph sentence-layered LDA}, by
+biasing the original latent-Dirichlet allocation framework toward an adapation
+{for} the sentence structure.  We introduce the notion of {\emph sentence
+topics} by adding a set of latent variables in between the document and the
+words; the sentence topics served as an additional sub-document layer that is
+responsible for generating word topics.  We model the sentence topics as
+scalars, which in turn refers to a discrete distribution over word topics.  The
+complete generative process is depicted as follows.
+
+\begin{eqnarray*}
+  \theta^{d} \sim \mathrm{Dirichlet}(\alpha) \\
+  x_j \sim \mathrm{Multinomial}(\theta^{(d)}) \\
+  z_i \sim \mathrm{Discrete}(\tau^{(x_j)}) \\
+  w_i \sim \mathrm{Discrete}(\phi^{(z_i)}) \\
+  \tau^{(x_j)} \sim \mathrm{Dirichlet}(\gamma) \\
+  \phi^{(z_i)} \sim \mathrm{Dirichlet}(\beta) 
+\end{eqnarray*}
+
+For each document $d$, we draw a multinomial distribution $\theta^{(d)}$ over
+sentence topics from the Dirichlet prior $\alpha$.  Then, we draw a number of
+sentence topics $x_j$ from $\theta^{(d)}$ for all the sentences in the
+document.  Each sentence topic $x_j$ then leads to a discrete distribution over
+word topics, which is denoted as $\tau^{(x_j)}$, that we could use to draw word
+topics from.  Let each word topic drawn from $\tau^{(x_j)}$ be denoted as
+$z_i$, which again leads to a discrete distribution $\phi^{(z_i)}$ over words.
+Finally, we draw a word $w_i$ from the distribution $\phi^{(z_i)}$ for each
+word in the sentence.  As a general assumption of the model, all the
+discrete distributions $\tau^{(x_j)}$ were governed by the Dirichlet prior
+$\gamma$ and all the discrete distributions $\phi^{(z_i)}$ by the Dirichlet
+prior $\beta$.  The plate notation is shown in
+Figure~\ref{plate-notation:sentence-layered}.
+
+\begin{figure}[ht!]
+  \centering
+  \psset{xunit=8mm,yunit=8mm}
+  \begin{pspicture}(0,0)(8,11)%\showgrid  % Uncomment to show grid!
+    \SpecialCoor  % (a|b) means x-coord from 'a' and y-coord from 'b'.
+    \psset{arrowscale=1.5}
+
+    \rput(2.0,10.0){\GM@parameter{alpha}}\GM@label[angle=45]{alpha}{$\alpha$}
+    \rput(alpha|0,8.0){\GM@node{theta}}\GM@label[angle=45]{theta}{$\theta$}
+    \rput(alpha|0,6.0){\GM@node{x}}\GM@label[angle=45]{x}{$x$}
+    \rput(alpha|0,4.0){\GM@node{z}}\GM@label[angle=45]{z}{$z$}
+    \rput(alpha|0,2.0){\GM@node[observed=true]{w}}\GM@label[angle=45]{w}{$w$}
+    \rput(1.25,1.25){\GM@plate{1.5}{3.5}{$N_x$}}
+    \rput(0.75,0.75){\GM@plate{2.5}{6.0}{$M_\theta$}}
+    \rput(0.25,0.25){\GM@plate{3.5}{8.5}{$L$}}
+    
+    \rput(7.0,0|w){\GM@parameter{beta}}\GM@label[angle=45]{beta}{$\beta$}
+    \rput(7.0,0|z){\GM@parameter{delta}}\GM@label[angle=45]{delta}{$\delta$}
+    \rput(5.0,0|w){\GM@node{phi}}\GM@label[angle=45]{phi}{$\phi$}
+    \rput(5.0,0|z){\GM@node{tau}}\GM@label[angle=45]{tau}{$\tau$}
+    \rput(4.25,3.25){\GM@plate{1.5}{1.5}{$S$}}
+    \rput(4.25,1.25){\GM@plate{1.5}{1.5}{$T$}}
+
+    \ncline[arrows=->]{alpha}{theta}
+    \ncline[arrows=->]{theta}{x}
+    \ncline[arrows=->]{x}{z}
+    \ncline[arrows=->]{z}{w}
+    \ncline[arrows=->]{beta}{phi}
+    \ncline[arrows=->]{delta}{tau}
+    \ncline[arrows=->]{tau}{z}
+    \ncline[arrows=->]{phi}{w}
+  \end{pspicture}
+  \caption{The sentence-layered LDA model in the plate notation}
+  \label{plate-notation:sentence-layered}
+\end{figure}
+
+We use a Gibbs sampler to inference the model.  Since the joint probability
+$\Pr(\mathbf{z}, \mathbf{x})$ is generally intractable, we break it down to
+several conditional probability distributions. 
+
+\paragraph{Inferencing $z_i$.}  The conditional distribution $\Pr(z_i = j|\mathbf{z}_{-i}, \mathbf{w}, \mathbf{x})$ can
+be inferenced as what follows.
+\begin{eqnarray}
+  && \Pr(z_i = j|\mathbf{z}_{-i}, \mathbf{w}, \mathbf{x}) \nonumber\\
+  && \propto \Pr(w_i|z_i = j, \mathbf{z}_{-i}, \mathbf{w}_{-i}) \nonumber\\
+  && \quad \Pr(z_i = j|\mathbf{z}_{-i}, x, \mathbf{x}'), \label{z_i:both}
+\end{eqnarray}
+where $x$ denotes the sentence topic that induces $z_i$, and $\mathbf{x}' = \mathbf{x} - \{ x \}$.  
+
+%--------------------------------------------------
+% \begin{eqnarray}
+%     && \Pr(z_i = j|\mathbf{z}_{-i}, \mathbf{w}, \mathbf{x}) \nonumber\\
+%     &=& \Pr(z_i = j|\mathbf{z}_{-i}, w_i, \mathbf{w}_{-i}, x, \mathbf{x}') \nonumber\\
+%     &\propto& \Pr(w_i|z_i = j, \mathbf{z}_{-i}, \mathbf{w}_{-i}) \nonumber\\
+%     && \times \Pr(z_i = j|\mathbf{z}_{-i}, x, \mathbf{x}') \label{z_i:both},
+% \end{eqnarray}
+%-------------------------------------------------- 
+
+The first term in \eqref{z_i:both} is expanded by introducing the random variable $\phi^{(j)}$.
+Appropriate invocation of Bayes' theorem over the first term lead us to the simplified form.
+\begin{eqnarray}
+  && \Pr(w_i|z_i = j, \mathbf{z}_{-i}, \mathbf{w}_{-i}) \nonumber \\
+  && = \int \Pr(w_i|\phi^{(j)},z_i = j,\mathbf{z}_{-i},\mathbf{w}_{-i}) \nonumber\\
+  && \quad \Pr(\phi^{(j)}|z_i = j,\mathbf{z}_{-i},\mathbf{w}_{-i})\mathrm{d}\phi^{(j)} \nonumber \\
+  && = \frac{\beta + n_{-i,j}^{(w_i)}}{V \beta + n_{-i,j}^{(\cdot)}} \int \frac{\Gamma(V \beta + n_j^{(\cdot)})}{\prod_w \Gamma(\beta + n_j^{(w)})} \nonumber\\
+  && \quad \prod_w \left(\phi^{(j)}_w\right)^{\beta + n_j^{(w)} - 1} \mathrm{d}\phi^{(j)} \label{z_i:1.2} \\
+  && = \frac{\beta + n_{-i,j}^{(w_i)}}{V \beta + n_{-i,j}^{(\cdot)}}, \label{z_i:1.3}
+\end{eqnarray}
+
+Here, $n_{-i,j}^{(\cdot)}$ denotes the counts for all word occurrences that are
+of word topic $j$, excluding the current assignment of $w_i$, defined by
+$n_{-i,j}^{(\cdot)} = \sum_w n_{-i,j}^{(w)}$.  In a similar way,
+$n_j^{(\cdot)}$ denotes all such assignments including the count for $w_i$,
+which is defined by $n_j^{(\cdot)} = \sum_w n_j^{(w)}$.  The derivation largely
+follows the paradigm established in \cite{blei} and \cite{griffiths}, making
+use of conjugate priors to simplify the inference.  By employing the property
+$\Gamma(k + 1) = k \Gamma(k)$, we are able to further reduce the equation to
+the form of \eqref{z_i:1.2} and \eqref{z_i:1.3}.  Also note that $n_j^{(w_i)} =
+n_{-i,j}^{(w_i)} + 1$ and $n_j^{(w)} = n_{-i,j}^{(w)}$ for all $w \ne w_i$.
+
+The second term of \eqref{z_i:both} is also dealt with in the similar way. We expanded and intergrated the term over $\tau^{(x)}$ and it led us to the following derivation.
+\begin{eqnarray}
+  && \Pr(z_i = j|\mathbf{z}_{-i}, x, \mathbf{x}') \nonumber \\
+  && = \int \Pr(z_i = j|\tau^{(x)}, \mathbf{z}_{-i}, x, \mathbf{x}') \nonumber\\
+  && \quad \Pr(\tau^{(x)}|\mathbf{z}_{-i}, x, \mathbf{x}')\mathrm{d}\tau^{(x)} \nonumber \\
+  && = \int \tau_j^{(x)} \frac{\Gamma(T \delta + n_{-i,x}^{(\cdot)})}{\prod_z \Gamma(\delta + n_{-i,x}^{(z)})} \nonumber\\
+  && \quad \prod_z \left(\tau^{(x)}_z\right)^{\delta + n_{-i,x}^{(z)} - 1} \mathrm{d}\tau^{(x)} \label{z_i:2.1} \\
+  && = \frac{\delta + n_{-i,x}^{(j)}}{T \delta + n_{-i,x}^{(\cdot)}} \int \frac{\Gamma(T \delta + n_x^{(\cdot)})}{\prod_z \Gamma(\delta + n_x^{(z)})} \nonumber\\
+  && \quad \prod_z \left(\tau^{(x)}_z\right)^{\delta + n_x^{(z)} - 1} \mathrm{d}\tau^{(x)} \label{z_i:2.2} \\
+  && = \frac{\delta + n_{-i,x}^{(j)}}{T \delta + n_{-i,x}^{(\cdot)}}, \label{z_i:2.3}
+\end{eqnarray}
+where $n_{-i,x}^{(j)}$ denotes the number of words being assigned to topic $j$
+that are also governed by sentences assigned to the same topic as that of $x$,
+with the current word ($w_i$) left out.  In other words, we consider only
+sentences that are of same sentence-level topic as that of $x$ and count the
+number of words in these sentences being assigned to topic $j$.  Note that
+$n_x^{(j)} = n_{-i,x}^{(j)} + 1$ and $n_x^{(z)} = n_{-i,x}^{(z)}$ for all $z \ne
+z_i$.   Equation \eqref{z_i:2.1} follows the fact that
+$\Pr(\tau^{(x)}|\mathbf{z}_{-i}, x, \mathbf{x}') \propto \Pr(\mathbf{z}_{-i}|x,
+\mathbf{x}', \tau^{(x)}) \Pr(\tau^{(x)}) \sim \mathrm{Dirichlet}(\delta +
+n_{-i,x}^{(z)})$, and equations \eqref{z_i:2.2} and \eqref{z_i:2.3} from the
+same rationale as what we have in the preceding paragraph.
+%--------------------------------------------------
+% \begin{eqnarray}
+%   && \Pr(w_i|z_i = j, \mathbf{z}_{-i}, \mathbf{w}_{-i}) \nonumber \\
+%   &=& \int \Pr(w_i|\phi^{(j)},z_i = j,\mathbf{z}_{-i},\mathbf{w}_{-i}) 
+%   \Pr(\phi^{(j)}|z_i = j,\mathbf{z}_{-i},\mathbf{w}_{-i})\mathrm{d}\phi^{(j)} \nonumber \\
+%   &=& \int \Pr(w_i|\phi^{(j)},z_i = j) \Pr(\phi^{(j)}|\mathbf{z}_{-i},\mathbf{w}_{-i})\mathrm{d}\phi^{(j)} \nonumber \\
+%   &=& \int \phi^{(j)}_{w_i} \frac{\Gamma(V \beta + n_{-i,j}^{(\cdot)})}{\prod_w \Gamma(\beta + n_{-i,j}^{(w)})} \prod_w \left(\phi^{(j)}_w\right)^{\beta + n_{-i,j}^{(w)} - 1} \mathrm{d}\phi^{(j)} \label{z_i:1.1} \\
+%   &=& \frac{\beta + n_{-i,j}^{(w_i)}}{V \beta + n_{-i,j}^{(\cdot)}} \int \frac{\Gamma(V \beta + n_j^{(\cdot)})}{\prod_w \Gamma(\beta + n_j^{(w)})} \prod_w \left(\phi^{(j)}_w\right)^{\beta + n_j^{(w)} - 1} \mathrm{d}\phi^{(j)} \label{z_i:1.2} \\
+%   &=& \frac{\beta + n_{-i,j}^{(w_i)}}{V \beta + n_{-i,j}^{(\cdot)}}, \label{z_i:1.3}
+% \end{eqnarray}
+% where $n_{-i,j}^{(\cdot)} = \sum_w n_{-i,j}^{(w)}$ and $n_j^{(\cdot)} = \sum_w n_j^{(w)}$.  Equation
+% \eqref{z_i:1.1} follows the fact that
+% $\Pr(\phi^{(j)}|\mathbf{z}_{-i},\mathbf{w}_{-i}) \propto
+% \Pr(\mathbf{w}_{-1}|\mathbf{z}_{-1},\phi^{(j)}) \Pr(\phi^{(j)}) \sim
+% \mathrm{Dirichlet}(\beta + n_{-i,j}^{(w)})$.  By employing the property $\Gamma(k + 1) = k
+% \Gamma(k)$, we are able to further reduce the equation to the form of
+% \eqref{z_i:1.2} and \eqref{z_i:1.3}.  Also note that $n_j^{(w_i)} = n_{-i,j}^{(w_i)} + 1$ and $n_j^{(w)} =
+% n_{-i,j}^{(w)}$ for all $w \ne w_i$.
+%-------------------------------------------------- 
+
+%--------------------------------------------------
+% In the same way, we have the second term of \eqref{z_i:both} expanded and intergrated over $\tau^{(x)}$.
+% \begin{eqnarray}
+%   && \Pr(z_i = j|\mathbf{z}_{-i}, x, \mathbf{x}') \nonumber \\
+%   &=& \int \Pr(z_i = j|\tau^{(x)}, \mathbf{z}_{-i}, x, \mathbf{x}') 
+%   \Pr(\tau^{(x)}|\mathbf{z}_{-i}, x, \mathbf{x}')\mathrm{d}\tau^{(x)} \nonumber \\
+%   &=& \int \Pr(z_i = j|\tau^{(x)}, x) \Pr(\tau^{(x)}|\mathbf{z}_{-i}, x,\mathbf{x}')\mathrm{d}\tau^{(x)} \nonumber \\
+%   &=& \int \tau_j^{(x)} \frac{\Gamma(T \delta + n_{-i,x}^{(\cdot)})}{\prod_z \Gamma(\delta + n_{-i,x}^{(z)})} \prod_z \left(\tau^{(x)}_z\right)^{\delta + n_{-i,x}^{(z)} - 1} \mathrm{d}\tau^{(x)} \label{z_i:2.1} \\
+%   &=& \frac{\delta + n_{-i,x}^{(j)}}{T \delta + n_{-i,x}^{(\cdot)}} \int \frac{\Gamma(T \delta + n_x^{(\cdot)})}{\prod_z \Gamma(\delta + n_x^{(z)})} \prod_z \left(\tau^{(x)}_z\right)^{\delta + n_x^{(z)} - 1} \mathrm{d}\tau^{(x)} \label{z_i:2.2} \\
+%   &=& \frac{\delta + n_{-i,x}^{(j)}}{T \delta + n_{-i,x}^{(\cdot)}}.  \label{z_i:2.3}
+% \end{eqnarray}
+% where $n_{-i,x}^{(j)}$ denotes the number of words being assigned to topic $j$
+% that are also governed by sentences assigned to the same topic as that of $x$,
+% with the current word ($w_i$) left out.  In other words, we consider only
+% sentences that are of same sentence-level topic as that of $x$ and count the
+% number of words in these sentences being assigned to topic $j$.  Note that
+% $n_x^{(j)} = n_{-i,x}^{(j)} + 1$ and $n_x^{(z)} = n_{-i,x}^{(z)}$ for all $z \ne
+% z_i$.   Equation \eqref{z_i:2.1} follows the fact that
+% $\Pr(\tau^{(x)}|\mathbf{z}_{-i}, x, \mathbf{x}') \propto \Pr(\mathbf{z}_{-i}|x,
+% \mathbf{x}', \tau^{(x)}) \Pr(\tau^{(x)}) \sim \mathrm{Dirichlet}(\delta +
+% n_{-i,x}^{(z)})$, and equations \eqref{z_i:2.2} and \eqref{z_i:2.3} from the
+% same rationale as what we have in the preceding paragraph.
+%-------------------------------------------------- 
+
+\paragraph{Inferencing $x$.}  The conditional $\Pr(x =
+l|\mathbf{x}',\mathbf{z})$ can be rewritten as: 
+\begin{eqnarray*}
+  && \Pr(x = l|\mathbf{x}',\mathbf{z}) \nonumber\\
+  && \propto \Pr(\mathbf{z}^*|x = l, \mathbf{x}', \mathbf{z}') \nonumber\\
+  && \quad \Pr(x = l |\mathbf{x}',\mathbf{z}'),
+\end{eqnarray*}
+where $\mathbf{x}' =
+\mathbf{x} - \{x\}$, $\mathbf{z}^*$ and $\mathbf{z}'$ denotes all the topics
+governed by the current sentence and the others, respectively (i.e.,
+$\mathbf{z} = \mathbf{z}^* \cup \mathbf{z}'$).
+
+The first term can be rewritten as:
+\begin{eqnarray*}
+  && \Pr(\mathbf{z}^*|x = l, \mathbf{x}', \mathbf{z}') \nonumber \\
+  && = \int \prod_{z_i \in \mathbf{z}^*} \Pr(z_i|x = l, \tau^{(l)}) \nonumber\\
+  && \quad \Pr(\tau^{(l)}|\mathbf{x}', \mathbf{z}') \mathrm{d}\tau^{(l)} \nonumber \\
+  && = \int \prod_z \left(\tau^{(l)}_z\right)^{n_{+x,l}^{(z)}} \frac{\Gamma(T \delta + n_{-x,l}^{(\cdot)})}{\prod_z \Gamma(\delta + n_{-x,l}^{(z)})} \nonumber\\
+  && \quad \prod_z \left(\tau^{(l)}_z\right)^{\delta + n_{-x,l}^{(z)} - 1} \mathrm{d}\tau^{(l)} \\
+  && = \int \frac{\Gamma(T \delta + n_{-x,l}^{(\cdot)})}{\prod_z \Gamma(\delta + n_{-x,l}^{(z)})} \prod_z \left(\tau^{(l)}_z\right)^{\delta + n_l^{(z)} - 1} \mathrm{d}\tau^{(l)} \\
+  && = \prod_z \left[\frac{\Gamma(\delta + n_l^{(z)})}{\Gamma(\delta + n_{-x,l}^{(z)})}\right] \frac{\Gamma(T \delta + n_{-x,l}^{(\cdot)})}{\Gamma(T \delta + n_l^{(\cdot)})} \nonumber \\
+  && \quad \int \frac{\Gamma(T \delta + n_l^{(\cdot)})}{\prod_z \Gamma(\delta + n_l^{(z)})} \prod_z \left(\tau^{(l)}_z\right)^{\delta + n_l^{(z)} - 1} \mathrm{d}\tau^{(l)} \\
+  && \quad \prod_z \left[\frac{\Gamma(\delta + n_l^{(z)})}{\Gamma(\delta + n_{-x,l}^{(z)})}\right] \frac{\Gamma(T \delta + n_{-x,l}^{(\cdot)})}{\Gamma(T \delta + n_l^{(\cdot)})} \\
+  && = \frac{\mathcal{B}(\{\delta + n_l^{(z)}; \forall z\})}{\mathcal{B}(\{\delta + n_{-x,l}^{(z)}; \forall z\})},
+\end{eqnarray*}
+where $\mathcal{B}(\cdot)$ is the multinomial beta function defined by
+\[\mathcal{B}(a_1, \ldots, a_n) = \frac{\prod_i \Gamma(a_i)}{\Gamma(\sum_i
+a_i)}. \]
+%--------------------------------------------------
+% The first term can be rewritten as:
+% \begin{eqnarray}
+%   && \Pr(\mathbf{z}^*|x = l, \mathbf{x}', \mathbf{z}') \nonumber \\
+%   &=& \int \prod_{z_i \in \mathbf{z}^*} \Pr(z_i|x = l, \tau^{(l)}) \Pr(\tau^{(l)}|\mathbf{x}', \mathbf{z}') \mathrm{d}\tau^{(l)} \nonumber \\
+%   &=& \int \prod_z \left(\tau^{(l)}_z\right)^{n_{+x,l}^{(z)}} \frac{\Gamma(T \delta + n_{-x,l}^{(\cdot)})}{\prod_z \Gamma(\delta + n_{-x,l}^{(z)})} \prod_z \left(\tau^{(l)}_z\right)^{\delta + n_{-x,l}^{(z)} - 1} \mathrm{d}\tau^{(l)} \\
+%   &=& \int \frac{\Gamma(T \delta + n_{-x,l}^{(\cdot)})}{\prod_z \Gamma(\delta + n_{-x,l}^{(z)})} \prod_z \left(\tau^{(l)}_z\right)^{\delta + n_l^{(z)} - 1} \mathrm{d}\tau^{(l)} \\
+%   &=& \prod_z \left[\frac{\Gamma(\delta + n_l^{(z)})}{\Gamma(\delta + n_{-x,l}^{(z)})}\right] \frac{\Gamma(T \delta + n_{-x,l}^{(\cdot)})}{\Gamma(T \delta + n_l^{(\cdot)})} \nonumber \\
+%   && \quad \times \int \frac{\Gamma(T \delta + n_l^{(\cdot)})}{\prod_z \Gamma(\delta + n_l^{(z)})} \prod_z \left(\tau^{(l)}_z\right)^{\delta + n_l^{(z)} - 1} \mathrm{d}\tau^{(l)} \\
+%   &=& \prod_z \left[\frac{\Gamma(\delta + n_l^{(z)})}{\Gamma(\delta + n_{-x,l}^{(z)})}\right] \frac{\Gamma(T \delta + n_{-x,l}^{(\cdot)})}{\Gamma(T \delta + n_l^{(\cdot)})} \\
+%   &=& \frac{\mathcal{B}(\{\delta + n_l^{(z)}; \forall z\})}{\mathcal{B}(\{\delta + n_{-x,l}^{(z)}; \forall z\})},
+% \end{eqnarray}
+% where $\mathcal{B}(\cdot)$ is the multinomial beta function defined by
+% \[\mathcal{B}(a_1, \ldots, a_n) = \frac{\prod_i \Gamma(a_i)}{\Gamma(\sum_i
+% a_i)}. \]
+%-------------------------------------------------- 
+
+We have the second term worked out the same way:
+\begin{eqnarray*}
+  && \Pr(x = l|\mathbf{x}',\mathbf{z}') \\
+  && = \int \Pr(x = l|\theta^{(d)}) \Pr(\theta^{(d)}|\mathbf{x}') \mathrm{d}\theta^{(d)} \\
+  && = \frac{\alpha + n_{-x,d}^{(l)}}{S \alpha + n_{-x,d}^{(\cdot)}}.
+\end{eqnarray*}
+
+\paragraph{Gibbs Sampler.}  Putting everything all together, we have:
+\begin{eqnarray}
+  && \Pr(z_i = j|\mathbf{z}_{-i}, \mathbf{w}, \mathbf{x}) \propto \nonumber \\
+  && \quad \frac{\beta + n_{-i,j}^{(w_i)}}{V \beta + n_{-i,j}^{(\cdot)}} 
+  \frac{\delta + n_{-i,x}^{(j)}}{T \delta + n_{-i,x}^{(\cdot)}}, \\
+  && \Pr(x = l|\mathbf{x}',\mathbf{z}) \propto \nonumber \\
+  && \quad \frac{\mathcal{B}(\{\delta + n_l^{(z)}; \forall z\})}{\mathcal{B}(\{\delta + n_{-x,l}^{(z)}; \forall z\})}
+  \frac{\alpha + n_{-x,d}^{(l)}}{S \alpha + n_{-x,d}^{(\cdot)}}.
+\end{eqnarray}
+
+The resulting Gibbs sampling algorithm becomes extremely simple.
+
+\begin{enumerate}
+  \item Randomly initialize $\mathbf{x}$ and $\mathbf{z}$ by the specified generative model.
+  \item For each sentence $x$ in each document $d$, \begin{enumerate}
+    \item Estimate $\Pr(z_i = j|\mathbf{z}_{-i}, \mathbf{w}, \mathbf{x})$ for all $i$.
+    \item Estimate $\Pr(x = l|\mathbf{x}',\mathbf{z})$.
+  \end{enumerate}
+  \item Check for convergence.  Repeat the last step otherwise.
+\end{enumerate}
+
+\subsection{Sentence-Layered Bigram LDA} (Page 4, half page) { \it Here we show only
+theoretical results for the model because both models share similar inference
+steps.  Describe the sparsity issue here and present out solution (practical
+concerns). }
+
+{ \bf NOTE: This section might not be included in the short paper. }
+
+\section{Parameter Estimation} (Half of Page 4 to Half of Page 5) { \it Here we
+describe how to obtain the best parameter for the model.  We basically run a
+grid search.  Describe the framework of $\lambda$-mixture and how it could be
+done with a Gibbs sampler. }
+
+\section{Evaluation}
+{ \it Here we describe the way we evaluate the model.  Two tasks here: perplexity and haystack. }
+
+\subsection{Perplexity}
+(Page 5, half page) { \it Here we discuss how to measure test-set perplexity.  We tested the model on
+three datasets: ACL abstracts, Penn Treebank, weblog data that we collected.
+
+Perplexity is measured in the amount of uncertainty (a positive real number).
+The lower perplexity we get, the better fit the model is.  Participants are
+existing topic models: 1) LDA, 2) Sentence LDA, and 3) Sentence LDA + bigram.
+We might also want to give more detail on how we get a strong baseline by
+running grid search. }
+
+\subsection{``Haystack'' Task}
+(Page 6, half page) { \it Describe the idea of doing haystack task. 
+
+The ``hay'' sentences groups come from the Multiple-Translation Chinese Corpus
+Part 1 to Part 4.  
+
+The ``stack'' corpus that we used in this experiment is the Xinhua News Service
+(XIE) from the English Gigaword, which contains 4,517,671 sentences in totally
+679,007 documents.  For convenience we further break down the corpus into 12
+folds.
+
+The performance is measured by top-k accuracy and mean reciprocal rank.
+
+Participants include 1) tf-idf, 2) unigram (bi-gram) language model, 3) LDA,
+and 4) Sentence LDA + bigram.  The tf-idf model doesn't have parameters for us
+to fine-tune.
+
+NOTE: The performance of language model is greated affected by the underlying
+smoothing method.  A few ones that we had in mind include KN, Good-Turing, or
+Dirichlet smoothing.  We may or may not have enough time to fine-tune these
+model; probably only look it up on the internet and use the parameters reported
+in the previous work.
+
+We do not re-estimate the best parameters for topic models in this task. }
+
+\section{Results} (Pages 6 and 7, one page) { \it Present tables and graphs in
+here and bring up a short discussion about the number we got.  Try to justify
+why our model works better than the baseline. }
+
+\section{Related Work} (Page 7, Half a page)  { \it We want to introduce related work
+about topic models and about sentence similarity. }
+
+\section{Discussions} (Page 8, 3/4 page)  { \it Here we might want to discuss the
+results a little bit, e.g., pros and cons for the sentence model, and how does
+the bigram information help in the framework, and also sparsity issues, etc. }
+
+\section{Concluding Remarks} (Page 8, 1/4 page)
+{ \it Here we go back to the big picture and restate our contribution verbosely.  }
+
+%--------------------------------------------------
+% \section*{Appendix: Sentence-Layered LDA}
+% 
+% %--------------------------------------------------
+% % Sentence-layered LDA
+% %-------------------------------------------------- 
+% \begin{figure}[ht!]
+%   \centering
+%   \psset{xunit=10mm,yunit=10mm}
+%   \begin{pspicture}(0,0)(8,11)%\showgrid  % Uncomment to show grid!
+%     \SpecialCoor  % (a|b) means x-coord from 'a' and y-coord from 'b'.
+%     \psset{arrowscale=1.5}
+% 
+%     \rput(2.0,10.0){\GM@parameter{alpha}}\GM@label[angle=45]{alpha}{$\alpha$}
+%     \rput(alpha|0,8.0){\GM@node{theta}}\GM@label[angle=45]{theta}{$\theta$}
+%     \rput(alpha|0,6.0){\GM@node{x}}\GM@label[angle=45]{x}{$x$}
+%     \rput(alpha|0,4.0){\GM@node{z}}\GM@label[angle=45]{z}{$z$}
+%     \rput(alpha|0,2.0){\GM@node[observed=true]{w}}\GM@label[angle=45]{w}{$w$}
+%     \rput(1.25,1.25){\GM@plate{1.5}{3.5}{$N_x$}}
+%     \rput(0.75,0.75){\GM@plate{2.5}{6.0}{$M_\theta$}}
+%     \rput(0.25,0.25){\GM@plate{3.5}{8.5}{$L$}}
+%     
+%     \rput(7.0,0|w){\GM@parameter{beta}}\GM@label[angle=45]{beta}{$\beta$}
+%     \rput(7.0,0|z){\GM@parameter{delta}}\GM@label[angle=45]{delta}{$\delta$}
+%     \rput(5.0,0|w){\GM@node{phi}}\GM@label[angle=45]{phi}{$\phi$}
+%     \rput(5.0,0|z){\GM@node{tau}}\GM@label[angle=45]{tau}{$\tau$}
+%     \rput(4.25,3.25){\GM@plate{1.5}{1.5}{$S$}}
+%     \rput(4.25,1.25){\GM@plate{1.5}{1.5}{$T$}}
+% 
+%     \ncline[arrows=->]{alpha}{theta}
+%     \ncline[arrows=->]{theta}{x}
+%     \ncline[arrows=->]{x}{z}
+%     \ncline[arrows=->]{z}{w}
+%     \ncline[arrows=->]{beta}{phi}
+%     \ncline[arrows=->]{delta}{tau}
+%     \ncline[arrows=->]{tau}{z}
+%     \ncline[arrows=->]{phi}{w}
+%   \end{pspicture}
+%   \caption{(New) Full-blown sentence-layered LDA model in the plate notation}
+% \end{figure}
+% 
+% In the sentence-layered LDA, we introduce a set of latent variables $x$'s that
+% represent sentence-level topics.  Again, since the joint probability
+% $\Pr(\mathbf{z}, \mathbf{x})$ is generally intractable, we break it down to
+% several conditional probability distributions and make inference for each one
+% by applying Gibbs sampling method.
+% 
+% \paragraph{Inferencing $z_i$.}  The conditional distribution $\Pr(z_i = j|\mathbf{z}_{-i}, \mathbf{w}, \mathbf{x})$ can
+% be inferenced as what follows.
+% \begin{eqnarray}
+%     \Pr(z_i = j|\mathbf{z}_{-i}, \mathbf{w}, \mathbf{x}) &=& \Pr(z_i = j|\mathbf{z}_{-i}, w_i, \mathbf{w}_{-i}, x, \mathbf{x}') \nonumber\\
+%     &\propto& \Pr(w_i|z_i = j, \mathbf{z}_{-i}, \mathbf{w}_{-i}) \times \Pr(z_i = j|\mathbf{z}_{-i}, x, \mathbf{x}') \label{z_i:both},
+% \end{eqnarray}
+% where $x$ denotes the sentence topic that induces $z_i$, and $\mathbf{x}' = \mathbf{x} - \{ x \}$.  
+% 
+% Expanding the first term in \eqref{z_i:both} by introducing the random variable $\phi^{(j)}$.  
+% Appropriate invocation of Bayes' theorem gives us:
+% \begin{eqnarray}
+%   && \Pr(w_i|z_i = j, \mathbf{z}_{-i}, \mathbf{w}_{-i}) \nonumber \\
+%   &=& \int \Pr(w_i|\phi^{(j)},z_i = j,\mathbf{z}_{-i},\mathbf{w}_{-i}) 
+%   \Pr(\phi^{(j)}|z_i = j,\mathbf{z}_{-i},\mathbf{w}_{-i})\mathrm{d}\phi^{(j)} \nonumber \\
+%   &=& \int \Pr(w_i|\phi^{(j)},z_i = j) \Pr(\phi^{(j)}|\mathbf{z}_{-i},\mathbf{w}_{-i})\mathrm{d}\phi^{(j)} \nonumber \\
+%   &=& \int \phi^{(j)}_{w_i} \frac{\Gamma(V \beta + n_{-i,j}^{(\cdot)})}{\prod_w \Gamma(\beta + n_{-i,j}^{(w)})} \prod_w \left(\phi^{(j)}_w\right)^{\beta + n_{-i,j}^{(w)} - 1} \mathrm{d}\phi^{(j)} \label{z_i:1.1} \\
+%   &=& \frac{\beta + n_{-i,j}^{(w_i)}}{V \beta + n_{-i,j}^{(\cdot)}} \int \frac{\Gamma(V \beta + n_j^{(\cdot)})}{\prod_w \Gamma(\beta + n_j^{(w)})} \prod_w \left(\phi^{(j)}_w\right)^{\beta + n_j^{(w)} - 1} \mathrm{d}\phi^{(j)} \label{z_i:1.2} \\
+%   &=& \frac{\beta + n_{-i,j}^{(w_i)}}{V \beta + n_{-i,j}^{(\cdot)}}, \label{z_i:1.3}
+% \end{eqnarray}
+% where $n_{-i,j}^{(\cdot)} = \sum_w n_{-i,j}^{(w)}$ and $n_j^{(\cdot)} = \sum_w n_j^{(w)}$.  Equation
+% \eqref{z_i:1.1} follows the fact that
+% $\Pr(\phi^{(j)}|\mathbf{z}_{-i},\mathbf{w}_{-i}) \propto
+% \Pr(\mathbf{w}_{-1}|\mathbf{z}_{-1},\phi^{(j)}) \Pr(\phi^{(j)}) \sim
+% \mathrm{Dirichlet}(\beta + n_{-i,j}^{(w)})$.  By employing the property $\Gamma(k + 1) = k
+% \Gamma(k)$, we are able to further reduce the equation to the form of
+% \eqref{z_i:1.2} and \eqref{z_i:1.3}.  Also note that $n_j^{(w_i)} = n_{-i,j}^{(w_i)} + 1$ and $n_j^{(w)} =
+% n_{-i,j}^{(w)}$ for all $w \ne w_i$.
+% 
+% In the same way, we have the second term of \eqref{z_i:both} expanded and intergrated over $\tau^{(x)}$.
+% \begin{eqnarray}
+%   && \Pr(z_i = j|\mathbf{z}_{-i}, x, \mathbf{x}') \nonumber \\
+%   &=& \int \Pr(z_i = j|\tau^{(x)}, \mathbf{z}_{-i}, x, \mathbf{x}') 
+%   \Pr(\tau^{(x)}|\mathbf{z}_{-i}, x, \mathbf{x}')\mathrm{d}\tau^{(x)} \nonumber \\
+%   &=& \int \Pr(z_i = j|\tau^{(x)}, x) \Pr(\tau^{(x)}|\mathbf{z}_{-i}, x,\mathbf{x}')\mathrm{d}\tau^{(x)} \nonumber \\
+%   &=& \int \tau_j^{(x)} \frac{\Gamma(T \delta + n_{-i,x}^{(\cdot)})}{\prod_z \Gamma(\delta + n_{-i,x}^{(z)})} \prod_z \left(\tau^{(x)}_z\right)^{\delta + n_{-i,x}^{(z)} - 1} \mathrm{d}\tau^{(x)} \label{z_i:2.1} \\
+%   &=& \frac{\delta + n_{-i,x}^{(j)}}{T \delta + n_{-i,x}^{(\cdot)}} \int \frac{\Gamma(T \delta + n_x^{(\cdot)})}{\prod_z \Gamma(\delta + n_x^{(z)})} \prod_z \left(\tau^{(x)}_z\right)^{\delta + n_x^{(z)} - 1} \mathrm{d}\tau^{(x)} \label{z_i:2.2} \\
+%   &=& \frac{\delta + n_{-i,x}^{(j)}}{T \delta + n_{-i,x}^{(\cdot)}}.  \label{z_i:2.3}
+% \end{eqnarray}
+% where $n_{-i,x}^{(j)}$ denotes the number of words being assigned to topic $j$
+% that are also governed by sentences assigned to the same topic as that of $x$,
+% with the current word ($w_i$) left out.  In other words, we consider only
+% sentences that are of same sentence-level topic as that of $x$ and count the
+% number of words in these sentences being assigned to topic $j$.  Note that
+% $n_x^{(j)} = n_{-i,x}^{(j)} + 1$ and $n_x^{(z)} = n_{-i,x}^{(z)}$ for all $z \ne
+% z_i$.   Equation \eqref{z_i:2.1} follows the fact that
+% $\Pr(\tau^{(x)}|\mathbf{z}_{-i}, x, \mathbf{x}') \propto \Pr(\mathbf{z}_{-i}|x,
+% \mathbf{x}', \tau^{(x)}) \Pr(\tau^{(x)}) \sim \mathrm{Dirichlet}(\delta +
+% n_{-i,x}^{(z)})$, and equations \eqref{z_i:2.2} and \eqref{z_i:2.3} from the
+% same rationale as what we have in the preceding paragraph.
+% 
+% \paragraph{Inferencing $x$.}  The conditional $\Pr(x =
+% l|\mathbf{x}',\mathbf{z})$ can be rewritten as: \[ \Pr(x =
+% l|\mathbf{x}',\mathbf{z}) \propto \Pr(\mathbf{z}^*|x = l, \mathbf{x}',
+% \mathbf{z}') \Pr(x = l |\mathbf{x}',\mathbf{z}'), \] where $\mathbf{x}' =
+% \mathbf{x} - \{x\}$, $\mathbf{z}^*$ and $\mathbf{z}'$ denotes all the topics
+% governed by the current sentence and the others, respectively (i.e.,
+% $\mathbf{z} = \mathbf{z}^* \cup \mathbf{z}'$).
+% 
+% The first term can be rewritten as:
+% \begin{eqnarray}
+%   && \Pr(\mathbf{z}^*|x = l, \mathbf{x}', \mathbf{z}') \nonumber \\
+%   &=& \int \prod_{z_i \in \mathbf{z}^*} \Pr(z_i|x = l, \tau^{(l)}) \Pr(\tau^{(l)}|\mathbf{x}', \mathbf{z}') \mathrm{d}\tau^{(l)} \nonumber \\
+%   &=& \int \prod_z \left(\tau^{(l)}_z\right)^{n_{+x,l}^{(z)}} \frac{\Gamma(T \delta + n_{-x,l}^{(\cdot)})}{\prod_z \Gamma(\delta + n_{-x,l}^{(z)})} \prod_z \left(\tau^{(l)}_z\right)^{\delta + n_{-x,l}^{(z)} - 1} \mathrm{d}\tau^{(l)} \\
+%   &=& \int \frac{\Gamma(T \delta + n_{-x,l}^{(\cdot)})}{\prod_z \Gamma(\delta + n_{-x,l}^{(z)})} \prod_z \left(\tau^{(l)}_z\right)^{\delta + n_l^{(z)} - 1} \mathrm{d}\tau^{(l)} \\
+%   &=& \prod_z \left[\frac{\Gamma(\delta + n_l^{(z)})}{\Gamma(\delta + n_{-x,l}^{(z)})}\right] \frac{\Gamma(T \delta + n_{-x,l}^{(\cdot)})}{\Gamma(T \delta + n_l^{(\cdot)})} \nonumber \\
+%   && \quad \times \int \frac{\Gamma(T \delta + n_l^{(\cdot)})}{\prod_z \Gamma(\delta + n_l^{(z)})} \prod_z \left(\tau^{(l)}_z\right)^{\delta + n_l^{(z)} - 1} \mathrm{d}\tau^{(l)} \\
+%   &=& \prod_z \left[\frac{\Gamma(\delta + n_l^{(z)})}{\Gamma(\delta + n_{-x,l}^{(z)})}\right] \frac{\Gamma(T \delta + n_{-x,l}^{(\cdot)})}{\Gamma(T \delta + n_l^{(\cdot)})} \\
+%   &=& \frac{\mathcal{B}(\{\delta + n_l^{(z)}; \forall z\})}{\mathcal{B}(\{\delta + n_{-x,l}^{(z)}; \forall z\})},
+% \end{eqnarray}
+% where $\mathcal{B}(\cdot)$ is the multinomial beta function defined by
+% \[\mathcal{B}(a_1, \ldots, a_n) = \frac{\prod_i \Gamma(a_i)}{\Gamma(\sum_i
+% a_i)}. \]
+% 
+% We have the second term worked out the same way:
+% \begin{eqnarray*}
+%   \Pr(x = l|\mathbf{x}',\mathbf{z}') &=& \int \Pr(x = l|\theta^{(d)}) \Pr(\theta^{(d)}|\mathbf{x}') \mathrm{d}\theta^{(d)} \\
+%   &=& \frac{\alpha + n_{-x,d}^{(l)}}{S \alpha + n_{-x,d}^{(\cdot)}}.
+% \end{eqnarray*}
+% 
+% \paragraph{Gibbs Sampler.}  Putting everything all together, we have:
+% \begin{eqnarray}
+%   \Pr(z_i = j|\mathbf{z}_{-i}, \mathbf{w}, \mathbf{x}) &\propto&
+%     \frac{\beta + n_{-i,j}^{(w_i)}}{V \beta + n_{-i,j}^{(\cdot)}} 
+%     \frac{\delta + n_{-i,x}^{(j)}}{T \delta + n_{-i,x}^{(\cdot)}}, \\
+%   \Pr(x = l|\mathbf{x}',\mathbf{z}) &\propto&
+%     \frac{\mathcal{B}(\{\delta + n_l^{(z)}; \forall z\})}{\mathcal{B}(\{\delta + n_{-x,l}^{(z)}; \forall z\})}
+%     \frac{\alpha + n_{-x,d}^{(l)}}{S \alpha + n_{-x,d}^{(\cdot)}}.
+% \end{eqnarray}
+% 
+% The resulting Gibbs sampling algorithm becomes extremely simple.
+% 
+% \begin{enumerate}
+%   \item Randomly initialize $\mathbf{x}$ and $\mathbf{z}$ by the specified generative model.
+%   \item For each sentence $x$ in each document $d$, \begin{enumerate}
+%     \item Estimate $\Pr(z_i = j|\mathbf{z}_{-i}, \mathbf{w}, \mathbf{x})$ for all $i$.
+%     \item Estimate $\Pr(x = l|\mathbf{x}',\mathbf{z})$.
+%   \end{enumerate}
+%   \item Check for convergence.  Repeat the last step otherwise.
+% \end{enumerate}
+%-------------------------------------------------- 
+
+%--------------------------------------------------
+% \end{document}
+%-------------------------------------------------- 
