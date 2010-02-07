@@ -170,7 +170,7 @@
 %-------------------------------------------------- 
 
 \begin{abstract}
-(Page 1, top) { \it Here we summarize the contribution of this work.
+{ \color{red} (Page 1, top) Here we summarize the contribution of this work.
 Supposedly, this work is regarded as an application of topic models over the
 sentence level. }
 
@@ -203,15 +203,20 @@ the sentence structures and go with the original settings.  Either way we lose
 a certain amount of information.  We find it rather cumbersome for topic models
 being restricted to the implication on only one level of granularity.  A number
 of NLP applications would essential benefit from any kind of adaptation of LDA
-to model the sentence-word or document-sentence relationship.
+to model the sentence-word or document-sentence relationship. {\color{red} Our argument for sentence topic model goes here...}.
 
-(Pages 1 and 2, one and a half pages) { \it Here we start with a short summary
-about the following points: \begin{itemize} \item Sentence-level topic modeling
-is useful.  \item LDA doesn't work well due to a number of reasons (name them
-all).  \item Observations that we had to figure out how to improve the topic
-model.  \item We try to adapt the existing topic model into the sentence data.
-\item We get better results.  \end{itemize} We need to address the difference
-between our model, hLDA and Pachinko Allocation Model (PAM). }
+{\color{red} Contribution goes here...}
+
+This paper is arranged as follows... {\color{red} Outline goes here...}
+%--------------------------------------------------
+% (Pages 1 and 2, one and a half pages) { \it Here we start with a short summary
+% about the following points: \begin{itemize} \item Sentence-level topic modeling
+% is useful.  \item LDA doesn't work well due to a number of reasons (name them
+% all).  \item Observations that we had to figure out how to improve the topic
+% model.  \item We try to adapt the existing topic model into the sentence data.
+% \item We get better results.  \end{itemize} We need to address the difference
+% between our model, hLDA and Pachinko Allocation Model (PAM). }
+%-------------------------------------------------- 
 
 \section{Model}
 \subsection{Sentence-Layered LDA}
@@ -467,24 +472,26 @@ The resulting Gibbs sampling algorithm becomes extremely simple.
   \item Check for convergence.  Repeat the last step otherwise.
 \end{enumerate}
 
-\subsection{Sentence-Layered Bigram LDA} (Page 4, half page) { \it Here we show only
+{\color{red} Putting so much math in here is not a good idea.  Replace it with
+simple, obvious theoretical results. }
+
+\subsection{Sentence-Layered Bigram LDA} { \color{red} (Page 4, half page) Here we show only
 theoretical results for the model because both models share similar inference
 steps.  Describe the sparsity issue here and present out solution (practical
 concerns). }
 
-{ \bf NOTE: This section might not be included in the short paper. }
-
-\section{Parameter Estimation} (Half of Page 4 to Half of Page 5) { \it Here we
+\section{Parameter Estimation} { \color{red} (Half of Page 4 to Half of Page 5) Here we
 describe how to obtain the best parameter for the model.  We basically run a
 grid search.  Describe the framework of $\lambda$-mixture and how it could be
 done with a Gibbs sampler. }
 
 \section{Evaluation}
-{ \it Here we describe the way we evaluate the model.  Two tasks here: perplexity and haystack. }
-
 \subsection{Perplexity}
-(Page 5, half page) { \it Here we discuss how to measure test-set perplexity.  We tested the model on
-three datasets: ACL abstracts, Penn Treebank, weblog data that we collected.
+
+{ \color{red} (Page 5, half page) Here we discuss how to measure test-set
+perplexity.  We tested the model on two datasets: ACL abstracts, and Penn
+Treebank.  We no longer need numbers on the weblog data, since it is not really
+a standard benchmark and is somewhat irrelevant here.
 
 Perplexity is measured in the amount of uncertainty (a positive real number).
 The lower perplexity we get, the better fit the model is.  Participants are
@@ -493,7 +500,11 @@ We might also want to give more detail on how we get a strong baseline by
 running grid search. }
 
 \subsection{``Haystack'' Task}
-(Page 6, half page) { \it Describe the idea of doing haystack task. 
+
+{ \color{red} NOTE: This evaluation is no longer useful in this work.  Might be
+removed anytime soon. }
+
+{ \color{red} (Page 6, half page) Describe the idea of doing haystack task. 
 
 The ``hay'' sentences groups come from the Multiple-Translation Chinese Corpus
 Part 1 to Part 4.  
@@ -509,27 +520,21 @@ Participants include 1) tf-idf, 2) unigram (bi-gram) language model, 3) LDA,
 and 4) Sentence LDA + bigram.  The tf-idf model doesn't have parameters for us
 to fine-tune.
 
-NOTE: The performance of language model is greated affected by the underlying
-smoothing method.  A few ones that we had in mind include KN, Good-Turing, or
-Dirichlet smoothing.  We may or may not have enough time to fine-tune these
-model; probably only look it up on the internet and use the parameters reported
-in the previous work.
-
 We do not re-estimate the best parameters for topic models in this task. }
 
-\section{Results} (Pages 6 and 7, one page) { \it Present tables and graphs in
+\section{Results} { \color{red} (Pages 6 and 7, one page) Present tables and graphs in
 here and bring up a short discussion about the number we got.  Try to justify
 why our model works better than the baseline. }
 
-\section{Related Work} (Page 7, Half a page)  { \it We want to introduce related work
+\section{Related Work} { \color{red} (Page 7, Half a page)  We want to introduce related work
 about topic models and about sentence similarity. }
 
-\section{Discussions} (Page 8, 3/4 page)  { \it Here we might want to discuss the
+\section{Discussions} { \color{red} (Page 8, 3/4 page)  Here we might want to discuss the
 results a little bit, e.g., pros and cons for the sentence model, and how does
 the bigram information help in the framework, and also sparsity issues, etc. }
 
-\section{Concluding Remarks} (Page 8, 1/4 page)
-{ \it Here we go back to the big picture and restate our contribution verbosely.  }
+\section{Concluding Remarks} { \color{red} (Page 8, 1/4 page)
+Here we go back to the big picture and restate our contribution verbosely.  }
 
 %--------------------------------------------------
 % \section*{Appendix: Sentence-Layered LDA}
