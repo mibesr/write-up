@@ -480,10 +480,54 @@ theoretical results for the model because both models share similar inference
 steps.  Describe the sparsity issue here and present out solution (practical
 concerns). }
 
-\section{Parameter Estimation} { \color{red} (Half of Page 4 to Half of Page 5) Here we
-describe how to obtain the best parameter for the model.  We basically run a
-grid search.  Describe the framework of $\lambda$-mixture and how it could be
-done with a Gibbs sampler. }
+\section{Parameter Estimation}  The performance of the LDA-based model can
+largely rely on the parameters for the Dirichlet priors.  In our model, for
+simplicity, all these priors are assumed to be symmetric.  Far as we know, the
+parameters for LDA models do not have a formal way to optimize; they are
+normally determined by experimentation.  Therefore, in order to determine the
+best parameters for future use, we went through the following empirical
+procedure.  
+
+First, we set things up.  We decided to use the weblog data in this experiment.
+We divided the data into training, test, and development sets.  We also
+determined the number of word topics and the number of sentence topics.  This
+is done by explicitly enumerating all the combinations that we are interested
+in.  The possible number of word/sentence topics are ${5, 10, 50, 100}$.   We
+loop through all the $4 \times 4 = 16$ possible $(T,S)$ combinations and search
+for the best $(\alpha, \beta, \gamma)$ for that combination.
+
+Then, for each $(T, S)$ pair, there are totally three parameters to search for:
+$\alpha$, $\beta$, and $\gamma$; and the ``grid points'' to use in the search
+were 0.05, 0.01, 0.005, and 0.001.  We looped through all the $4 \times 4
+\times 4 = 64$ combinations and trained the sentence-layered model accordingly.
+The trained model were tested against the development set and in the end each
+model came back with a test perplexity score.  We picked up the model with the
+lowest test perplexity and moved on to the next test.  For each $(T, S)$ pair,
+the parameter $(\alpha^*, \beta^*, \gamma^*)$ were saved together as a tuple.
+
+Next, we formed a linear regression model based on the saved data.  We wish to
+derive a function of the number of word/sentence topics by looking into the
+relationship between $T + S \sim \alpha + \beta + \gamma$.  
+
+{ \color{red} The induced weights and numbers and figures go here... }
+
+As a result, we found the following equation fit the data best.  Given $T$ and
+$S$, we have:
+\begin{eqnarray*}
+  \alpha &=& 0.6433^{***} \times \frac{1}{T} \\
+  && \quad \textrm{($R^2 = 0.4872$)} \nonumber\\
+  \beta &=& 0.000146^{*} \times S + 1.4528713^{***} \times \frac{1}{T} \\
+  && \quad \textrm{($R^2 = 0.877$)} \nonumber\\
+  \gamma &=& 5.276e-05^{***} \times S + 2.156e-01 \times \frac{1}{T} \\
+  && \quad \textrm{($R^2 = 0.9135$)} \nonumber
+\end{eqnarray*}
+where the weights with an asterisks in the superscripts denote $p < 0.1$ and
+those with three asterisks ($***$) denotes $p < 0.001$.
+
+{ \color{red} Note: Not quite sure we should include more details in here.  And no $\lambda$-mixture. }
+
+{ \color{red} (Half of Page 4 to Half of Page 5) Here we
+describe how to obtain the best parameter for the model. }
 
 \section{Evaluation}
 \subsection{Perplexity}
