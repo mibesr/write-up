@@ -1,0 +1,169 @@
+\section{Introduction}
+
+%--------------------------------------------------
+% In the past few years, the faceted search interface has been introduced in
+% various digital library applications and has also been shown generally useful
+% to the users in exploratory and information seeking tasks.  
+%-------------------------------------------------- 
+
+Query-dependent faceted navigation did not received as much attention until
+recently, when faceted search interface started being recognized as an eminent
+information seeking tool in various kinds of digital library applications.  In
+the technical respect, the major obstacle for employing this technique in a
+real-world setup lies in the time complexity.  When facing a user query, the
+retrieval system that supports such a function would first put together a
+complete list of document identifiers that covers all the documents that match
+the query from the inverted index, explicitly scan through the forward index
+that maps a document to a set of associated facets for all the matched
+document, collect facet captions and counts, and finally return all these
+information back to the user.  Since the operation involves a set of results
+that is only known in run-time, its complexity is largely $O(K \times |R|)$ in
+time, where $K$ denotes an average number of facets being associated with a
+document, and $|R|$ denotes the size of the query result set.  
+
+Employing a relational database backend is the easiest, while also the most
+practical, approach towards construction of this function.  The document
+contents are usually stored in one table and associated facet records in
+another, and then implement the search function with a plain SQL text match
+against the documents.  The set of facets associated with all the matched
+document and their corresponding counts of occurrences can be pulled out as
+easily with a join or SQL aggregation functions such as {\tt GROUP BY} and {\tt
+COUNT}.  The downside of this approach is we compromise retrieval quality in
+favor of ease of extra efforts because most of the modern relational database
+systems do not really support fuzzy-match in text fields, least to say the
+state-of-the-art document retrieval models.  A proposed workaround for this is
+to host retrieval engine and document representation somewhere else and access
+the RDBMS only for aggregating facet counts.  This could be done fairly easily
+by using the retrieved document identifiers to explicitly form a (probably very
+long) {\tt SELECT} query.  Unfortunately, this solution might not scale well,
+since serving data in an RDBMS way, on the other hand, can obstruct the
+interaction to the retrieval model and degrade the performance.
+
+%--------------------------------------------------
+% In the simplest case, retrieval of query-dependent facets can be done in two
+% phases: One for retriving the list of documents that match the given query, and
+% the other for collecting all the associated facets for each retrieved document.
+% With careful design of the backend data structure, the first phase normally
+% returns in a very short time; the running time of the second phase, on the
+% other hand, would usually grow as a multiple of the first one.  Ironically, it
+% turns out generation of all the associated facets does require a linear scan
+% through the entire result set, while the retrieval function does only a small
+% amount of that size----since most search interfaces return only a fixed amount
+% of document at a time when facing a new query (i.e., say top-$k$ in the first page), 
+% and most of the user session would not last longer than than a few pages of results.
+%-------------------------------------------------- 
+
+({ \it
+Argue that it takes enormous computational resources to produce the exact count
+for the facets, even with a RDBMS-based implementation. })
+
+We discovered that the generation of query-dependent facets takes more than
+50\% of the entire process time on one of our testbed system backed by language
+model.  A further look reveals that most of the CPU time are spent scanning the
+forward index. ({ \it Observation 1: Takes time to process document-by-document })
+
+An interesting aspect that we discovered in the development of digital library
+systems is that users tend to follow top-ranked facets.  According to our
+records, the average click-through rank of the facets falls in the top 20\% of
+the presented facets. ({ \it Observation 2: Users tend to process only a small
+amount of given information, especially those pieces presented as more relevant
+than others.  They might not really look at the numbers.  The key is the rank.
+})
+
+This work is motivated by the aforementioned observation... ({ \it Motivations:
+speed-up and support for state-of-the-art retrieval functions.  })
+
+Our contribution lies in ... ({ \it Contributions })
+
+Along with the wide acceptance of faceted search interface in the digital
+library community, an noticable amount of efforts has recently been put on
+usability tests and discovery of more advanced usage.  Previous efforts
+include... ({ \it Related work })
+
+\section{Approximate Query-Dependent \\Faceted Navigation}
+
+\subsection{Index Structure} 
+The guideline in development of approximate facet count retrieval algorithm is
+to prevent access to the document forward index.  ({ \it The key for speed-up
+is to not scanning through the index })
+
+One way to do it is to build up a term-facet inverted index.  We prefetch all
+the associated facets and corresponding counts in the relevant set and store
+all these information in the inverted structure.  The example....({ \it The
+idea of building the inverted index })
+
+Practical concerns for such arrangement incluce ... ({ \it Here we address
+the trick that we use to speed up the computation.  We might also want to
+address other possibilities for achieving the same goal. })
+
+\subsection{Aggregation Methods}
+
+An straightforward idea for aggregating the results for all the query terms is
+to average the facet counts. ({ \it Average })
+
+By viewing the facet counts ...({ \it Maximum })
+
+({ \it Interpolation })
+
+\subsection{Error estimation} 
+We recast the problem as rank-correlation optimization problem.  ({ \it Here we
+elaborate on developing faceted navigation in conventional approach, and we
+formulate the approximated version of the problem. })
+
+({ \it Here we address how likely we are about to
+introduce errors, and how large it could be. })
+
+\section{Evaluation}
+
+We use Dansin dataset as our reference corpus.  The dataset contains N,NNN
+documents.  Each documents comes in as an XML file that contains fulltext
+transcripts, metadata items, and associated human-selected facets.  The average
+number of facets associated with a document in Dansin dataset is N.NNN.  There
+are two types of facets involved in this study: contents of certain selected
+fields, and hand-labeled concepts.  Hand-labeled concepts, in fact, are created
+by a group of annotators.  All these information are already made available in
+the metadata of the documents.
+
+The major challenge for conducting such an evaluation task is to devise a set
+of query topics.  Since most of the digital libraries are very much
+domain-specific, it is difficult to find a standard reference query topics that
+could be used across studies.  The approach that we took was to look for
+session query logs in the relevant domain.  In the end, we took a copy of the
+query log in 2009 from the DARC system which was developed and maintained by
+Digital Archives Research Center.  
+
+We preprocessed the log and remove all the entries were follow-up clicks on the
+relevant facets and leave only original user queries in the file.  The total
+amount of unique identifiable query topics is NN,NNN.  300 topics were randomly
+drawn from the population and gone through human inspection.  Since the DARC
+system is an aggregation service of a number of underlying database system, it
+is possible that the query log contains irrelevant topics to the Dansin set.
+Finally 151 topics were selected and used in the evaluation.
+
+({ \it Here we describe our effort for a number of proposed models.  The
+following items shall be addressed in order: Experimental runs: baseline,
+fuzzy-min, interpolation, and top-k.  })
+
+\subsection{Measures}
+
+The evaluation measures we used to assess the similarity between the original
+facets and the approximation is as follows.
+
+\begin{enumerate}
+\item $p$-norm: The measure evaluates the distance between two vectors.  In this work, we use only L1 and L2 norms.
+\item Jaccard coefficient: The measure assesses the similarity between two sets, defined by
+\[ J(X,Y) = \frac{X \cap Y}{X \cup Y}. \]
+\item Spearman's rho: The measure assesses the rank correlation between two rank lists, defined by
+\[ \rho(X,Y) = 1. \]
+\end{enumerate}
+
+\subsection{Results}
+Here we demonstrate the experimental results and give a brief analysis.
+
+\section{Discussions}
+
+\section{Concluding Remarks}
+
+\section{Acknowledgments}
+\it A few names shall be mentioned here, including NTU DTRAP and its corresponding funding project, and Gary Chen.
+
