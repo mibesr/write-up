@@ -231,12 +231,12 @@ scalars, which in turn refers to a discrete distribution over word topics.  The
 complete generative process is depicted as follows.
 
 \begin{eqnarray*}
-  \theta^{d} \sim \mathrm{Dirichlet}(\alpha) \\
-  x_j \sim \mathrm{Multinomial}(\theta^{(d)}) \\
-  z_i \sim \mathrm{Discrete}(\tau^{(x_j)}) \\
-  w_i \sim \mathrm{Discrete}(\phi^{(z_i)}) \\
-  \tau^{(x_j)} \sim \mathrm{Dirichlet}(\gamma) \\
-  \phi^{(z_i)} \sim \mathrm{Dirichlet}(\beta) 
+  \theta^{d} &\sim& \mathrm{Dirichlet}(\alpha) \\
+  x_j &\sim& \mathrm{Multinomial}(\theta^{(d)}) \\
+  z_i &\sim& \mathrm{Discrete}(\tau^{(x_j)}) \\
+  w_i &\sim& \mathrm{Discrete}(\phi^{(z_i)}) \\
+  \tau^{(x_j)} &\sim& \mathrm{Dirichlet}(\gamma) \\
+  \phi^{(z_i)} &\sim& \mathrm{Dirichlet}(\beta) 
 \end{eqnarray*}
 
 For each document $d$, we draw a multinomial distribution $\theta^{(d)}$ over
@@ -541,7 +541,7 @@ a held-out data.  Perplexity is measured in the amount of uncertainty, which is
 a positive real number.  The lower perplexity we get for the model, the better
 fit the model is for the data.  Generally, the test perplexity is derived as:
 \[ \mathrm{perplexity_{test}} = \exp(\frac{- \log
-\Pr(\mathbf{w}_\mathrm{test})}{N_\mathrm{test}} \]
+\Pr(\mathbf{w}_\mathrm{test})}{N_\mathrm{test}}) \]
 
 The key is to formulate $\Pr(\mathbf{w}_\mathrm{test})$ for different topic
 models.  For LDA, the probability is evaluated as follows.  \[
