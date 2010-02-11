@@ -1,183 +1,17 @@
 %--------------------------------------------------
-% \documentclass{article}
-% 
-% \usepackage{amsmath}
-% %--------------------------------------------------
-% % Plotting graphical models
-% %-------------------------------------------------- 
-% \usepackage{pst-all} % PSTricks
-% \usepackage{com.braju.graphicalmodels} % Email author to get this package
-% \catcode`\@=11%
-% 
-% \begin{document}
-% \author{Ruey-Cheng Chen, Reid Swanson, and Andrew Gordon}
-% \title{Sentence-Level LDA Model}
-% \date{\today}
-% \maketitle
+% Abstract
 %-------------------------------------------------- 
-
-%--------------------------------------------------
-% \section{Bigram LDA}
-% 
-% %--------------------------------------------------
-% % Bigram LDA
-% %-------------------------------------------------- 
-% \begin{figure}[ht!]
-%   \centering
-%   \psset{xunit=10mm,yunit=10mm}
-%   \begin{pspicture}(0,0)(10,11)%\showgrid  % Uncomment to show grid!
-%     \SpecialCoor  % (a|b) means x-coord from 'a' and y-coord from 'b'.
-%     \psset{arrowscale=1.5}
-% 
-%     \rput(1.25,6.0){\GM@node{z1}}\GM@label[angle=50]{z1}{$z_1$}
-%     \rput(1.25,4.0){\GM@node[observed=true]{w1}}\GM@label[angle=45]{w1}{$w_1$}
-%     \rput(1.25,2.0){\GM@node[observed=true]{w0}}\GM@label[angle=45]{w0}{$w_0$}
-%     \rput(z1){ 
-%       \rput(1.5,0){\GM@ldots{zd}} 
-%       \rput(1.5,-2.0){\GM@ldots{wd}}}
-%     \rput(zd){
-%       \rput(1.5,0){\GM@node{zz}}\GM@label[angle=45]{zz}{$z_{i-1}$} 
-%       \rput(1.5,-2.0){\GM@node[observed=true]{ww}}\GM@label[angle=45]{ww}{$w_{i-1}$}}
-%     \rput(zz){
-%       \rput(1.5,0){\GM@node{z}}\GM@label[angle=45]{z}{$z_i$}
-%       \rput(1.5,-2.0){\GM@node[observed=true]{w}}\GM@label[angle=45]{w}{$w_i$}}
-%     \rput(z){
-%       \rput(1.5,0){\GM@ldots{zd2}}
-%       \rput(1.5,-2.0){\GM@ldots{wd2}}}
-%     \rput(zd2){
-%       \rput(1.5,0){\GM@node{zn}}\GM@label[angle=45]{zn}{$z_n$}
-%       \rput(1.5,-2.0){\GM@node[observed=true]{wn}}\GM@label[angle=45]{wn}{$w_n$}}
-% 
-%     \rput(5.0,10.0){\GM@parameter{alpha}}\GM@label[angle=45]{alpha}{$\alpha$}
-%     \rput(alpha|0,8.0){\GM@node{theta}}\GM@label[angle=45]{theta}{$\theta$}
-%     \rput(0.25,3.25){\GM@plate{9.5}{5.5}{$L$}}
-%     
-%     \ncline[arrows=->]{z1}{w1}
-%     \ncline[arrows=->]{zz}{ww}
-%     \ncline[arrows=->]{z}{w}
-%     \ncline[arrows=->]{zn}{wn}
-%     \ncline[arrows=->]{w0}{w1}
-%     \ncline[arrows=->]{w1}{wd}
-%     \ncline[arrows=->]{wd}{ww}
-%     \ncline[arrows=->]{ww}{w}
-%     \ncline[arrows=->]{w}{wd2}
-%     \ncline[arrows=->]{wd2}{wn}
-% 
-%     \rput(w|0,2.0){\GM@node{phi}}\GM@label[angle=50]{phi}{$\phi$}
-%     \rput(phi){
-%       \rput(3.0,0){\GM@parameter{beta}}\GM@label[angle=45]{beta}{$\beta$}
-%       \rput(-1.0,-0.75){\GM@plate{2.0}{1.5}{$TW$}}}
-% 
-%     \ncline[arrows=->]{alpha}{theta}
-%     \ncline[arrows=->]{theta}{z1}
-%     \ncline[arrows=->]{theta}{zz}
-%     \ncline[arrows=->]{theta}{z}
-%     \ncline[arrows=->]{theta}{zn}
-%     \ncline[arrows=->]{phi}{w1}
-%     \ncline[arrows=->]{phi}{ww}
-%     \ncline[arrows=->]{phi}{w}
-%     \ncline[arrows=->]{phi}{wn}
-%     \ncline[arrows=->]{beta}{phi}
-%   \end{pspicture}
-%   \caption{Bigram LDA model in plate notation.}
-% \end{figure}
-% 
-% We begin with Equation (2) in Griffiths' work:
-% \begin{eqnarray*}
-%     && \Pr(z_i = j|\mathbf{z}_{-i}, \mathbf{w}) \nonumber \\
-%     &=& \Pr(z_i = j|\mathbf{z}_{-i},w_i,\mathbf{w}_{-i}) \nonumber \\
-%     &\propto& \Pr(w_i|z_i = j,\mathbf{z}_{-i},\mathbf{w}_{-i}) \Pr(z_i = j|\mathbf{z}_{-i}, \mathbf{w}_{-i}) \\
-%     &=& \Pr(w_i|z_i = j,z_{i-1},\mathbf{z}_-,w_{i-1},\mathbf{w}_-) \Pr(z_i = j|z_{i-1},\mathbf{z}_-,w_{i-1},\mathbf{w}_-),
-% \end{eqnarray*}
-% where $\mathbf{z}_-$ and $\mathbf{w}_-$ represent all $z$'s without $z_i$ and
-% $z_{i-1}$, and all $w$'s without $w_i$ and $w_{i-1}$, respectively.
-% 
-% \paragraph{Dissecting $\Pr(w_i|z_i = j,z_{i-1},\mathbf{z}_-,w_{i-1},\mathbf{w}_-)$:}
-% To get rid of $z_{i-1}$, $\mathbf{z}_-$, and $\mathbf{w}_-$ in the first term,
-% we need to expand the probability by introducing $\phi$ into the equation, split the
-% terms, and then integrate out the whole thing, shown as what follows.
-% \begin{eqnarray*}
-%     &&\Pr(w_i|z_i = j,z_{i-1},\mathbf{z}_-,w_{i-1},\mathbf{w}_-) \nonumber \\
-%     &=& \int \Pr(w_i|z_i = j,z_{i-1},\mathbf{z}_-,w_{i-1},\mathbf{w}_-,\phi^{(j)}) \nonumber \\
-%     && \quad \Pr(\phi^{(j)}|z_i = j,z_{i-1},\mathbf{z}_-,w_{i-1},\mathbf{w}_-)\mathrm{d}\phi^{(j)}\\
-%     &=& \int \Pr(w_i|z_i = j,w_{i-1},\phi^{(j)}) \nonumber \\
-%     && \quad \Pr(\phi^{(j)}|z_{i-1},\mathbf{z}_-,w_{i-1},\mathbf{w}_-)\mathrm{d}\phi^{(j)}\\
-% \end{eqnarray*}
-% 
-% The second term inside the integral is basically a Dirichlet.  Specificly, we have:
-% \begin{equation}
-% \Pr(\phi^{(j)}|z_{i-1},\mathbf{z}_-,w_{i-1},\mathbf{w}_-) \sim \mathrm{Dirichlet}(\beta + n^{(a,b)}_{-i,j}).
-% \end{equation}
-% 
-% This can be shown by applying Bayes's theorem and losing all the conditionally-independent variables, we have:
-% \begin{eqnarray*}
-%     \Pr(\phi^{(j)}|z_{i-1},\mathbf{z}_-,w_{i-1},\mathbf{w}_-) &\propto& \Pr(w_{i-1}|\mathbf{w}_-,z_{i-1},\mathbf{z}_-,\phi^{(j)})\\
-%     && \times \Pr(\mathbf{w}_-|z_{i-1},\mathbf{z}_-,\phi^{(j)}) \times \Pr(\phi^{(j)}|z_{i-1},\mathbf{z}_-) \\
-%     &=& \Pr(w_{i-1}|\mathbf{w}_-,z_{i-1},\mathbf{z}_-,\phi^{(j)}) \\
-%     && \times \Pr(\mathbf{w}_-|z_{i-1},\mathbf{z}_-,\phi^{(j)}) \times \Pr(\phi^{(j)}) \\
-%     &=& \prod_{k=1}^{i-1} \Pr(w_k|w_{k-1},z_k,\phi^{(j)}) \Pr(\phi^{(j)}) \\
-%     &=& \prod_{(a,b) \in V^2} \left[\phi^{(j)}_{a,b}\right]^{n^{(a,b)}_{-i,j}} \Pr(\phi^{(j)})
-% \end{eqnarray*}
-% 
-% Since $\Pr(\phi^{(j)}) \sim \mathrm{Dirichlet}(\beta)$ and the left-hand side
-% of the equation is actually a probability distribution \footnote{Here we use a
-% symmetric Dirichlet prior, as what was done in Griffiths} (which implies the
-% integral of the right-hand side over all $\phi^{(j)}$ equals to 1), we have the
-% left-hand side a distribution draw from the Dirichlet prior shown in equation
-% (1).
-% 
-% Now let us get back to the integral.
-% \begin{eqnarray*}
-%     && \int \Pr(w_i|z_i = j,w_{i-1},\phi^{(j)}) \Pr(\phi^{(j)}|z_{i-1},\mathbf{z}_-,w_{i-1},\mathbf{w}_-)\mathrm{d}\phi^{(j)}\\
-%     &=& \int \phi^{(j)}_{w_{i-1},w_i} \Pr(\phi^{(j)}|z_{i-1},\mathbf{z}_-,w_{i-1},\mathbf{w}_-)\mathrm{d}\phi^{(j)}\\
-%     &=& \int \phi^{(j)}_{w_{i-1},w_i} \frac{\Gamma(\sum_{(a,b)}\beta + n^{(a,b)}_{-i,j})}{\prod_{(a,b)} \Gamma(\beta + n^{(a,b)}_{-i,j})}
-%     \prod_{(a,b)} \left[\phi^{(j)}_{(a,b)}\right]^{\beta + n^{(a,b)}_{-i,j} - 1}\mathrm{d}\phi^{(j)}\\
-%     &=& \frac{\beta + n^{(w_{i-1},w_i)}_{-i,j}}{V^2 \beta + \sum_{(a,b)} n^{(a,b)}_{-i,j}} \int \frac{\Gamma(V^2 \beta + \sum_{(a,b)} n^{(a,b)}_{j})}{\prod_{(a,b)} \Gamma(\beta + n^{(a,b)}_{j})}
-%     \prod_{(a,b)} \left[\phi^{(j)}_{(a,b)}\right]^{\beta + n^{(a,b)}_{j} - 1}\mathrm{d}\phi^{(j)}\\
-%     &=& \frac{\beta + n^{(w_{i-1},w_i)}_{-i,j}}{V^2 \beta + \sum_{(a,b)} n^{(a,b)}_{-i,j}} \\
-% \end{eqnarray*}
-% 
-% The second last equation holds simply because $\Gamma(k+1) = k \Gamma(k)$ and:
-% \begin{equation}
-% n^{(a,b)}_{j} = \left\{ \begin{array}{l}
-% n^{(a,b)}_{-i,j} + 1\quad{\textrm{,$(a,b)=(w_{i-1},w_i)$}}\\
-% n^{(a,b)}_{-i,j}\quad{\textrm{,otherwise}}\\
-% \end{array} \right.
-% \end{equation}
-% 
-% \paragraph{Dissecting $\Pr(z_i = j|z_{i-1},\mathbf{z}_-,w_{i-1},\mathbf{w}_-)$:}  
-% By using the same trick as we
-% do in the previous section, we get rid of redundant variables by introducing
-% $\theta$ into the equation.  We have:
-% \begin{eqnarray*}
-%     \Pr(z_i = j|z_{i-1},\mathbf{z}_-,w_{i-1},\mathbf{w}_-) &=& \Pr(z_i = j|z_{i-1},\mathbf{z}_-) \\
-%     &=& \int \Pr(z_i = j|z_{i-1},\mathbf{z}_-,\theta) \Pr(\theta|z_{i-1},\mathbf{z}_-) \mathrm{d}\theta\\
-%     &=& \int \Pr(z_i = j|\theta) \Pr(\theta|\mathbf{z}_-) \mathrm{d}\theta\\
-% \end{eqnarray*}
-% 
-% It turns out the integral remains intact as what was in Griffiths' work.  In fact, the final term would be:
-% \[ \Pr(z_i = j|z_{i-1},\mathbf{z}_-) = \frac{\alpha + n^{(d_i)}_{-i,j}}{K \alpha + \sum_k n^{(d_i)}_{-i,k}} \]
-% 
-% \paragraph{Gibbs Sampler:}  The final conditional probability is:
-% \begin{equation}
-%     \Pr(z_i = j|\mathbf{z}_{-i}, \mathbf{w}) =
-%     \frac{\beta + n^{(w_{i-1},w_i)}_{-i,j}}{V^2 \beta + \sum_{(a,b)} n^{(a,b)}_{-i,j}} 
-%     \frac{\alpha + n^{(d_i)}_{-i,j}}{K \alpha + \sum_k n^{(d_i)}_{-i,k}}
-% \end{equation}
-% 
-% The difference between the original LDA and bigram-LDA lies merely in the dimenionality of the
-% lookup table $\phi^{(j)}$ and the way word counts are accumulated.
-%-------------------------------------------------- 
-
 \begin{abstract}
-{ \color{red} (Page 1, top) Here we summarize the contribution of this work.
+\comment{ (Page 1, top) Here we summarize the contribution of this work.
 Supposedly, this work is regarded as an application of topic models over the
 sentence level. }
 
 \end{abstract}
 
-\section{Introduction}
-
+%--------------------------------------------------
+% Introduction
+%-------------------------------------------------- 
+\section{Introduction} \label{s:introduction}
 Topic models were first introduced in the NLP community as a mean of
 formalizing the inference of latent semantics from the surface data.  We have
 seen a large body of research work that made use of such a technique and
@@ -203,32 +37,36 @@ the sentence structures and go with the original settings.  Either way we lose
 a certain amount of information.  We find it rather cumbersome for topic models
 being restricted to the implication on only one level of granularity.  A number
 of NLP applications would essential benefit from any kind of adaptation of LDA
-to model the sentence-word or document-sentence relationship. {\color{red} Our argument for sentence topic model goes here...}.
+to model the sentence-word or document-sentence relationship.
 
-{\color{red} Contribution goes here...}
+\comment{ Our argument for sentence topic model goes here...}.
 
-This paper is arranged as follows... {\color{red} Outline goes here...}
+\comment{ NOTE: We need to address the difference between our model, hLDA and
+Pachinko Allocation Model (PAM).  The most difficult one is ``latent-Dirichlet
+co-clustering'', which is almost identical to our work. }
+
+This paper is arranged as follows.  In Section~\ref{s:sentence-layered-lda}, we
+introduce an LDA-based generative model to leverage the intra-document sentence
+topics and the corresponding inference procedure.  The estimation method for
+model parameters are describe in Section~\ref{s:parameter-estimation}.  The
+experiments and results are shown in Section~\ref{s:evaluation}.  Related work
+is introduced in Section~\ref{s:related-work}.  In Section~\ref{s:discussions},
+we discuss a number of issue discovered in the development of the model.  We
+give out our conclusions and point out possible future works in
+Section~\ref{s:concluding-remarks}.  
+
 %--------------------------------------------------
-% (Pages 1 and 2, one and a half pages) { \it Here we start with a short summary
-% about the following points: \begin{itemize} \item Sentence-level topic modeling
-% is useful.  \item LDA doesn't work well due to a number of reasons (name them
-% all).  \item Observations that we had to figure out how to improve the topic
-% model.  \item We try to adapt the existing topic model into the sentence data.
-% \item We get better results.  \end{itemize} We need to address the difference
-% between our model, hLDA and Pachinko Allocation Model (PAM). }
+% Model
 %-------------------------------------------------- 
-
-\section{Model}
-\subsection{Sentence-Layered LDA}
-
-We propose an generative topic model called {\it sentence-layered LDA}, by
-biasing the original latent-Dirichlet allocation framework toward an adapation
-{for} the sentence structure.  We introduce the notion of {\it sentence
-topics} by adding a set of latent variables in between the document and the
-words; the sentence topics served as an additional sub-document layer that is
-responsible for generating word topics.  We model the sentence topics as
-scalars, which in turn refers to a discrete distribution over word topics.  The
-complete generative process is depicted as follows.
+\section{Sentence-Layered LDA} \label{s:sentence-layered-lda} We propose an
+generative topic model called {\it sentence-layered LDA}, by biasing the
+original latent-Dirichlet allocation framework toward an adapation {for} the
+sentence structure.  We introduce the notion of {\it sentence topics} by adding
+a set of latent variables in between the document and the words; the sentence
+topics served as an additional sub-document layer that is responsible for
+generating word topics.  We model the sentence topics as scalars, which in turn
+refers to a discrete distribution over word topics.  The complete generative
+process is depicted as follows.
 
 \begin{eqnarray*}
   \theta^{d} &\sim& \mathrm{Dirichlet}(\alpha) \\
@@ -472,21 +310,33 @@ The resulting Gibbs sampling algorithm becomes extremely simple.
   \item Check for convergence.  Repeat the last step otherwise.
 \end{enumerate}
 
-{\color{red} Putting so much math in here is not a good idea.  Replace it with
+\comment{ Putting so much math in here is not a good idea.  Replace it with
 simple, obvious theoretical results. }
 
-\subsection{Sentence-Layered Bigram LDA} { \color{red} (Page 4, half page) Here we show only
-theoretical results for the model because both models share similar inference
-steps.  Describe the sparsity issue here and present out solution (practical
-concerns). }
+\begin{table*}[!ht]
+  \centering
+  \begin{tabular}{ll}
+    Parameter Equation &  Adjusted $R^2$ \\
+    \hline
+    $\alpha = 0.6433^{***} \times 1/S$ & 0.4872 \\
+    $\beta = 1.46 \times {10^{-4}}^{*} \times S + 1.4528713^{***} \times 1/T$ & 0.877 \\
+    $\gamma = 5.276 \times {10^{-5}}^{***} \times S + 0.2156^{***} \times 1/T $& 0.9135 
+  \end{tabular}
 
-\section{Parameter Estimation}  The performance of the LDA-based model can
-largely rely on the parameters for the Dirichlet priors.  In our model, for
-simplicity, all these priors are assumed to be symmetric.  Far as we know, the
-parameters for LDA models do not have a formal way to optimize; they are
-normally determined by experimentation.  Therefore, in order to determine the
-best parameters for future use, we went through the following empirical
-procedure.  
+  \caption{The linear fit for model parameters.  Weight values with
+  an asterisk ($^*$) in the superscript are significant at $p < 0.1$, and those
+  with three asterisks ($^{***}$) in the superscript at $p < 0.001$.} \label{t:model-parameters}
+\end{table*}
+
+
+\section{Parameter Estimation} \label{s:parameter-estimation}
+
+\comment{ (One page) } The performance of the LDA-based model can largely rely
+on the parameters for the Dirichlet priors.  In our model, for simplicity, all
+these priors are assumed to be symmetric.  Far as we know, the parameters for
+LDA models do not have a formal way to optimize; they are normally determined
+by experimentation.  Therefore, in order to determine the best parameters for
+future use, we went through the following empirical procedure.  
 
 First, we set things up.  We decided to use the weblog data in this experiment.
 We divided the data into training, test, and development sets.  We also
@@ -507,49 +357,30 @@ the parameter $(\alpha^*, \beta^*, \gamma^*)$ were saved together as a tuple.
 
 Next, we formed a linear regression model based on the saved data.  We wish to
 derive a function of the number of word/sentence topics by looking into the
-relationship between $T + S \sim \alpha + \beta + \gamma$.  
+relationship between $T + S \sim \alpha + \beta + \gamma$.  As a result, the
+equations shown in Table~\ref{t:model-parameters} were found to fit the data
+best.
 
-{ \color{red} The induced weights and numbers and figures go here... }
-
-As a result, we found the following equation fit the data best.  Given $T$ and
-$S$, we have:
-\begin{eqnarray*}
-  \alpha &=& 0.6433^{***} \times \frac{1}{S} \\
-  && \quad \textrm{($R^2 = 0.4872$)} \nonumber\\
-  \beta &=& 1.46 \times {10^{-4}}^{*} \times S + 1.4528713^{***} \times \frac{1}{T} \\
-  && \quad \textrm{($R^2 = 0.877$)} \nonumber\\
-  \gamma &=& 5.276 \times {10^{-5}}^{***} \times S + 0.2156 \times \frac{1}{T} \\
-  && \quad \textrm{($R^2 = 0.9135$)} \nonumber
-\end{eqnarray*}
-where the weights with an asterisks ($^*$) in the superscripts denote $p < 0.1$ and
-those with three asterisks ($^{***}$) denotes $p < 0.001$.
-
-{ \color{red} Note: Not quite sure we should include more details in here.  And no $\lambda$-mixture. }
-
-{ \color{red} (Half of Page 4 to Half of Page 5) Here we
-describe how to obtain the best parameter for the model. }
-
-\section{Evaluation}
-\subsection{Perplexity}
-
-{ \color{red} (Page 5, half page) Here we discuss how to measure test-set
-perplexity.  We tested the model on the Penn Treebank. }
+%--------------------------------------------------
+% Experiments
+%-------------------------------------------------- 
+\section{Evaluation} \label{s:evaluation}
+\subsection{Perplexity} \label{ss:perplexity}
 
 One way to assess the performance of a topic model is through test-set
 perplexity.  The test-set perplexity measures how well the model generalizes on
 a held-out data.  Perplexity is measured in the amount of uncertainty, which is
 a positive real number.  The lower perplexity we get for the model, the better
 fit the model is for the data.  Generally, the test perplexity is derived as:
-\[ \mathrm{perplexity_{test}} = \exp(\frac{- \log
-\Pr(\mathbf{w}_\mathrm{test})}{N_\mathrm{test}}) \]
+\begin{eqnarray*} \mathrm{perplexity_{test}} &=& \exp(\frac{- \log
+\Pr(\mathbf{w}_\mathrm{test})}{N_\mathrm{test}}) \\ &=& \exp(\frac{- \sum_w
+\log \Pr(w|d_\mathrm{test})}{N_\mathrm{test}}) \end{eqnarray*}
 
-The key is to formulate $\Pr(\mathbf{w}_\mathrm{test})$ for different topic
-models.  For LDA, the probability is evaluated as follows.  \[
-\Pr(\mathbf{w}_\mathrm{test}) = \sum_w \log \sum_z \Pr(w|z) \Pr(z|d) \]
-
-Somehow, the probability for the sentence LDA is a bit more complicated due to
-an additional layer of latent semantics.  \[ \Pr(\mathbf{w}_\mathrm{test}) =
-\sum_w \log \sum_x \sum_z \Pr(w|z) \Pr(z|x) \Pr(x|d) \]
+The key is to formulate $\Pr(w_\mathrm{test})$ for different topic models.  For
+LDA, the probability is evaluated as follows.  \[ \Pr(w|d_\mathrm{test}) =
+\sum_z \Pr(w|z) \Pr(z|d) \] Somehow, the probability for the sentence LDA is a
+bit more complicated due to an additional layer of latent semantics.  \[
+\Pr(w|d_\mathrm{test}) = \sum_x \sum_z \Pr(w|z) \Pr(z|x) \Pr(x|d) \]
 
 To infer all these probabilities, we loaded the trained model back in for
 initializing $\Pr(w|z)$ in both model.  Since the training and the test sets do
@@ -560,38 +391,181 @@ $\Pr(w|z)$ and started another 500-iteration burn-in on the test sets.  For
 simplicity, we read out only one sample for $\Pr(z|x)$ and $\Pr(x|d)$ at the
 end of burn-in (and did the same thing for $\Pr(z|d)$ in the LDA model).
 
-We divided the Penn Treebank into two sets, one consisting of 2,300 documents
-and the other of 150 documents { \color{red} (The count is not precise. Change
-it later) }.  We trained the topic models on the first set and evaluate
-test-set perplexity on the second.  The result is discussed in the following
-sections ({\color{red} FIX IT}).
+The Penn TreeBank is composed of 2,312 parsed documents, where each document
+contains 21.2837 sentences in average.  We further divided the TreeBank into
+two sets, one of 2,300 documents and the other of 154.  We trained the topic
+models on the first set and evaluated the perplexities on the second.  For both
+model, we had the Gibbs sampler burned in for 1,000 iterations before reading
+out probabilistic estimates.  The number of word topics $T$ for both models are
+set to be 100, as we figured the word topics in both models are functionally
+equivalent and therefore they should be set to the same value.  The number
+sentence topics for the sentence-layered model, however, were assigned to a
+empirical value 10 that generally achieved best performance in our own tests.
+As we argued in the previous sections, sentence topics should be viewed as
+document-specific smoothing mechanisms rather than ``super topics'' that
+compete with word topics, and we believed that such type of arrangement works
+best for our comparative study. 
 
-{ \color{red} NOTE: How do we decide the parameters in this test?  Through grid
-search? }
+We had the parameters of the LDA model set up as suggested in
+\cite{griffiths2004finding}, i.e., $\alpha = 50 / T$ and $\beta = 0.01$.  For
+the sentence-layered LDA, the parameter is determined by applying the
+regression result described in Section~\ref{s:parameter-estimation}.  In this
+experiment, we tested three type of topic models: sentence-layered LDA, and two
+LDA runs separately trained on the document level and the sentence level.  When
+trained on the document level, LDA discard sentence boundary and treat the
+entire document as one text unit; while on the sentence level, LDA treat each
+sentence as individual ``documents''.  The tests are done only at the sentence
+level.
 
-\subsection{Cohesion Test}
+The experimental result is shown in Figure~\ref{f:perplexity}.
+\comment{(Describe the results)}
 
-{ \color{red} NOTE: This task is proposed in replace of the haystack evaluation. }
-{ \color{red} (Page 6, half a page) Describe the idea of the cohesion test. }
+\begin{figure}[!ht]
+  \includegraphics[width=\columnwidth]{ppl.eps}
+  \caption{Performance of the three topic models in terms of test-set perplexity on the Penn TreeBank.}
+  \label{f:perplexity}
+\end{figure}
 
-The cohesion test is another way for evaluating how well a probabilistic model
-generalizes the data.  We assume that, a probabilistic model should be able to
-tell how coherent the content of a document is by looking at the query
-likelihood, which is functionally equivalent to the test-set perplexity.  We
-expect that a coherent document results in a lower perplexity while an
-incoherent document a higher one.  
+\subsection{Topic Examples} \label{ss:topic-examples}
 
-One way to form an incoherent set of document is through sentence ``swap-in''.
-Given a document $d$ and a set of sentences ${ s_1, s_2, \ldots, s_N }$
-(candidates) drawn from the test data, we randomly chose one sentence (some $q
-\in d$) from the document and replace it with any sentence from the candidate
-set.  By repeating the last step $N$ times, we form a synthesis document set.
-Now, we present the original document $d$ together with the synthesis set and
-asked the model to sort the documents in the order of test-set perplexity.  We
-look at the rank the original document is positioned in each run and evaluate
-the model performance by mean-reciprocal rank.  In this task, we still used
-Penn Treebank as our test corpora.  The result is shown in the following
-section ({\color{red} FIX IT}).
+\comment{ (Half a page) Here we briefly describe the word topics and show some example cluster }
+
+\begin{table*}[!ht]
+  \footnotesize
+  \begin{tabular}{llllllllll}
+
+bush & 0.006447 & million & 0.045660 & market & 0.020823 & president & 0.014135 & company & 0.009599\\
+federal & 0.006197 & year & 0.020008 & stock & 0.010724 & chief & 0.009355 & million & 0.008671\\
+court & 0.005780 & share & 0.018079 & trading & 0.008483 & executive & 0.008839 & new & 0.006577\\
+president & 0.005502 & billion & 0.013913 & investors & 0.007897 & vice & 0.007051 & year & 0.004713\\
+house & 0.005058 & quarter & 0.013669 & more & 0.006490 & company & 0.006948 & billion & 0.004699\\
+judge & 0.004891 & company & 0.013540 & stocks & 0.006125 & officer & 0.006191 & corp & 0.004303\\
+rrb & 0.004502 & cents & 0.009978 & prices & 0.005929 & chairman & 0.005881 & more & 0.004282\\
+state & 0.004474 & shares & 0.008423 & big & 0.005369 & sales & 0.005503 & inc & 0.004210\\
+white & 0.004363 & sales & 0.008333 & program & 0.004991 & corp & 0.005159 & out & 0.003958\\
+lrb & 0.004280 & net & 0.008037 & traders & 0.004717 & damage & 0.005056 & bank & 0.003720\\
+congress & 0.004169 & corp & 0.007484 & markets & 0.004652 & san & 0.004644 & group & 0.003505\\
+case & 0.003863 & third & 0.007471 & price & 0.004496 & named & 0.004609 & two & 0.003310\\
+committee & 0.003835 & earlier & 0.007330 & money & 0.004300 & francisco & 0.004609 & last & 0.003289\\
+bill & 0.003752 & rose & 0.006815 & futures & 0.004287 & products & 0.004334 & under & 0.003267\\
+against & 0.003668 & earnings & 0.006507 & many & 0.004105 & inc & 0.004300 & buy & 0.003238\\
+senate & 0.003502 & inc & 0.006365 & index & 0.003753 & rnr & 0.003990 & years & 0.003159\\
+law & 0.003224 & stock & 0.005838 & new & 0.003753 & director & 0.003784 & business & 0.003030\\
+political & 0.003196 & revenue & 0.005414 & buy & 0.003571 & area & 0.003543 & one & 0.002986\\
+government & 0.003196 & new & 0.005349 & funds & 0.003558 & ibm & 0.003406 & tax & 0.002943\\
+east & 0.003141 & profit & 0.005272 & companies & 0.003401 & new & 0.003165 & first & 0.002943\\
+\hline
+new & 0.008341 & cancer & 0.005641 & out & 0.004540 & year & 0.012195 & plant & 0.007408\\
+one & 0.007973 & drug & 0.004275 & san & 0.003982 & stock & 0.011907 & corp & 0.005953\\
+more & 0.006784 & health & 0.003741 & one & 0.003982 & new & 0.009746 & plants & 0.004102\\
+people & 0.004897 & university & 0.003385 & more & 0.003266 & trading & 0.009722 & company & 0.003970\\
+years & 0.004708 & gene & 0.002910 & francisco & 0.003226 & index & 0.008738 & china & 0.003903\\
+out & 0.004444 & cbs & 0.002910 & air & 0.002907 & shares & 0.007874 & more & 0.003903\\
+now & 0.004416 & human & 0.002792 & earthquake & 0.002907 & market & 0.007562 & magazine & 0.003771\\
+time & 0.004189 & institute & 0.002495 & steel & 0.002907 & average & 0.007346 & products & 0.003110\\
+such & 0.003963 & noriega & 0.002257 & three & 0.002469 & down & 0.007010 & cars & 0.002912\\
+two & 0.003803 & course & 0.002257 & market & 0.002469 & prices & 0.006914 & 000 & 0.002647\\
+year & 0.003680 & team & 0.002257 & equipment & 0.002390 & york & 0.006866 & drug & 0.002581\\
+ich & 0.003680 & sports & 0.002198 & city & 0.002270 & exchange & 0.006818 & build & 0.002449\\
+many & 0.003425 & patients & 0.002198 & corp & 0.002191 & rate & 0.006794 & air & 0.002449\\
+lrb & 0.003369 & researchers & 0.002139 & over & 0.002151 & month & 0.006578 & auto & 0.002383\\
+over & 0.003284 & heat & 0.002139 & home & 0.002032 & days & 0.005930 & production & 0.002383\\
+rrb & 0.003255 & football & 0.002079 & system & 0.002032 & yen & 0.005570 & producers & 0.002316\\
+000 & 0.003170 & genes & 0.001901 & game & 0.002032 & points & 0.005498 & egg & 0.002250\\
+business & 0.003161 & man & 0.001782 & service & 0.001952 & rose & 0.005402 & equipment & 0.002250\\
+american & 0.003095 & jones & 0.001782 & stores & 0.001952 & fell & 0.005330 & japan & 0.002250\\
+even & 0.003001 & white & 0.001782 & computer & 0.001912 & billion & 0.005306 & world & 0.002184\\
+  \end{tabular}
+  \caption{Topic clusters for sentence-layered LDA trained on the Penn TreeBank.}
+  \label{t:topic-cluster-slda}
+\end{table*}
+
+\begin{table*}[!ht]
+  \footnotesize
+  \begin{tabular}{llllllllll}
+
+out & 0.025053 & bank & 0.016592 & rrb & 0.024270 & corp & 0.028034 & prices & 0.016212\\
+time & 0.018857 & securities & 0.014099 & lrb & 0.023996 & inc & 0.020579 & interest & 0.014718\\
+many & 0.017699 & bonds & 0.013166 & before & 0.011998 & company & 0.018514 & rate & 0.013060\\
+more & 0.017646 & investment & 0.012628 & house & 0.011360 & companies & 0.016450 & analysts & 0.010783\\
+even & 0.015028 & money & 0.012305 & under & 0.010831 & based & 0.012547 & much & 0.010638\\
+people & 0.014975 & through & 0.012018 & plan & 0.009974 & industry & 0.011812 & long & 0.010383\\
+still & 0.012090 & capital & 0.011426 & ich & 0.008133 & unit & 0.010447 & japanese & 0.010182\\
+those & 0.011538 & issue & 0.009435 & law & 0.007786 & products & 0.009765 & rates & 0.010182\\
+now & 0.010274 & debt & 0.009417 & bill & 0.007458 & international & 0.008855 & recent & 0.009490\\
+such & 0.009776 & funds & 0.009346 & one & 0.007075 & including & 0.008242 & higher & 0.009217\\
+way & 0.007870 & offer & 0.009184 & city & 0.007039 & computer & 0.008242 & expected & 0.009017\\
+good & 0.007692 & part & 0.009112 & case & 0.006710 & operations & 0.007927 & trade & 0.008998\\
+small & 0.007443 & yield & 0.008521 & congress & 0.006692 & group & 0.007682 & major & 0.008670\\
+far & 0.006535 & bond & 0.008485 & line & 0.005835 & oil & 0.007385 & lower & 0.008543\\
+news & 0.006499 & each & 0.008449 & white & 0.005762 & used & 0.006982 & foreign & 0.008434\\
+number & 0.006482 & sold & 0.007947 & set & 0.005744 & national & 0.006772 & high & 0.008288\\
+little & 0.006357 & banks & 0.007857 & whether & 0.005580 & concern & 0.006755 & growth & 0.008124\\
+think & 0.006339 & common & 0.007821 & policy & 0.005470 & services & 0.006650 & term & 0.007942\\
+same & 0.006250 & pay & 0.007713 & committee & 0.005306 & contract & 0.006422 & economic & 0.007924\\
+though & 0.006019 & cash & 0.007552 & judge & 0.005033 & service & 0.006335 & japan & 0.007887\\
+\hline
+million & 0.087200 & two & 0.026314 & new & 0.054527 & president & 0.024608 & government & 0.017090\\
+year & 0.059195 & one & 0.026204 & market & 0.044860 & business & 0.021042 & federal & 0.016910\\
+billion & 0.035402 & years & 0.024279 & stock & 0.037836 & company & 0.015519 & state & 0.013338\\
+share & 0.032287 & more & 0.022885 & trading & 0.024692 & financial & 0.013006 & officials & 0.010825\\
+000 & 0.023358 & over & 0.020629 & shares & 0.024053 & chairman & 0.012821 & against & 0.009873\\
+quarter & 0.021983 & three & 0.015458 & york & 0.019512 & american & 0.012711 & such & 0.009694\\
+sales & 0.021374 & week & 0.014780 & exchange & 0.016550 & chief & 0.012193 & court & 0.008706\\
+company & 0.016935 & month & 0.013661 & price & 0.016230 & executive & 0.012138 & department & 0.008006\\
+first & 0.016361 & ich & 0.013478 & yesterday & 0.015113 & well & 0.010604 & insurance & 0.007629\\
+cents & 0.015839 & next & 0.013185 & down & 0.014173 & both & 0.010013 & public & 0.007396\\
+earlier & 0.014725 & last & 0.012855 & big & 0.014120 & firm & 0.009884 & bush & 0.007181\\
+rose & 0.013942 & days & 0.010526 & stocks & 0.012949 & make & 0.009515 & use & 0.007163\\
+third & 0.013541 & world & 0.010269 & board & 0.012612 & take & 0.009016 & office & 0.007037\\
+net & 0.012636 & between & 0.009774 & index & 0.011867 & management & 0.008665 & tax & 0.006768\\
+earnings & 0.012497 & during & 0.009499 & program & 0.011743 & work & 0.008406 & california & 0.006516\\
+last & 0.011592 & old & 0.009169 & investors & 0.010980 & exp & 0.008388 & help & 0.006122\\
+profit & 0.010565 & five & 0.009022 & day & 0.010909 & vice & 0.008295 & without & 0.005745\\
+income & 0.010287 & another & 0.008417 & average & 0.009472 & very & 0.007704 & administration & 0.005637\\
+revenue & 0.009173 & plans & 0.008142 & friday & 0.009064 & rnr & 0.007353 & made & 0.005583\\
+loss & 0.008337 & past & 0.008142 & buy & 0.008816 & director & 0.007187 & life & 0.005565\\
+
+  \end{tabular}
+  \caption{Topic clusters for the original LDA (sentence level) trained on the Penn TreeBank.}
+  \label{t:topic-cluster-lda}
+\end{table*}
+
+As a result of the previous experiment, we fetched the top-20 most
+representative words from the topic clusters for both the LDA and
+sentence-layered models.  The snapshots are shown in
+Tables~\ref{t:topic-cluster-slda} and \ref{t:topic-cluster-lda}, respectively.
+
+\comment{NOTE: We cannot afford put two big tables here.  Select two or three
+comparable clusters from both model as an example.}
+
+\comment{FIX IT: Add the results on ACL abstracts.}
+
+%--------------------------------------------------
+% \subsection{Cohesion Test}
+% 
+% { \color{red} NOTE: This task is proposed in replace of the haystack evaluation. }
+% { \color{red} (Page 6, half a page) Describe the idea of the cohesion test. }
+% 
+% The cohesion test is another way for evaluating how well a probabilistic model
+% generalizes the data.  We assume that, a probabilistic model should be able to
+% tell how coherent the content of a document is by looking at the query
+% likelihood, which is functionally equivalent to the test-set perplexity.  We
+% expect that a coherent document results in a lower perplexity while an
+% incoherent document a higher one.  
+% 
+% One way to form an incoherent set of document is through sentence ``swap-in''.
+% Given a document $d$ and a set of sentences ${ s_1, s_2, \ldots, s_N }$
+% (candidates) drawn from the test data, we randomly chose one sentence (some $q
+% \in d$) from the document and replace it with any sentence from the candidate
+% set.  By repeating the last step $N$ times, we form a synthesis document set.
+% Now, we present the original document $d$ together with the synthesis set and
+% asked the model to sort the documents in the order of test-set perplexity.  We
+% look at the rank the original document is positioned in each run and evaluate
+% the model performance by mean-reciprocal rank.  In this task, we still used
+% Penn TreeBank as our test corpora.  The result is shown in the following
+% section ({\color{red} FIX IT}).
+%-------------------------------------------------- 
 
 %--------------------------------------------------
 % \subsection{``Haystack'' Task}
@@ -612,168 +586,33 @@ section ({\color{red} FIX IT}).
 %-------------------------------------------------- 
 
 
-\section{Results} { \color{red} (Pages 6 and 7, one page) Present tables and graphs in
-here and bring up a short discussion about the number we got.  Try to justify
-why our model works better than the baseline. }
-
-\section{Related Work} { \color{red} (Page 7, Half a page)  We want to introduce related work
-about topic models and about sentence similarity. }
-
-\section{Discussions} { \color{red} (Page 8, 3/4 page)  Here we might want to discuss the
-results a little bit, e.g., pros and cons for the sentence model, and how does
-the bigram information help in the framework, and also sparsity issues, etc. }
-
-\section{Concluding Remarks} { \color{red} (Page 8, 1/4 page)
-Here we go back to the big picture and restate our contribution verbosely.  }
-
 %--------------------------------------------------
-% \section*{Appendix: Sentence-Layered LDA}
-% 
-% %--------------------------------------------------
-% % Sentence-layered LDA
-% %-------------------------------------------------- 
-% \begin{figure}[ht!]
-%   \centering
-%   \psset{xunit=10mm,yunit=10mm}
-%   \begin{pspicture}(0,0)(8,11)%\showgrid  % Uncomment to show grid!
-%     \SpecialCoor  % (a|b) means x-coord from 'a' and y-coord from 'b'.
-%     \psset{arrowscale=1.5}
-% 
-%     \rput(2.0,10.0){\GM@parameter{alpha}}\GM@label[angle=45]{alpha}{$\alpha$}
-%     \rput(alpha|0,8.0){\GM@node{theta}}\GM@label[angle=45]{theta}{$\theta$}
-%     \rput(alpha|0,6.0){\GM@node{x}}\GM@label[angle=45]{x}{$x$}
-%     \rput(alpha|0,4.0){\GM@node{z}}\GM@label[angle=45]{z}{$z$}
-%     \rput(alpha|0,2.0){\GM@node[observed=true]{w}}\GM@label[angle=45]{w}{$w$}
-%     \rput(1.25,1.25){\GM@plate{1.5}{3.5}{$N_x$}}
-%     \rput(0.75,0.75){\GM@plate{2.5}{6.0}{$M_\theta$}}
-%     \rput(0.25,0.25){\GM@plate{3.5}{8.5}{$L$}}
-%     
-%     \rput(7.0,0|w){\GM@parameter{beta}}\GM@label[angle=45]{beta}{$\beta$}
-%     \rput(7.0,0|z){\GM@parameter{delta}}\GM@label[angle=45]{delta}{$\delta$}
-%     \rput(5.0,0|w){\GM@node{phi}}\GM@label[angle=45]{phi}{$\phi$}
-%     \rput(5.0,0|z){\GM@node{tau}}\GM@label[angle=45]{tau}{$\tau$}
-%     \rput(4.25,3.25){\GM@plate{1.5}{1.5}{$S$}}
-%     \rput(4.25,1.25){\GM@plate{1.5}{1.5}{$T$}}
-% 
-%     \ncline[arrows=->]{alpha}{theta}
-%     \ncline[arrows=->]{theta}{x}
-%     \ncline[arrows=->]{x}{z}
-%     \ncline[arrows=->]{z}{w}
-%     \ncline[arrows=->]{beta}{phi}
-%     \ncline[arrows=->]{delta}{tau}
-%     \ncline[arrows=->]{tau}{z}
-%     \ncline[arrows=->]{phi}{w}
-%   \end{pspicture}
-%   \caption{(New) Full-blown sentence-layered LDA model in the plate notation}
-% \end{figure}
-% 
-% In the sentence-layered LDA, we introduce a set of latent variables $x$'s that
-% represent sentence-level topics.  Again, since the joint probability
-% $\Pr(\mathbf{z}, \mathbf{x})$ is generally intractable, we break it down to
-% several conditional probability distributions and make inference for each one
-% by applying Gibbs sampling method.
-% 
-% \paragraph{Inferencing $z_i$.}  The conditional distribution $\Pr(z_i = j|\mathbf{z}_{-i}, \mathbf{w}, \mathbf{x})$ can
-% be inferenced as what follows.
-% \begin{eqnarray}
-%     \Pr(z_i = j|\mathbf{z}_{-i}, \mathbf{w}, \mathbf{x}) &=& \Pr(z_i = j|\mathbf{z}_{-i}, w_i, \mathbf{w}_{-i}, x, \mathbf{x}') \nonumber\\
-%     &\propto& \Pr(w_i|z_i = j, \mathbf{z}_{-i}, \mathbf{w}_{-i}) \times \Pr(z_i = j|\mathbf{z}_{-i}, x, \mathbf{x}') \label{z_i:both},
-% \end{eqnarray}
-% where $x$ denotes the sentence topic that induces $z_i$, and $\mathbf{x}' = \mathbf{x} - \{ x \}$.  
-% 
-% Expanding the first term in \eqref{z_i:both} by introducing the random variable $\phi^{(j)}$.  
-% Appropriate invocation of Bayes' theorem gives us:
-% \begin{eqnarray}
-%   && \Pr(w_i|z_i = j, \mathbf{z}_{-i}, \mathbf{w}_{-i}) \nonumber \\
-%   &=& \int \Pr(w_i|\phi^{(j)},z_i = j,\mathbf{z}_{-i},\mathbf{w}_{-i}) 
-%   \Pr(\phi^{(j)}|z_i = j,\mathbf{z}_{-i},\mathbf{w}_{-i})\mathrm{d}\phi^{(j)} \nonumber \\
-%   &=& \int \Pr(w_i|\phi^{(j)},z_i = j) \Pr(\phi^{(j)}|\mathbf{z}_{-i},\mathbf{w}_{-i})\mathrm{d}\phi^{(j)} \nonumber \\
-%   &=& \int \phi^{(j)}_{w_i} \frac{\Gamma(V \beta + n_{-i,j}^{(\cdot)})}{\prod_w \Gamma(\beta + n_{-i,j}^{(w)})} \prod_w \left(\phi^{(j)}_w\right)^{\beta + n_{-i,j}^{(w)} - 1} \mathrm{d}\phi^{(j)} \label{z_i:1.1} \\
-%   &=& \frac{\beta + n_{-i,j}^{(w_i)}}{V \beta + n_{-i,j}^{(\cdot)}} \int \frac{\Gamma(V \beta + n_j^{(\cdot)})}{\prod_w \Gamma(\beta + n_j^{(w)})} \prod_w \left(\phi^{(j)}_w\right)^{\beta + n_j^{(w)} - 1} \mathrm{d}\phi^{(j)} \label{z_i:1.2} \\
-%   &=& \frac{\beta + n_{-i,j}^{(w_i)}}{V \beta + n_{-i,j}^{(\cdot)}}, \label{z_i:1.3}
-% \end{eqnarray}
-% where $n_{-i,j}^{(\cdot)} = \sum_w n_{-i,j}^{(w)}$ and $n_j^{(\cdot)} = \sum_w n_j^{(w)}$.  Equation
-% \eqref{z_i:1.1} follows the fact that
-% $\Pr(\phi^{(j)}|\mathbf{z}_{-i},\mathbf{w}_{-i}) \propto
-% \Pr(\mathbf{w}_{-1}|\mathbf{z}_{-1},\phi^{(j)}) \Pr(\phi^{(j)}) \sim
-% \mathrm{Dirichlet}(\beta + n_{-i,j}^{(w)})$.  By employing the property $\Gamma(k + 1) = k
-% \Gamma(k)$, we are able to further reduce the equation to the form of
-% \eqref{z_i:1.2} and \eqref{z_i:1.3}.  Also note that $n_j^{(w_i)} = n_{-i,j}^{(w_i)} + 1$ and $n_j^{(w)} =
-% n_{-i,j}^{(w)}$ for all $w \ne w_i$.
-% 
-% In the same way, we have the second term of \eqref{z_i:both} expanded and intergrated over $\tau^{(x)}$.
-% \begin{eqnarray}
-%   && \Pr(z_i = j|\mathbf{z}_{-i}, x, \mathbf{x}') \nonumber \\
-%   &=& \int \Pr(z_i = j|\tau^{(x)}, \mathbf{z}_{-i}, x, \mathbf{x}') 
-%   \Pr(\tau^{(x)}|\mathbf{z}_{-i}, x, \mathbf{x}')\mathrm{d}\tau^{(x)} \nonumber \\
-%   &=& \int \Pr(z_i = j|\tau^{(x)}, x) \Pr(\tau^{(x)}|\mathbf{z}_{-i}, x,\mathbf{x}')\mathrm{d}\tau^{(x)} \nonumber \\
-%   &=& \int \tau_j^{(x)} \frac{\Gamma(T \delta + n_{-i,x}^{(\cdot)})}{\prod_z \Gamma(\delta + n_{-i,x}^{(z)})} \prod_z \left(\tau^{(x)}_z\right)^{\delta + n_{-i,x}^{(z)} - 1} \mathrm{d}\tau^{(x)} \label{z_i:2.1} \\
-%   &=& \frac{\delta + n_{-i,x}^{(j)}}{T \delta + n_{-i,x}^{(\cdot)}} \int \frac{\Gamma(T \delta + n_x^{(\cdot)})}{\prod_z \Gamma(\delta + n_x^{(z)})} \prod_z \left(\tau^{(x)}_z\right)^{\delta + n_x^{(z)} - 1} \mathrm{d}\tau^{(x)} \label{z_i:2.2} \\
-%   &=& \frac{\delta + n_{-i,x}^{(j)}}{T \delta + n_{-i,x}^{(\cdot)}}.  \label{z_i:2.3}
-% \end{eqnarray}
-% where $n_{-i,x}^{(j)}$ denotes the number of words being assigned to topic $j$
-% that are also governed by sentences assigned to the same topic as that of $x$,
-% with the current word ($w_i$) left out.  In other words, we consider only
-% sentences that are of same sentence-level topic as that of $x$ and count the
-% number of words in these sentences being assigned to topic $j$.  Note that
-% $n_x^{(j)} = n_{-i,x}^{(j)} + 1$ and $n_x^{(z)} = n_{-i,x}^{(z)}$ for all $z \ne
-% z_i$.   Equation \eqref{z_i:2.1} follows the fact that
-% $\Pr(\tau^{(x)}|\mathbf{z}_{-i}, x, \mathbf{x}') \propto \Pr(\mathbf{z}_{-i}|x,
-% \mathbf{x}', \tau^{(x)}) \Pr(\tau^{(x)}) \sim \mathrm{Dirichlet}(\delta +
-% n_{-i,x}^{(z)})$, and equations \eqref{z_i:2.2} and \eqref{z_i:2.3} from the
-% same rationale as what we have in the preceding paragraph.
-% 
-% \paragraph{Inferencing $x$.}  The conditional $\Pr(x =
-% l|\mathbf{x}',\mathbf{z})$ can be rewritten as: \[ \Pr(x =
-% l|\mathbf{x}',\mathbf{z}) \propto \Pr(\mathbf{z}^*|x = l, \mathbf{x}',
-% \mathbf{z}') \Pr(x = l |\mathbf{x}',\mathbf{z}'), \] where $\mathbf{x}' =
-% \mathbf{x} - \{x\}$, $\mathbf{z}^*$ and $\mathbf{z}'$ denotes all the topics
-% governed by the current sentence and the others, respectively (i.e.,
-% $\mathbf{z} = \mathbf{z}^* \cup \mathbf{z}'$).
-% 
-% The first term can be rewritten as:
-% \begin{eqnarray}
-%   && \Pr(\mathbf{z}^*|x = l, \mathbf{x}', \mathbf{z}') \nonumber \\
-%   &=& \int \prod_{z_i \in \mathbf{z}^*} \Pr(z_i|x = l, \tau^{(l)}) \Pr(\tau^{(l)}|\mathbf{x}', \mathbf{z}') \mathrm{d}\tau^{(l)} \nonumber \\
-%   &=& \int \prod_z \left(\tau^{(l)}_z\right)^{n_{+x,l}^{(z)}} \frac{\Gamma(T \delta + n_{-x,l}^{(\cdot)})}{\prod_z \Gamma(\delta + n_{-x,l}^{(z)})} \prod_z \left(\tau^{(l)}_z\right)^{\delta + n_{-x,l}^{(z)} - 1} \mathrm{d}\tau^{(l)} \\
-%   &=& \int \frac{\Gamma(T \delta + n_{-x,l}^{(\cdot)})}{\prod_z \Gamma(\delta + n_{-x,l}^{(z)})} \prod_z \left(\tau^{(l)}_z\right)^{\delta + n_l^{(z)} - 1} \mathrm{d}\tau^{(l)} \\
-%   &=& \prod_z \left[\frac{\Gamma(\delta + n_l^{(z)})}{\Gamma(\delta + n_{-x,l}^{(z)})}\right] \frac{\Gamma(T \delta + n_{-x,l}^{(\cdot)})}{\Gamma(T \delta + n_l^{(\cdot)})} \nonumber \\
-%   && \quad \times \int \frac{\Gamma(T \delta + n_l^{(\cdot)})}{\prod_z \Gamma(\delta + n_l^{(z)})} \prod_z \left(\tau^{(l)}_z\right)^{\delta + n_l^{(z)} - 1} \mathrm{d}\tau^{(l)} \\
-%   &=& \prod_z \left[\frac{\Gamma(\delta + n_l^{(z)})}{\Gamma(\delta + n_{-x,l}^{(z)})}\right] \frac{\Gamma(T \delta + n_{-x,l}^{(\cdot)})}{\Gamma(T \delta + n_l^{(\cdot)})} \\
-%   &=& \frac{\mathcal{B}(\{\delta + n_l^{(z)}; \forall z\})}{\mathcal{B}(\{\delta + n_{-x,l}^{(z)}; \forall z\})},
-% \end{eqnarray}
-% where $\mathcal{B}(\cdot)$ is the multinomial beta function defined by
-% \[\mathcal{B}(a_1, \ldots, a_n) = \frac{\prod_i \Gamma(a_i)}{\Gamma(\sum_i
-% a_i)}. \]
-% 
-% We have the second term worked out the same way:
-% \begin{eqnarray*}
-%   \Pr(x = l|\mathbf{x}',\mathbf{z}') &=& \int \Pr(x = l|\theta^{(d)}) \Pr(\theta^{(d)}|\mathbf{x}') \mathrm{d}\theta^{(d)} \\
-%   &=& \frac{\alpha + n_{-x,d}^{(l)}}{S \alpha + n_{-x,d}^{(\cdot)}}.
-% \end{eqnarray*}
-% 
-% \paragraph{Gibbs Sampler.}  Putting everything all together, we have:
-% \begin{eqnarray}
-%   \Pr(z_i = j|\mathbf{z}_{-i}, \mathbf{w}, \mathbf{x}) &\propto&
-%     \frac{\beta + n_{-i,j}^{(w_i)}}{V \beta + n_{-i,j}^{(\cdot)}} 
-%     \frac{\delta + n_{-i,x}^{(j)}}{T \delta + n_{-i,x}^{(\cdot)}}, \\
-%   \Pr(x = l|\mathbf{x}',\mathbf{z}) &\propto&
-%     \frac{\mathcal{B}(\{\delta + n_l^{(z)}; \forall z\})}{\mathcal{B}(\{\delta + n_{-x,l}^{(z)}; \forall z\})}
-%     \frac{\alpha + n_{-x,d}^{(l)}}{S \alpha + n_{-x,d}^{(\cdot)}}.
-% \end{eqnarray}
-% 
-% The resulting Gibbs sampling algorithm becomes extremely simple.
-% 
-% \begin{enumerate}
-%   \item Randomly initialize $\mathbf{x}$ and $\mathbf{z}$ by the specified generative model.
-%   \item For each sentence $x$ in each document $d$, \begin{enumerate}
-%     \item Estimate $\Pr(z_i = j|\mathbf{z}_{-i}, \mathbf{w}, \mathbf{x})$ for all $i$.
-%     \item Estimate $\Pr(x = l|\mathbf{x}',\mathbf{z})$.
-%   \end{enumerate}
-%   \item Check for convergence.  Repeat the last step otherwise.
-% \end{enumerate}
+% Other stuff
 %-------------------------------------------------- 
+\section{Related Work} \label{s:related-work} \comment{ (Page 7, Half a page) Mostly topic models. }  
 
-%--------------------------------------------------
-% \end{document}
-%-------------------------------------------------- 
+\section{Discussions} \label{s:discussions} \comment{ (Page 8, 3/4 page)  } 
+
+While the LDA has been proven quite successful in discovery task for word
+topics, one drawback of the model remains its inability to offer fine-grain
+topic distribution, being unprecise to sample the document-level multinomial.
+Our model, being one of the descendents of LDA, is likely to inherit this flaw.
+Our expectation to simultaneously improve word-cluster and document-cluster
+precision did not come true.  Through experimentation, we showed that, by
+offering enough number of sentence-level mixtures, the layered model can better
+fit the underlying data, resulting in better probability estimate for the
+generation of word topics.  However, it remains rather difficult for us to put
+the topic distribution to direct use.  
+
+Far as we have learned, certain applications that a precise topic distribution
+can benefit have already seen indirect use of the topic models, and most of
+these effort heavily relied on the rich topic features provided by inspecting
+word clusters.  A direct application of the topic distribution might be more
+appealing either in theoretical or practical point of view.  Our preliminary
+study on integrating a layered mixture of multinomials is only an early step
+toward this big challenge.
+
+\section{Concluding Remarks} \label{s:concluding-remarks} \comment{ (Page 8, 1/4 page) }
+
+\comment{NOTE: If I figured out what to write in the abstract/end of
+introduction, I'll have no problem fill this in. }
