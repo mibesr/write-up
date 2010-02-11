@@ -185,7 +185,7 @@ benefit from all kinds of sucessful implications branched from the original
 model.  Generally, most of these previous efforts begun with the assumption
 that a document is in principle a bag of topics.  The words that we observed
 were indirectly inferred by the underlying distribution of these background
-concepts.  The process to go from a pseudo (or {\emph prototypical}) document ,
+concepts.  The process to go from a pseudo (or {\it prototypical}) document ,
 composed of latent semantics, to a realization of documents, a collection of
 words, is described as a statistical generation process that relied on a number
 of discrete distributions: the document-level topic distribution, and the
@@ -221,9 +221,9 @@ This paper is arranged as follows... {\color{red} Outline goes here...}
 \section{Model}
 \subsection{Sentence-Layered LDA}
 
-We propose an generative topic model called {\emph sentence-layered LDA}, by
+We propose an generative topic model called {\it sentence-layered LDA}, by
 biasing the original latent-Dirichlet allocation framework toward an adapation
-{for} the sentence structure.  We introduce the notion of {\emph sentence
+{for} the sentence structure.  We introduce the notion of {\it sentence
 topics} by adding a set of latent variables in between the document and the
 words; the sentence topics served as an additional sub-document layer that is
 responsible for generating word topics.  We model the sentence topics as
@@ -327,7 +327,7 @@ of word topic $j$, excluding the current assignment of $w_i$, defined by
 $n_{-i,j}^{(\cdot)} = \sum_w n_{-i,j}^{(w)}$.  In a similar way,
 $n_j^{(\cdot)}$ denotes all such assignments including the count for $w_i$,
 which is defined by $n_j^{(\cdot)} = \sum_w n_j^{(w)}$.  The derivation largely
-follows the paradigm established in \cite{blei} and \cite{griffiths}, making
+follows the paradigm established in \cite{blei2003latent} and \cite{griffiths2004finding}, making
 use of conjugate priors to simplify the inference.  By employing the property
 $\Gamma(k + 1) = k \Gamma(k)$, we are able to further reduce the equation to
 the form of \eqref{z_i:1.2} and \eqref{z_i:1.3}.  Also note that $n_j^{(w_i)} =
