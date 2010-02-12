@@ -3,16 +3,10 @@
 %-------------------------------------------------- 
 \begin{abstract}
 \comment{ 
-  Abstract goes here. 
-  Abstract goes here. 
-  Abstract goes here. 
-  Abstract goes here. 
-  Abstract goes here. 
-  Abstract goes here. 
-  Abstract goes here. 
-  Abstract goes here. 
-  Abstract goes here. 
-  Abstract goes here. 
+  Abstract goes here...
+  Abstract goes here...
+  Abstract goes here...
+  Abstract goes here...
 }
 \end{abstract}
 
@@ -35,66 +29,36 @@ latent semantics, to a realization of the document, i.e., collection of words,
 is described as a generative statistical process that relies on two discrete
 distributions: the document-level topic distribution $\Pr(z|d)$ and the
 topic-specific word distribution $\Pr(w|z)$.  Such an arrangement has garnered
-great success in various document-specific tasks.  However, when applying the
-topic modeling techniques to text data that comes with sentence structures, we
-could not stand but ask ourselves: How do we address the document-sentence and
-the sentence-word hierarchical relationship in a topic model where the notion
-of sentence (or smaller text units) were completely missing?  
+great success in various document-specific tasks.  However, direct implication
+of such models on sentence data may cause problems due to the misjudgment of
+the text boundaries.  
 
-The answer is: We do not.  Usually we either end up modeling sentences the way
-we do with documents (as if the sentences were smaller topics containers) and
-deliberately omit the document-level information, or we completely ignore the
-sentence structures and go with the original settings.  Either way we lose a
-certain amount of information.  We find it rather cumbersome for topic models
-being restricted to the implication on only one level of granularity.  A number
-of NLP applications would essential benefit from any kind of adaptation of LDA
-to model the sentence-word or document-sentence relationship.
+When applied on short text units without specific arrangement, the LDA model
+either overfits the data or does not get good probabilistic estimate at all.
+Usually we either end up modeling sentences the way we do with documents (as if
+the sentences were smaller topics containers) and deliberately omit the
+document-level information, or we completely ignore the sentence structures and
+go with the original settings.  Either way we lose a certain amount of rich
+information embedded in the sentence structure.  We find it cumbersome for
+topic models being restricted to the implication on only one level of
+granularity; Since a number of NLP applications might lean on any kind of
+adaptation of LDA to model the sentence-word or document-sentence relationship,
+we look for a way to mitigate the forementioned problems.
 
-\comment{ 
-  Argument goes here. 
-  Argument goes here. 
-  Argument goes here. 
-  Argument goes here. 
-  Argument goes here. 
-  Argument goes here. 
-  Argument goes here. 
-  Argument goes here. 
-  Argument goes here. 
-  Argument goes here. 
-  Argument goes here. 
-  Argument goes here. 
-  Argument goes here. 
-  Argument goes here. 
-  Argument goes here. 
-  Argument goes here. 
-  Argument goes here. 
-  Argument goes here. 
-  Argument goes here. 
-  Argument goes here. 
-  Argument goes here. 
-  Argument goes here. 
-  Argument goes here. 
-  Argument goes here. 
-  Argument goes here. 
-  Argument goes here. 
-  Argument goes here. 
-  Argument goes here. 
-  Argument goes here. 
-  Argument goes here. 
-} 
+This work is motivated by the following hypothesis.  We assume that the
+overfitting problem can be mitigate by by introducing a set of sentence-level
+ensembles into the original LDA model.  The ensembles are indicators that point
+to a set of multinomial distributions over topics; each sentence in the
+document choose a distribution to follow and generates the word topics
+accordingly.  The idea is to offer a \emph{switch} in between documents and
+topics, serving as a soft boundary between short texts (as opposed to the usual
+\emph{hard} boundary between sentences) that prevents the LDA model either go
+low on the co-occurrence counts or grow overfitted.  
 
-\comment{ 
-  Contribution goes here. 
-  Contribution goes here. 
-  Contribution goes here. 
-  Contribution goes here. 
-  Contribution goes here. 
-  Contribution goes here. 
-  Contribution goes here. 
-  Contribution goes here. 
-  Contribution goes here. 
-  Contribution goes here. 
-} 
+Our contribution can be stated as follows.  We proposed an adaptation for the
+original LDA model to the sentence data; in the experiment our approach showed
+better interpretability on the test benchmark, indicating that the adaptation
+generalized well for sentences than original LDA model did. 
 
 This paper is arranged as follows.  In Section~\ref{s:sentence-layered-lda}, we
 introduce an LDA-based generative model to leverage the intra-document sentence
@@ -160,7 +124,7 @@ Figure~\ref{plate-notation:sentence-layered}.
 
 \begin{figure}[ht!]
   \centering
-  \psset{xunit=8mm,yunit=8mm}
+  \psset{xunit=7mm,yunit=7mm}
   \begin{pspicture}(0,0)(8,11)%\showgrid  % Uncomment to show grid!
     \SpecialCoor  % (a|b) means x-coord from 'a' and y-coord from 'b'.
     \psset{arrowscale=1.5}
@@ -194,13 +158,15 @@ Figure~\ref{plate-notation:sentence-layered}.
   \label{plate-notation:sentence-layered}
 \end{figure}
 
-We use a Gibbs sampler to inference the model.  Since the joint probability
+We apply a Gibbs sampler to induce the model.  Since the joint probability
 $\Pr(\mathbf{z}, \mathbf{x})$ is generally intractable, we break it down to
-several conditional probability distributions. 
+several conditional probability distributions.  The derivation largely follows
+the paradigm established in \cite{blei2003latent} and
+\cite{griffiths2004finding}, making use of conjugate priors to simplify the
+inference.
 
-\paragraph{Conditional $z_i$.}  
-The conditional distribution $\Pr(z_i = j|\mathbf{z}_{-i}, \mathbf{w}, \mathbf{x})$ can
-be derived as what follows.
+\paragraph{Conditional for $\mathbf{z_i}$.}  The conditional distribution $\Pr(z_i
+= j|\mathbf{z}_{-i}, \mathbf{w}, \mathbf{x})$ can be derived as what follows.
 \begin{small}
 \begin{eqnarray*}
   && \Pr(z_i = j|\mathbf{z}_{-i}, \mathbf{w}, \mathbf{x}) \nonumber\\
@@ -208,20 +174,15 @@ be derived as what follows.
   && = \frac{\beta + n_{-i,j}^{(w_i)}}{V \beta + n_{-i,j}^{(\cdot)}} \frac{\delta + n_{-i,x}^{(j)}}{T \delta + n_{-i,x}^{(\cdot)}}, \label{z_i:2.3}
 \end{eqnarray*}
 \end{small}
-where $x$ denotes the sentence topic that induces $z_i$, and $\mathbf{x}' = \mathbf{x} - \{ x \}$.  
 
-\comment{ 
-  Notation description goes here.
-  Notation description goes here.
-  Notation description goes here.
-  Notation description goes here.
-  Notation description goes here.
-  Notation description goes here.
-  Notation description goes here.
-  Notation description goes here.
-  Notation description goes here.
-  Notation description goes here.
-}
+Here, $x$ denotes the sentence topic that induces $z_i$, and $\mathbf{x}' =
+\mathbf{x} - \{ x \}$.  $n_{-i,j}^{(\cdot)}$ denotes the counts for all word
+occurrences that are of word topic $j$, excluding the current assignment of
+$w_i$, which is defined by $n_{-i,j}^{(\cdot)} = \sum_w n_{-i,j}^{(w)}$.  In a
+similar way, $n_j^{(\cdot)}$ denotes all such assignments including the count
+for $w_i$, which is defined by $n_j^{(\cdot)} = \sum_w n_j^{(w)}$.  lso note
+  that $n_j^{(w_i)} = n_{-i,j}^{(w_i)} + 1$ and $n_j^{(w)} = n_{-i,j}^{(w)}$
+  for all $w \ne w_i$.
 
 %--------------------------------------------------
 % \begin{eqnarray}
@@ -336,20 +297,9 @@ where $\mathbf{x}' =
 \mathbf{x} - \{x\}$, $\mathbf{z}^*$ and $\mathbf{z}'$ denotes all the topics
 governed by the current sentence and the others, respectively (i.e.,
 $\mathbf{z} = \mathbf{z}^* \cup \mathbf{z}'$).
-
-\comment{ 
-  Notation description goes here.
-  Notation description goes here.
-  Notation description goes here.
-  Notation description goes here.
-  Notation description goes here.
-  Notation description goes here.
-  Notation description goes here.
-  Notation description goes here.
-  Notation description goes here.
-  Notation description goes here.
-}
-
+Note that $\mathcal{B}(\cdot)$ is the multinomial beta function defined by
+\[\mathcal{B}(a_1, \ldots, a_n) = \frac{\prod_i \Gamma(a_i)}{\Gamma(\sum_i
+a_i)}. \]
 
 %--------------------------------------------------
 % The first term can be rewritten as:
@@ -410,30 +360,14 @@ $\mathbf{z} = \mathbf{z}^* \cup \mathbf{z}'$).
 % 
 %-------------------------------------------------- 
 
-\comment{
-  FILL ME! 
-  FILL ME! 
-  FILL ME! 
-  FILL ME! 
-  FILL ME! 
-  FILL ME! 
-  FILL ME! 
-  FILL ME! 
-  FILL ME! 
-  FILL ME! 
-  FILL ME! 
-}
-
-\paragraph{Gibbs Sampler.}  
-The resulting Gibbs sampling algorithm becomes quite straightforward.
-\begin{enumerate}
-  \item Randomly initialize $\mathbf{x}$ and $\mathbf{z}$ by the specified generative model.
-  \item For each sentence $x$ in each document $d$, \begin{enumerate}
-    \item Estimate $\Pr(z_i = j|\mathbf{z}_{-i}, \mathbf{w}, \mathbf{x})$ for all $i$.
-    \item Estimate $\Pr(x = l|\mathbf{x}',\mathbf{z})$.
-  \end{enumerate}
-  \item Check for convergence.  Repeat the last step otherwise.
-\end{enumerate}
+\paragraph{Gibbs Sampler.}  The resulting Gibbs sampling algorithm becomes
+quite straightforward.  First, we randomly initialize $\mathbf{x}$ and
+$\mathbf{z}$ by the specified generative process.  Then, for each sentence $x$
+in each document $d$, we estimate $\Pr(z_i = j|\mathbf{z}_{-i}, \mathbf{w},
+\mathbf{x})$ for all $i$, and estimate $\Pr(x = l|\mathbf{x}',\mathbf{z})$.  We
+iterate the previous step for estimating conditionals until reaching the
+specified limit for the number of iterations.  Finally, we read out the model
+(i.e., the parameters) and terminate.
 
 \begin{table*}[!ht]
   \centering
@@ -458,28 +392,27 @@ approach for optimizing these parameters; they are normally determined through
 experimentation.  Accordingly, we followed the following experimental procedure
 to estimate the parameters of our model.
 
-We decided to learn the parameters on a larger, multi-topic corpus.  The
-dataset we used comes from the daily Spinn3r blog stream\footnote{\tt http://spinn3r.com}, for that we found the
-extracts we had seemed to fit the purpose well.  \comment{Describe the size of
-the dataset}.  First, we divided the data into training, test, and development
-sets.  We also determined the number of word topics and the number of sentence
-topics.  This is done by explicitly enumerating all the combinations that we
-are interested in.  The possible number of word/sentence topics are ${5, 10,
-50, 100}$.   We loop through all the $4 \times 4 = 16$ possible $(T,S)$
-combinations and search for the best $(\alpha, \beta, \gamma)$ for that
-combination.  Then, for each $(T, S)$ pair, there are totally three parameters
-to search for: $\alpha$, $\beta$, and $\gamma$; and the ``grid points'' to use
-in the search were 0.05, 0.01, 0.005, and 0.001.  We looped through all the $4
-\times 4 \times 4 = 64$ combinations and trained the sentence-layered model
-accordingly.  The trained model were tested against the development set and in
-the end each model came back with a test perplexity score.  We picked the
-model with the lowest test perplexity and moved on to the next test.  For each
-$(T, S)$ pair, the parameter $(\alpha^*, \beta^*, \gamma^*)$ were saved
-together as a tuple.  Next, we formed a linear regression model based on the
-saved data.  We wish to derive a function of the number of word/sentence topics
-by looking into the relationship between $T + S \sim \alpha + \beta + \gamma$.
-As a result, the equations shown in Table~\ref{t:model-parameters} were found
-to fit the data best.
+We decided to learn the parameters on a larger, multi-topic corpus; among other
+choices, we found the ICWSM 2009 Data Challenge Dataset \cite{burton2009icwsm}
+suit the purpose best, in terms of both coverage and size.  First, we divided the
+data into training, test, and development sets.  We also determined the number
+of word topics and the number of sentence topics.  This is done by explicitly
+enumerating all the combinations that we are interested in.  The possible
+number of word/sentence topics are ${5, 10, 50, 100}$.   We loop through all
+the $4 \times 4 = 16$ possible $(T,S)$ combinations and search for the best
+$(\alpha, \beta, \gamma)$ for that combination.  Then, for each $(T, S)$ pair,
+there are totally three parameters to search for: $\alpha$, $\beta$, and
+$\gamma$; and the ``grid points'' to use in the search were 0.05, 0.01, 0.005,
+and 0.001.  We looped through all the $4 \times 4 \times 4 = 64$ combinations
+and trained the sentence-layered model accordingly.  The trained model were
+tested against the development set and in the end each model came back with a
+test perplexity score.  We picked the model with the lowest test perplexity and
+moved on to the next test.  For each $(T, S)$ pair, the parameter $(\alpha^*,
+\beta^*, \gamma^*)$ were saved together as a tuple.  Next, we formed a linear
+regression model based on the saved data.  We wish to derive a function of the
+number of word/sentence topics by looking into the relationship between $T + S
+\sim \alpha + \beta + \gamma$.  As a result, the equations shown in
+Table~\ref{t:model-parameters} were found to fit the data best.
 
 %--------------------------------------------------
 % Experiments
@@ -532,10 +465,8 @@ set to be 10, as we figured the word topics in both models are functionally
 equivalent and therefore they should be set to the same value.  The number
 sentence topics for the sentence-layered model, however, were assigned to a
 empirical value 20 that generally achieved best performance in our own tests.
-\comment{FIXME: As we argued in the previous sections}, sentence topics should be viewed as
-document-specific smoothing mechanisms rather than ``super topics'' that
-compete with word topics, and we believed that such type of arrangement works
-best for our comparative study. 
+We believed that such type of arrangement works
+best in this comparative study. 
 
 We had the parameters of the LDA model set up as suggested in
 \cite{griffiths2004finding}, i.e., $\alpha = 50 / T$ and $\beta = 0.01$.  For
@@ -546,8 +477,22 @@ LDA runs separately trained on the document level and the sentence level.  When
 trained on the document level, LDA discard sentence boundary and treat the
 entire document as one text unit; while on the sentence level, LDA treat each
 sentence as individual ``documents''.  Tests were done only at the sentence
-level.  The experimental result is shown in Figure~\ref{f:perplexity}.
-\comment{(Describe the results)}
+level.  
+
+The experimental result showed that our approach achieved even lower test-set
+perplexity than the other two LDA runs did.  As shown in
+Figure~\ref{f:perplexity}, the perplexity for our model got convergence in
+roughly 300 iterations; while those for the LDA models grew stable in a fairly
+early stage.  We figured that both LDA models suffered from the following two
+issues.  First, when the LDA model working in the sentence level, the
+association of topic words did not go across the sentence boundaries, and thus
+resulted in a loss of co-occurrence statistics.  Second, the LDA model trained
+on the documents disregarded the syntax structures and treated all the word
+occurrences as equally important; as a result, the model overfitted the data
+and failed to address the diversity of co-occurred words in sentence level.  It
+turned out employing a mixture of multiple sentence-layered LDA mitigate the
+problems without much burden and best interpreted the word distribution for the
+test data.
 
 %--------------------------------------------------
 % \subsection{Topic Examples} \label{ss:topic-examples}
@@ -717,15 +662,18 @@ level.  The experimental result is shown in Figure~\ref{f:perplexity}.
 % Other stuff
 %-------------------------------------------------- 
 \section{Related Work} \label{s:related-work} 
-\comment{ (Page 7, Half a page) Mostly topic models. 
-NOTE: We need to address the difference between our model, hLDA and
-Pachinko Allocation Model (PAM).  The most difficult one is ``latent-Dirichlet
-co-clustering'', which is almost identical to our work. 
 
-More stuff.  More stuff.  More stuff.  More stuff.  More stuff.  More stuff.
-More stuff.  More stuff.  More stuff.  More stuff.  More stuff.  More stuff.
-More stuff.  More stuff.  More stuff.  More stuff.  More stuff.  More stuff.
-}
+Our work was inspired by a number of efforts for extending the LDA model,
+including Pachinko allocation model \cite{li2006pachinko}, nested Chinese
+restaurant process \cite{blei2004hierarchical}, and mixture network
+\cite{heinrich2009generic}.  Among other efforts that we have gradually learned
+about during the development of this work, the most similar to our approach is
+the latent-Dirichlet co-clustering model \cite{shafiei2006latent}.  While the
+previous research went through complicated formulation in light of modeling the
+correlation between topics, our preliminary study for LDA mixture made in the
+sentence level tried to bridge the gap between the document and the words.  Our
+proposed model can be seen as a specialization of these efforts all together
+for improving the model interpretability at a finer scale.
 
 \section{Discussions} \label{s:discussions} 
 While the LDA has been proven quite successful in discovery task for word
