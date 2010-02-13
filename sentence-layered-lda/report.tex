@@ -9,7 +9,7 @@ modeling approaches to sentence-level tasks introduces a number of challenges.
 In this paper, we adapt the approach of latent-Dirichlet allocation to include
 an additional layer for incorporating information about the sentence boundaries
 in documents.  We show that the addition of this minimal information of
-document structure improves perplexity results of a trained model.  
+document structure improves the perplexity results of a trained model.  
 
 \end{abstract}
 
@@ -38,7 +38,7 @@ topic.
 
 One way to apply LDA to sentence data is to treat individual sentences as whole
 documents.  The problem with this approach is that it does not account for the
-context in which the individual sentence appears.  Alternatively, the topic
+context in which the individual sentences appear.  Alternatively, the topic
 distribution of individual sentences could be treated as the same as that of
 the whole document.  Here the problem is that the differences between that
 contributions of individual sentences to document topics is ignored.  Given the
@@ -48,14 +48,14 @@ sentence-level tasks, a new model is needed.
 This work adapts the standard LDA model to better account for the contribution
 of sentences to the topics of documents.  Our approach is to add an additional
 layer in the standard LDA model that integrates information about the sentence
-boundaries of documents.  The ensembles in this layer are indicators that point
+boundaries in documents.  The ensembles in this layer are indicators that point
 to a set of multinomial distributions over topics; each sentence in the
 document chooses a distribution to follow and generates the word topics
 accordingly.  The idea is to offer a set of \emph{switches} in between
 documents and topics, serving to balance the contribution of sentences and
 documents to the topic distribution.  
 
-In this paper, we present this new model as an an adaptation for the standard
+In this paper, we present this new model as an adaptation of the standard
 LDA model.  We demonstrate that our model performs better on test-set
 perplexity than the standard LDA model.  These results suggest that this model
 may have applicability in future sentence-level tasks.
@@ -66,13 +66,13 @@ may have applicability in future sentence-level tasks.
 \section{Sentence-Layered LDA} \label{s:sentence-layered-lda} 
 
 We propose a generative topic model, called {\it sentence-layered LDA}, that
-incorporats sentence boundaries into the original LDA framework.  We introduce
+incorporates sentence boundaries into the original LDA framework.  We introduce
 the notion of {\it sentence topics} by adding a set of latent variables which
 serve as additional sub-document constructs in between the document and the
 words.  In this model, documents do not explicitly generate word topics, but
 instead guide sentences toward certain topic distributions by producing a set
 of sentence topics.  The sentence topics are indicator scalars, pointing to
-specific discrete distributions over word topics.  The adapation can be seen as
+specific discrete distributions over word topics.  The adaptation can be seen as
 a number of LDA machines working as individuals at the sentence level being
 governed by the document node.  The generative process is summarized by the
 following variables.  
@@ -85,7 +85,7 @@ following variables.
   w_i &\sim& \mathrm{Discrete}(\phi^{(z_i)})
 \end{eqnarray*}
 Besides the usual constructs inherited from the LDA model, the newly-introduced
-discrete distributions $\tau^{(x_j)}$ were governed by the Dirichlet prior
+discrete distributions $\tau^{(x_j)}$ are governed by the Dirichlet prior
 $\gamma$.   For simplicity, symmetric Dirichlet priors are assumed here.  The
 complete plate notation of the model is shown in
 Figure~\ref{plate-notation:sentence-layered}.
@@ -133,10 +133,10 @@ Since the joint probability $\Pr(\mathbf{z}, \mathbf{x})$ is generally
 intractable, we break it down to two conditional probability distributions and
 integrate out the priors.  The procedure largely follows the paradigm suggested
 in \cite{blei2003latent} and \cite{griffiths2004finding}.  The inference is
-done by by a straightforward application of Gibbs sampler.
+done by a straightforward application of Gibbs sampler.
 
 \paragraph{Conditional for $\mathbf{z_i}$.}  The conditional distribution $\Pr(z_i
-= j|\mathbf{z}_{-i}, \mathbf{w}, \mathbf{x})$ can be shown to be as what follows.
+= j|\mathbf{z}_{-i}, \mathbf{w}, \mathbf{x})$ can be shown to be as follows.
 \begin{eqnarray*}
   && \Pr(z_i = j|\mathbf{z}_{-i}, \mathbf{w}, \mathbf{x}) \nonumber\\
   && \propto \Pr(w_i|z_i = j, \mathbf{z}_{-i}, \mathbf{w}_{-i}) \Pr(z_i = j|\mathbf{z}_{-i}, x, \mathbf{x}') \nonumber \\
@@ -344,7 +344,7 @@ sentence level.
 Our work was inspired by a number of efforts for extending the standard LDA
 model.  Our work differs from Pachinko allocation model \cite{li2006pachinko},
 nested Chinese restaurant process \cite{blei2004hierarchical}, and mixture
-network \cite{heinrich2009generic}, each of which allow an artibrary number of
+network \cite{heinrich2009generic}, each of which allow an arbitrary number of
 sub-document units to model topic correlations.  Instead, our model adhere
 strictly to the sentence boundaries to define document structure.  Our approach
 is most similar to that of the latent-Dirichlet co-clustering model
