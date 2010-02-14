@@ -207,12 +207,11 @@ various numbers of word and sentence topics.  To do this, we conducted a
 three-dimensional grid search for these parameters when given 5, 10, 50, or 100
 word or sentence topics (4 $\times$ 4 possible combinations).  For each
 $(\alpha, \beta, \gamma)$ triple, we assigned values of 0.05, 0.01, 0.005, and
-0.001 to each parameter and trained the sentence-layered model.  
-
-The trained models were tested against the development set to calculate the
-test-set perplexity.  We selected the model with the lowest test-set perplexity
-and recorded the corresponding $(\alpha, \beta, \gamma)$ parameters for the
-given number of sentence and word topics.
+0.001 to each parameter and trained the sentence-layered model.  The trained
+models were tested against the development set to calculate the test-set
+perplexity.  We selected the model with the lowest test-set perplexity and
+recorded the corresponding $(\alpha, \beta, \gamma)$ parameters for the given
+number of sentence and word topics.
 
 Next, we formed a linear regression model based on the recorded data.  We
 derived a linear fit function for each parameter for a given number of
@@ -235,7 +234,7 @@ Table~\ref{t:model-parameters}.
 \section{Perplexity Evaluation} \label{s:perplexity-evaluation}
 
 One way to assess the performance of a topic model is through test-set
-perplexity.  Test-set perplexity measures how well the model generalizes on a
+perplexity.  Test-set perplexity evaluates how well the model generalizes on a
 held-out data.  Perplexity is measured in the amount of uncertainty, which is a
 positive real number.  The lower perplexity we achieve for the model, the
 better fit the model is to the data.  The test-set perplexity is calculated as:
@@ -250,22 +249,21 @@ semantics.  \[ \Pr(w|d_\mathrm{test}) = \sum_x \sum_z \Pr(w|z) \Pr(z|x)
 \Pr(x|d) \] 
 
 To calculate perplexity for each model, we begin with probabilities $\Pr(w|z)$
-learned from the training set.  Since the training and test sets did not
-share documents or sentences, the probabilities related to $z$, $x$,
-and $d$ needed to be re-sampled using texts from the test data.  
+learned from the training set.  Since the training and test sets did not share
+documents or sentences, the probabilities related to $z$, $x$, and $d$ needed
+to be re-sampled using texts from the test data.  We employed the same Gibbs
+sampling procedure with the initialized values for $\Pr(w|z)$ and started
+another 500-iteration burn-in on the test sets.  For simplicity, we read out
+only one sample for $\Pr(z|x)$, $\Pr(x|d)$, and $\Pr(z|d)$ at the end of
+burn-in.
 
-We employed the same Gibbs sampling procedure with the initialized
-values for $\Pr(w|z)$ and started another 500-iteration burn-in on the test
-sets.  For simplicity, we read out only one sample for $\Pr(z|x)$,
-$\Pr(x|d)$, and $\Pr(z|d)$ at the end of burn-in.
-
-As a corpus for evaluation, we chose the documents in the Penn TreeBank \cite{marcus1994building}.
-The Penn TreeBank is composed of 2,312 parsed documents, where each document
-contains 21.3 sentences on average.  We further divided the TreeBank into
-two sets, one of 2,300 documents and the other of 154.  We trained the topic
-models on the first set and evaluated the perplexity on the second.  For both
-models, we had the Gibbs sampler burned in for 1,000 iterations before reading
-out probability estimates.  
+As a corpus for evaluation, we chose the documents in the Penn TreeBank
+\cite{marcus1994building}.  The Penn TreeBank is composed of 2,312 parsed
+documents, where each document contains 21.3 sentences on average.  We further
+divided the TreeBank into two sets, one of 2,300 documents and the other of
+154.  We trained the topic models on the first set and evaluated the perplexity
+on the second.  For both models, we had the Gibbs sampler burned in for 1,000
+iterations before reading out probability estimates.  
 
 We set up the parameters of the standard LDA model as suggested in
 \cite{griffiths2004finding}, i.e., $\alpha = 50 / T$ and $\beta = 0.01$.  For
@@ -278,11 +276,11 @@ boundaries and treats the entire document as one text unit.  When trained at
 the sentence level, LDA treat each sentence as individual ``documents''.  Tests
 were made only at the sentence level.  
 
-The number of word topics $T$ for all models were
-set to 10; we figured the word topics in both models are functionally
-equivalent and therefore should be set to the same value.  The number
-sentence topics for the sentence-layered model were assigned to 
-20, which empirically achieved the best performance in our preliminary tests.
+The number of word topics $T$ for all models were set to 10; we figured the
+word topics in both models are functionally equivalent and therefore should be
+set to the same value.  The number of sentence topics for the sentence-layered
+model were assigned to 20, which empirically achieved the best performance in
+our preliminary tests.
 
 The experimental results showed that our sentence-layered LDA model achieved
 lower test-set perplexity than the standard LDA models.  As shown in
@@ -341,16 +339,16 @@ sentence level.
 %-------------------------------------------------- 
 \section{Related Work} \label{s:related-work} 
 
-Our work was inspired by a number of efforts for extending the standard LDA
+This work was inspired by a number of efforts for extending the standard LDA
 model.  Our work differs from Pachinko allocation model \cite{li2006pachinko},
 nested Chinese restaurant process \cite{blei2004hierarchical}, and mixture
-network \cite{heinrich2009generic}, each of which allow an arbitrary number of
-sub-document units to model topic correlations.  Instead, our model adhere
-strictly to the sentence boundaries to define document structure.  Our approach
-is most similar to that of the latent-Dirichlet co-clustering model
-\cite{shafiei2006latent}.  Our work differs in that it utilizes multiple
-sentence-level LDA machines to better account for the contribution of sentences
-to the topics of documents.
+network \cite{heinrich2009generic}, each of which allows an arbitrary number of
+sub-document units and an arbitrary number of dependency links in between to
+model topic correlations.  Instead, our model adheres strictly to the sentence
+boundaries to define document structure.  Our approach is most similar to that
+of the latent-Dirichlet co-clustering model \cite{shafiei2006latent}.  Our work
+differs in that it utilizes multiple sentence-level LDA machines to better
+account for the contribution of sentences to the topics of documents.
 
 \section{Conclusions} \label{s:discussion} 
 
