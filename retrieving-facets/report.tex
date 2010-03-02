@@ -93,9 +93,48 @@ contributions.  \item Introduce the outline. \end{itemize} }
 \section{Model}
 
 \comment{(3 pages) This section should cover the following three technical aspects of the
-model: (1) mathematical framework stemmed from the basic language modeling
-approach, (2) the required modification to the index structure, and (3)
-complexity analysis.}
+model: \begin{itemize} \item Mathematical framework stemmed from the basic language modeling
+approach; \item The required modification to the index structure; \item complexity analysis. \end{itemize}}
+
+\subsection{General framework}  
+
+Let $D$ be the set of documents, and $F$ be the set of facets.
+
+\begin{eqnarray}
+  \Pr(f|Q) &=& \sum_{d \in D} \Pr(f|d,Q) \Pr(d|Q) \nonumber\\
+  &=& \sum_{d \in D} \Pr(f|d) \Pr(d|Q) \nonumber\\
+  &\propto& \sum_{d \in D} \Pr(f|d) \Pr(Q|d) \label{eq:pr(f|Q)}\\
+  && \nonumber\\
+  \Pr(Q|d) &=& \prod_{q \in Q} \Pr(q|d) \nonumber\\
+  &\propto& \sum_{q \in Q} \log \Pr(q|d) \label{eq:pr(Q|d)}
+\end{eqnarray}
+
+\paragraph{Estimation for $\Pr(Q|d)$.}
+
+\begin{eqnarray}
+  \Pr(Q|d) &=& \exp \left(\sum_{q \in Q} \log \Pr(q|d) \right) \nonumber\\
+  &=& \exp \left(\sum_{q \in Q} \log \left[ \frac{f_{q,d} + \mu f_q / |C|}{|d| + \mu} \right] \right) \nonumber\\
+  &=& \exp \left(\sum_{q \in Q} \log \left( f_{q,d} + \mu f_q / |C| \right) - |Q| \log \left( |d| + \mu \right) \right) \nonumber\\
+  &=& K \times \exp \left( \sum_{q \in Q \cap d} \log \left( \frac{f_{q,d} |C|}{\mu f_q} + 1 \right) 
+  - |Q| \log \left( |d| + \mu \right) \right) 
+\end{eqnarray}
+where \[ K = \exp \left( |Q| \log \mu - |Q| \log |C| + \sum_{q \in Q} \log f_q \right). \]
+
+\paragraph{Estimation for $\Pr(f|Q)$.}
+
+\begin{eqnarray}
+  \Pr(f|Q) &\propto& \sum_{d \in D} \Pr(f|d) \Pr(Q|d) \nonumber\\
+  &=& \sum_{d \in \{d'|f \in d\}} \frac{c_{f,d}}{\mu_2 + c_d} \Pr(Q|d) + \sum_{d \in D} \frac{\mu_2 c_f / |F|}{\mu_2 + c_d} \Pr(Q|d)
+\end{eqnarray}
+
+Let $c_{f,d} = 1$ and $K_f = \mu_2 c_f/|F|$.
+
+\begin{eqnarray}
+  \Pr(f|q) &\propto& \sum_{d \in \{d'|f \in d\}} \frac{1}{\mu_2 + c_d} \Pr(Q|d) \\
+  && \quad + K_f \sum_{d \in D} \frac{1}{\mu_2 + c_d} \Pr(Q|d)
+\end{eqnarray}
+
+\subsection{Algorithm}
 
 %--------------------------------------------------
 % \section{Approximate Query-Dependent Faceted Navigation}
