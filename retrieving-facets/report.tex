@@ -96,44 +96,68 @@ notion of relevance into the facet interface.
 % approach; \item The required modification to the index structure; \item complexity analysis. \end{itemize}}
 %-------------------------------------------------- 
 
-We recast the faceted search as a language modeling framework, in which we take
-a document-centric view and assume that each document $d_j$ is associated with
-two distributions $\Pr(t_i|d_j)$ and $\Pr(f_k|d_j)$.  The first distribution
-$\Pr(t_i|d_j)$ is a multinomial distribution over the term domain $T$ that
-governs the generation of term occurrences in document $d_j$, and the second
-distribution $\Pr(f_k|d_j)$ is a multinomial distribution over the facet domain
-$F$ that offers similar use to the generatio n of facets.  The generative
-process can be described as follows: \footnote{A formal way to model the
-generation of the corresponding set size $|T_j|$ and $|F_j|$ is through Poisson
-processes.  For simplicity, in this work we assume these numbers are
-pre-determined for each document $d_j$.} 
+Consider a document collection of size $N$, in which each document $d_j$ is
+associated with a set of terms $T_j$ and a set of facets $F_j$.  We assume that
+each term $t_i \in T_j$ and each facet $f_k \in F_j$ are drawn from are drawn
+from two document-specific multinomials, one over the term domain and the other
+over the facet domain, respectively.  We further assume that the former,
+denoted as $\tau^{(j)}$, is drawn from a Dirichlet prior $\{ \alpha_i; i \in
+[1, T] \}$ and the latter from another Dirichlet $\{ \beta_k; k \in [1, F] \}$.
+The generative process can be described as follows: \footnote{A formal way to
+model the generation of the corresponding set size $|T_j|$ and $|F_j|$ is
+through Poisson processes.  For simplicity, in this work we assume these
+numbers are pre-determined for each document $d_j$.} 
 
-\begin{itemize} \item For each document $d_j$, \begin{enumerate} \item For $i
-\in \{ 1, \ldots, |T_j| \}$, $t_i \sim \textrm{Mult}(d_j)$ \item For $k \in \{
-  1, \ldots, |F_j| \}$, $f_k \sim \textrm{Mult}(d_j)$ \end{enumerate}
-  \end{itemize}
+\begin{itemize} 
+  \item For each document $d_j$, \begin{enumerate}
+    \item Assign $d_j = j$
+    \item $\tau^{(j)} \sim \textrm{Dirichlet}(\alpha_i; i \in [1, |T|])$
+    \item $\phi^{(j)} \sim \textrm{Dirichlet}(\beta_k; i \in [1, |F|])$
+    \item For $i \in \{ 1, \ldots, |T_j| \}$, $t_i \sim \textrm{Mult}(\tau^{(j)})$ 
+    \item For $k \in \{ 1, \ldots, |F_j| \}$, $f_k \sim \textrm{Mult}(\phi^{(j)})$ 
+  \end{enumerate}
+\end{itemize}
 
-We would also like to point out that it is not possible to draw terms and
-facets from the same distribution $\textrm{Mult}(d_j)$.  Here, there are
-actually two distributions for $\textrm{Mult}(d_j)$, i.e., one for generating
-$t_i$ and the other for generating $f_k$.  Since the description of the
-generative process is only conceptual, we distinguish these two distributions
-only when it is neccesary.  The generative process can also be viewed in plate
-notation as shown in figure \ref{f:model}.
+Upon receiving a query $Q$, it is modeled as a new document $x$ in the
+framework, in which the only observable variables are the query terms $q_i$'s;
+the corresponding document node $x$ and facet $y$ remains unknown.  The entire
+generative process in plate notation is shown in Figure~\ref{f:model}.
+\footnote{Without loss of generality, the number of facets in the query is set
+to 1.}  
 
 \begin{figure}[ht!]
   \centering
   \psset{xunit=10mm,yunit=10mm}
-  \begin{pspicture}(0,0)(8,2)%\showgrid  % Uncomment to show grid!
+  \begin{pspicture}(0,-1.5)(8,4.5)%\showgrid  % Uncomment to show grid!
     \SpecialCoor  % (a|b) means x-coord from 'a' and y-coord from 'b'.
     \psset{arrowscale=1.5}
-    \rput(4.0,1.0){\GM@parameter{d}}\GM@label[angle=45]{d}{$d_j$}
-    \rput(1.0,1.0){\GM@node{t}}\GM@label[angle=45]{t}{$t_i$}
-    \rput(0.25, 0.25){\GM@plate{1.5}{1.5}{$|T_j|$}}
-    \rput(7.0,1.0){\GM@node{f}}\GM@label[angle=45]{f}{$f_k$}
-    \rput(6.25, 0.25){\GM@plate{1.5}{1.5}{$|F_j|$}}
+    \rput(4.0,0.0){\GM@node[observed=true]{d}}\GM@label[angle=90]{d}{$d_j = j$}
+    \rput(2.0,0.0){\GM@node[observed=true]{t}}\GM@label[angle=45]{t}{$t_i$}
+    \rput(1.25, -0.75){\GM@plate{1.5}{1.5}{$|T_j|$}}
+    \rput(6.0,0.0){\GM@node[observed=true]{f}}\GM@label[angle=45]{f}{$f_k$}
+    \rput(5.25, -0.75){\GM@plate{1.5}{1.5}{$|F_j|$}}
+    \rput(0.75, -1.25){\GM@plate{6.5}{2.5}{$N$}}
+
+    \rput(4.0,4.0){\GM@node{x}}\GM@label[angle=45]{x}{$x$}
+    \rput(2.0,4.0){\GM@node[observed=true]{q}}\GM@label[angle=45]{q}{$q_i$}
+    \rput(1.25, 3.25){\GM@plate{1.5}{1.5}{$|Q|$}}
+    \rput(6.0,4.0){\GM@node{y}}\GM@label[angle=45]{y}{$y$}
+
+    \rput(2.0,2.0){\GM@node{tau}}\GM@label[angle=45]{tau}{$\tau$}
+    \rput(6.0,2.0){\GM@node{phi}}\GM@label[angle=45]{phi}{$\phi$}
+    \rput(0.0,0|tau){\GM@parameter{alpha}}\GM@label[angle=45]{alpha}{$\alpha$}
+    \rput(8.0,0|phi){\GM@parameter{beta}}\GM@label[angle=45]{beta}{$\beta$}
+
     \ncline[arrows=->]{d}{t}
     \ncline[arrows=->]{d}{f}
+    \ncline[arrows=->]{x}{q}
+    \ncline[arrows=->]{x}{y}
+    \ncline[arrows=->]{tau}{t}
+    \ncline[arrows=->]{tau}{q}
+    \ncline[arrows=->]{phi}{f}
+    \ncline[arrows=->]{phi}{y}
+    \ncline[arrows=->]{alpha}{tau}
+    \ncline[arrows=->]{beta}{phi}
   \end{pspicture}
 
   \caption{A document-centric generative model.  The document $d_j$ generates a
@@ -143,9 +167,10 @@ notation as shown in figure \ref{f:model}.
   \label{f:model}
 \end{figure}
 
-Now, given a query $Q \subset T$, the task for retriving relevant facets can be
+We are ready to recast faceted search as a baysian inference problem in
+this framework.  Given a query $Q$, the task for retriving relevant facets can be
 desribed as one of the following two optimization problems.  In the first
-scenario, which we coined as the \emph{forward problem}, we search for the most probable facet $f$ triggered by the query $Q$.
+scenario, which we coin as the \emph{forward problem}, we search for the most probable facet $f$ triggered by the query $Q$.
 \begin{equation}f^*_{\rm forward} = \arg\max_{f \in F} \Pr(f|Q) \end{equation}
 
 On the other hand, the search can be done in \emph{backward} by looking for the most probable facet that triggers the query $Q$.
@@ -155,41 +180,41 @@ Here, we use the term \emph{trigger} to describe the relationship between the
 facet and the term because in the graphical model there is no direct
 dependencies in between two nodes.
 
-\begin{eqnarray}
-  \Pr(f|Q) &=& \sum_{d \in D} \Pr(f|d,Q) \Pr(d|Q) \nonumber\\
-  &=& \sum_{d \in D} \Pr(f|d) \Pr(d|Q) \nonumber\\
-  &\propto& \sum_{d \in D} \Pr(f|d) \Pr(Q|d) \label{eq:pr(f|Q)}\\
-  && \nonumber\\
-  \Pr(Q|d) &=& \prod_{q \in Q} \Pr(q|d) \nonumber\\
-  &\propto& \sum_{q \in Q} \log \Pr(q|d) \label{eq:pr(Q|d)}
-\end{eqnarray}
-
-\paragraph{Estimation for $\Pr(Q|d)$.}
-
-\begin{eqnarray}
-  \Pr(Q|d) &=& \exp \left(\sum_{q \in Q} \log \Pr(q|d) \right) \nonumber\\
-  &=& \exp \left(\sum_{q \in Q} \log \left[ \frac{f_{q,d} + \mu f_q / |C|}{|d| + \mu} \right] \right) \nonumber\\
-  &=& \exp \left(\sum_{q \in Q} \log \left( f_{q,d} + \mu f_q / |C| \right) - |Q| \log \left( |d| + \mu \right) \right) \nonumber\\
-  &=& K \times \exp \left( \sum_{q \in Q \cap d} \log \left( \frac{f_{q,d} |C|}{\mu f_q} + 1 \right) 
-  - |Q| \log \left( |d| + \mu \right) \right) 
-\end{eqnarray}
-where \[ K = \exp \left( |Q| \log \mu - |Q| \log |C| + \sum_{q \in Q} \log f_q \right). \]
-
-\paragraph{Estimation for $\Pr(f|Q)$.}
-
-\begin{eqnarray}
-  \Pr(f|Q) &\propto& \sum_{d \in D} \Pr(f|d) \Pr(Q|d) \nonumber\\
-  &=& \sum_{d \in \{d'|f \in d\}} \frac{c_{f,d}}{\mu_2 + c_d} \Pr(Q|d) + \sum_{d \in D} \frac{\mu_2 c_f / |F|}{\mu_2 + c_d} \Pr(Q|d)
-\end{eqnarray}
-
-Let $c_{f,d} = 1$ and $K_f = \mu_2 c_f/|F|$.
-
-\begin{eqnarray}
-  \Pr(f|q) &\propto& \sum_{d \in \{d'|f \in d\}} \frac{1}{\mu_2 + c_d} \Pr(Q|d) \\
-  && \quad + K_f \sum_{d \in D} \frac{1}{\mu_2 + c_d} \Pr(Q|d)
-\end{eqnarray}
-
-\subsection{Algorithm}
+%--------------------------------------------------
+% \begin{eqnarray}
+%   \Pr(f|Q) &=& \sum_{d \in D} \Pr(f|d,Q) \Pr(d|Q) \nonumber\\
+%   &=& \sum_{d \in D} \Pr(f|d) \Pr(d|Q) \nonumber\\
+%   &\propto& \sum_{d \in D} \Pr(f|d) \Pr(Q|d) \label{eq:pr(f|Q)}\\
+%   && \nonumber\\
+%   \Pr(Q|d) &=& \prod_{q \in Q} \Pr(q|d) \nonumber\\
+%   &\propto& \sum_{q \in Q} \log \Pr(q|d) \label{eq:pr(Q|d)}
+% \end{eqnarray}
+% 
+% \paragraph{Estimation for $\Pr(Q|d)$.}
+% 
+% \begin{eqnarray}
+%   \Pr(Q|d) &=& \exp \left(\sum_{q \in Q} \log \Pr(q|d) \right) \nonumber\\
+%   &=& \exp \left(\sum_{q \in Q} \log \left[ \frac{f_{q,d} + \mu f_q / |C|}{|d| + \mu} \right] \right) \nonumber\\
+%   &=& \exp \left(\sum_{q \in Q} \log \left( f_{q,d} + \mu f_q / |C| \right) - |Q| \log \left( |d| + \mu \right) \right) \nonumber\\
+%   &=& K \times \exp \left( \sum_{q \in Q \cap d} \log \left( \frac{f_{q,d} |C|}{\mu f_q} + 1 \right) 
+%   - |Q| \log \left( |d| + \mu \right) \right) 
+% \end{eqnarray}
+% where \[ K = \exp \left( |Q| \log \mu - |Q| \log |C| + \sum_{q \in Q} \log f_q \right). \]
+% 
+% \paragraph{Estimation for $\Pr(f|Q)$.}
+% 
+% \begin{eqnarray}
+%   \Pr(f|Q) &\propto& \sum_{d \in D} \Pr(f|d) \Pr(Q|d) \nonumber\\
+%   &=& \sum_{d \in \{d'|f \in d\}} \frac{c_{f,d}}{\mu_2 + c_d} \Pr(Q|d) + \sum_{d \in D} \frac{\mu_2 c_f / |F|}{\mu_2 + c_d} \Pr(Q|d)
+% \end{eqnarray}
+% 
+% Let $c_{f,d} = 1$ and $K_f = \mu_2 c_f/|F|$.
+% 
+% \begin{eqnarray}
+%   \Pr(f|q) &\propto& \sum_{d \in \{d'|f \in d\}} \frac{1}{\mu_2 + c_d} \Pr(Q|d) \\
+%   && \quad + K_f \sum_{d \in D} \frac{1}{\mu_2 + c_d} \Pr(Q|d)
+% \end{eqnarray}
+%-------------------------------------------------- 
 
 %--------------------------------------------------
 % \section{Approximate Query-Dependent Faceted Navigation}
