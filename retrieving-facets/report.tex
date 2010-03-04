@@ -1,11 +1,13 @@
 \section{Introduction}
 
-\comment{ (2 pages) The thought flows: \begin{itemize} \item Faceted search is
-getting popular in applications.  \item Ordinary setup failed to address
-relevnce in the presentation of discovered facets.  \item Our idea to employ an
-simple extension of the standard language modeling and applying it to the
-scenario.  \item A little bit about previous/similar efforts.  \item Highlight
-contributions.  \item Introduce the outline. \end{itemize} }
+%--------------------------------------------------
+% \comment{ (2 pages) The thought flows: \begin{itemize} \item Faceted search is
+% getting popular in applications.  \item Ordinary setup failed to address
+% relevnce in the presentation of discovered facets.  \item Our idea to employ an
+% simple extension of the standard language modeling and applying it to the
+% scenario.  \item A little bit about previous/similar efforts.  \item Highlight
+% contributions.  \item Introduce the outline. \end{itemize} }
+%-------------------------------------------------- 
 
 Over the past few years, faceted search has started playing an essential role
 in exploratory task for digital library applicatiosn.  While being recognized
@@ -103,7 +105,7 @@ distribution $\Pr(f_k|d_j)$ is a multinomial distribution over the facet domain
 $F$ that offers similar use to the generatio n of facets.  The generative
 process can be described as follows: \footnote{A formal way to model the
 generation of the corresponding set size $|T_j|$ and $|F_j|$ is through Poisson
-processes.  Here, however, for simplicity we assume these numbers are
+processes.  For simplicity, in this work we assume these numbers are
 pre-determined for each document $d_j$.} 
 
 \begin{itemize} \item For each document $d_j$, \begin{enumerate} \item For $i
@@ -111,7 +113,13 @@ pre-determined for each document $d_j$.}
   1, \ldots, |F_j| \}$, $f_k \sim \textrm{Mult}(d_j)$ \end{enumerate}
   \end{itemize}
 
-The task of retrieving relevant facets can be modeled as:
+We would also like to point out that it is not possible to draw terms and
+facets from the same distribution $\textrm{Mult}(d_j)$.  Here, there are
+actually two distributions for $\textrm{Mult}(d_j)$, i.e., one for generating
+$t_i$ and the other for generating $f_k$.  Since the description of the
+generative process is only conceptual, we distinguish these two distributions
+only when it is neccesary.  The generative process can also be viewed in plate
+notation as shown in figure \ref{f:model}.
 
 \begin{figure}[ht!]
   \centering
@@ -119,13 +127,11 @@ The task of retrieving relevant facets can be modeled as:
   \begin{pspicture}(0,0)(8,2)%\showgrid  % Uncomment to show grid!
     \SpecialCoor  % (a|b) means x-coord from 'a' and y-coord from 'b'.
     \psset{arrowscale=1.5}
-
     \rput(4.0,1.0){\GM@parameter{d}}\GM@label[angle=45]{d}{$d_j$}
     \rput(1.0,1.0){\GM@node{t}}\GM@label[angle=45]{t}{$t_i$}
     \rput(0.25, 0.25){\GM@plate{1.5}{1.5}{$|T_j|$}}
     \rput(7.0,1.0){\GM@node{f}}\GM@label[angle=45]{f}{$f_k$}
     \rput(6.25, 0.25){\GM@plate{1.5}{1.5}{$|F_j|$}}
-
     \ncline[arrows=->]{d}{t}
     \ncline[arrows=->]{d}{f}
   \end{pspicture}
@@ -136,6 +142,18 @@ The task of retrieving relevant facets can be modeled as:
   denoted as $f_k$.}
   \label{f:model}
 \end{figure}
+
+Now, given a query $Q \subset T$, the task for retriving relevant facets can be
+desribed as one of the following two optimization problems.  In the first
+scenario, which we coined as the \emph{forward problem}, we search for the most probable facet $f$ triggered by the query $Q$.
+\begin{equation}f^*_{\rm forward} = \arg\max_{f \in F} \Pr(f|Q) \end{equation}
+
+On the other hand, the search can be done in \emph{backward} by looking for the most probable facet that triggers the query $Q$.
+\begin{equation}f^*_{\rm backward} = \arg\max_{f \in F} \Pr(Q|f) \end{equation}
+
+Here, we use the term \emph{trigger} to describe the relationship between the
+facet and the term because in the graphical model there is no direct
+dependencies in between two nodes.
 
 \begin{eqnarray}
   \Pr(f|Q) &=& \sum_{d \in D} \Pr(f|d,Q) \Pr(d|Q) \nonumber\\
