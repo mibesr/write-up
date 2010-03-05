@@ -10,6 +10,19 @@
 \newcommand{\keywords}[1]{\par\addvspace\baselineskip
 \noindent\keywordname\enspace\ignorespaces#1}
 
+%--------------------------------------------------
+% % Traditional-Chinese support
+%-------------------------------------------------- 
+%--------------------------------------------------
+% \usepackage[cjkbg5]{ucs}
+% \usepackage[utf8x]{inputenc}
+% \usepackage[C00,T1]{fontenc}
+% \DeclareFontSubstitution{C00}{bsmi}{m}{n}
+% \newcommand\zhtw[1]{\bgroup\fontencoding{C00}\fontfamily{ming}\selectfont%
+% \SetUnicodeOption{cjkbg5}#1\egroup}
+%-------------------------------------------------- 
+\newcommand\zhtw[1]{}
+
 \usepackage{amsmath}
 \usepackage{pst-all} % PSTricks
 \usepackage{com.braju.graphicalmodels} % The package that really does the hard work

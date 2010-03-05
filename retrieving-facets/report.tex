@@ -10,7 +10,7 @@
 %-------------------------------------------------- 
 
 Over the past few years, faceted search has started playing an essential role
-in exploratory task for digital library applicatiosn.  While being recognized
+in exploratory task for digital library applications.  While being recognized
 as an eminent information seeking tool, usability of faceted search remains an
 open issue for researchers to work on.  Conventional faceted search presents
 the discovered facets based on the number of counts.  This type of arrangement
@@ -268,39 +268,39 @@ Therefore, the final form of Equation~\eqref{eq:backward} is as follow:
 
 \section{Evaluation}
 
-\comment{(1 1/2 pages) We briefly introduce the way we evaluate the performance.  Performance
-could be measured in terms of precision/recall (or accuracy only) by letting a
-domain expert explicitly annotating the entire query set.  Then we introduce
-the benchmark (Dansin dataset and the corresponding query set).}
+%--------------------------------------------------
+% \comment{(1 1/2 pages) We briefly introduce the way we evaluate the performance.  Performance
+% could be measured in terms of precision/recall (or accuracy only) by letting a
+% domain expert explicitly annotating the entire query set.  Then we introduce
+% the benchmark (Dansin dataset and the corresponding query set).}
+%-------------------------------------------------- 
 
-We use Dansin dataset as our reference corpus.  The dataset contains N,NNN
-documents.  Each documents comes in as an XML file that contains fulltext
-transcripts, metadata items, and associated human-selected facets.  The average
-number of facets associated with a document in Dansin dataset is N.NNN.  There
-are two types of facets involved in this study: contents of certain selected
-fields, and hand-labeled concepts.  Hand-labeled concepts, in fact, are created
-by a group of annotators.  All these information are already made available in
-the metadata of the documents.
+The best task for evaluating the model is facet ranking.  Given a set of query
+topics, the model should output a ranked list of facets; the model performance
+can be measured in precision and recall, by consulting the relevance judgment
+created by human assessor.  
 
-The major challenge for conducting such an evaluation task is to devise a set
-of query topics.  Since most of the digital libraries are very much
-domain-specific, it is difficult to find a standard reference query topics that
-could be used across studies.  The approach that we took was to look for
-session query logs in the relevant domain.  In the end, we took a copy of the
-query log in 2009 from the DARC system which was developed and maintained by
-Digital Archives Research Center.  
+We chose the Tan-Hsin Archive \zhtw{(淡新檔案) }as the test corpus.  The
+Tan-Hsin Archive is currently the most sizable and complete collection of
+historical documents in Taiwan dating back from 1776 to 1895, when Taiwan was
+ruled by Qing dynasty.  The collection contains nearly 20,000 administrative
+and judicial documents.  Each documents comes in as an XML file that contains
+fulltext transcripts, metadata items, and associated human-annotated facets.
+The average number of facets associated with a document in the dataset is
+\comment{N.NNN}.  There are two types of facets involved in this study:
+contents of certain selected fields, and hand-labeled concepts.  Hand-labeled
+concepts, in fact, are created by a group of annotators.  All these information
+are already made available in the metadata of the documents.
 
-We preprocessed the log and remove all the entries were follow-up clicks on the
-relevant facets and leave only original user queries in the file.  The total
-amount of unique identifiable query topics is NN,NNN.  300 topics were randomly
-drawn from the population and gone through human inspection.  Since the DARC
-system is an aggregation service of a number of underlying database system, it
-is possible that the query log contains irrelevant topics to the Dansin set.
-Finally 151 topics were selected and used in the evaluation.
-
-\comment{ Here we describe our effort for a number of proposed models.  The
-following items shall be addressed in order: Experimental runs: baseline,
-fuzzy-min, interpolation, and top-k.  }
+To prepare the query topics, we consulted the database where the Tan-Hsin
+Archive was previously made available and obtained a set of query log entries.
+We preprocessed the log and removed all the entries were follow-up clicks on
+the relevant facets and leave only original user queries in the file.  The
+total amount of unique identifiable query topics is \comment{NN,NNN}.  After
+manually removing incomplete and corrupted log entries, we let a domain expert
+eyeball through the entire query set to filter out irrelevant queries.   The
+final number on the query set size is \comment{NNN}.  Finally, \comment{NN}
+topics were randomly drawn from the population and used in the evaluation.
 
 \section{Results}
 
@@ -311,7 +311,8 @@ serve as gold standard for all the models to compare with. }
 
 \section{Related Work}
 
-\comment{ (Half a page) Introduce the related work in the following domains: (1) language modeling, (2) faceted search, and (3) expert finding. }
+\comment{ (Half a page) Introduce the related work in the following domains:
+(1) language modeling, (2) faceted search, and (3) expert finding. }
 
 Among the previous research, one closest effort to our approach is found in the
 domain of expert finding.  Balog et al. \cite{balog2009language} proposed a
@@ -349,5 +350,6 @@ possible future directions.  Also draw conclusion here. }
 
 \section{Acknowledgments}
 
-\comment{ A few names shall be mentioned here, including NTU DTRAP and its corresponding funding project, and Po-Yu Chen. }
-
+We thank Po-Yu Chen for his support on the Tan-Hsin Archive.  This study is sponsored by
+National Science Council, Taiwan, under the title ``National Taiwan University Digital
+Archives Project'' (Project No.  NSC-98-2631-H-002-005).
