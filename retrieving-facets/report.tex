@@ -1,13 +1,15 @@
 \section{Introduction}
 
-%--------------------------------------------------
-% \comment{ (2 pages) The thought flows: \begin{itemize} \item Faceted search is
-% getting popular in applications.  \item Ordinary setup failed to address
-% relevnce in the presentation of discovered facets.  \item Our idea to employ an
-% simple extension of the standard language modeling and applying it to the
-% scenario.  \item A little bit about previous/similar efforts.  \item Highlight
-% contributions.  \item Introduce the outline. \end{itemize} }
-%-------------------------------------------------- 
+\comment{ (1 pages) The thought flow: \begin{itemize} \item Faceted search gets
+popular lately.  \item One possible way to improve faceted search is through
+facet ranking, an issue that ordinary interface failed to address.  \item We
+want the model assign high score to the facets discovered in high-relevance
+documents.  \item An intuitive solution is to assign weighted score to facets,
+but the complexity varies from model to model.  \item Our idea is to extend the
+standard language modeling to offer ranking over the facets.  It is intuitively
+appealing since we do not need another ``weighting scheme'' for facets.  \item
+The task has no standard benchmark.  We created one in our own application.
+\item Highlight contributions.  \item Present the outline. \end{itemize} }
 
 Over the past few years, faceted search has started playing an essential role
 in exploratory task for digital library applications.  While being recognized
@@ -41,21 +43,6 @@ In this work, we attempt to improve faceted search usability by introducing the
 notion of relevance into the facet interface.  
 
 %--------------------------------------------------
-% Query-dependent faceted navigation did not received as much attention until
-% recently, when faceted search interface started being recognized as an eminent
-% information seeking tool in various kinds of digital library applications.  In
-% the technical respect, the major obstacle for employing this technique in a
-% real-world setup lies in the time complexity.  When facing a user query, the
-% retrieval system that supports such a function would first put together a
-% complete list of document identifiers that covers all the documents that match
-% the query from the inverted index, explicitly scan through the forward index
-% that maps a document to a set of associated facets for all the matched
-% document, collect facet captions and counts, and finally return all these
-% information back to the user.  Since the operation involves a set of results
-% that is only known in run-time, its complexity is largely $O(K \times |R|)$ in
-% time, where $K$ denotes an average number of facets being associated with a
-% document, and $|R|$ denotes the size of the query result set.  
-% 
 % Employing a relational database backend is the easiest, while also the most
 % practical, approach towards construction of this function.  The document
 % contents are usually stored in one table and associated facet records in
@@ -75,26 +62,9 @@ notion of relevance into the facet interface.
 % interaction to the retrieval model and degrade the performance.
 %-------------------------------------------------- 
 
-%--------------------------------------------------
-% 
-% This work is motivated by the aforementioned observation... \comment{ \it Motivations:
-% speed-up and support for state-of-the-art retrieval functions.  }
-% 
-% Our contribution lies in ... \comment{ Contributions }
-% 
-% Along with the wide acceptance of faceted search interface in the digital
-% library community, an noticable amount of efforts has recently been put on
-% usability tests and discovery of more advanced usage.  Previous efforts
-% include... \comment{ Related work }
-%-------------------------------------------------- 
-
 \section{Model}
 
-%--------------------------------------------------
-% \comment{(3 pages) This section should cover the following three technical aspects of the
-% model: \begin{itemize} \item Mathematical framework stemmed from the basic language modeling
-% approach; \item The required modification to the index structure; \item complexity analysis. \end{itemize}}
-%-------------------------------------------------- 
+\comment{Here, instead of directly jumping into the model, we had better start with some rationales.}
 
 Consider a document collection of size $N$, in which each document $d_j$ is
 associated with a set of terms $T_j$ and a set of facets $F_j$.  We assume that
@@ -123,12 +93,12 @@ framework, in which the only observable variables are the query terms $q_i$'s;
 the corresponding document node $x$ and facet $y$ remains unknown.  The entire
 generative process in plate notation is shown in Figure~\ref{f:model}.
 \footnote{Without loss of generality, the number of facets in the query is set
-to 1.}  
+to 1. \comment{(Explain why.)}}  
 
 \begin{figure}[ht!]
   \centering
   \psset{xunit=10mm,yunit=10mm}
-  \begin{pspicture}(0,-1.5)(8,4.5)%\showgrid  % Uncomment to show grid!
+  \begin{pspicture}(0,-2)(8,5)%\showgrid  % Uncomment to show grid!
     \SpecialCoor  % (a|b) means x-coord from 'a' and y-coord from 'b'.
     \psset{arrowscale=1.5}
     \rput(4.0,0.0){\GM@node[observed=true]{d}}\GM@label[angle=90]{d}{$d_j = j$}
@@ -163,18 +133,24 @@ to 1.}
   \caption{A document-centric generative model.  The document $d_j$ generates a
   set of terms $T_j$ in which each term is represented as $t_i$; meanwhile, the
   document is associated with a set of facets $F_j$ in which each facet is
-  denoted as $f_k$.}
+  denoted as $f_k$. \comment{FIXME: Introduce all the notations}. }
   \label{f:model}
 \end{figure}
 
-We are ready to recast faceted search as a baysian inference problem in
-this framework.  Given a set of query $\mathbf{q}$, the task for retriving relevant facets can be
-desribed as one of the following two optimization problems.  In the first
-case, which we coin as the \emph{forward problem}, we search for the most probable facet $f$ triggered by the query $\mathbf{q}$.
-\begin{equation}y^*_{\rm f} = \arg\max_{y \in F} \Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{f}) \label{eq:forward} \end{equation}
+We are ready to recast faceted search as a baysian inference problem in this
+framework.  Given a set of query $\mathbf{q}$, the task for retriving relevant
+facets can be desribed as one of the following two optimization problems.  In
+the first case, which we coin as the \emph{forward problem}, we search for the
+most probable facet $f$ triggered by the query $\mathbf{q}$.
 
-In the second case, the search is done in \emph{backward} by looking for the most probable facet $f$ that triggers the query $\mathbf{q}$.
-\begin{equation}y^*_{\rm b} = \arg\max_{y \in F} \Pr(\mathbf{q}|y, \mathbf{t}, \mathbf{d}, \mathbf{f}) \label{eq:backward} \end{equation}
+\begin{equation}y^*_{\rm f} = \arg\max_{y \in F} \Pr(y|\mathbf{q}, \mathbf{t},
+\mathbf{d}, \mathbf{f}) \label{eq:forward} \end{equation}
+
+In the second case, the search is done in \emph{backward} by looking for the
+most probable facet $f$ that triggers the query $\mathbf{q}$.
+
+\begin{equation}y^*_{\rm b} = \arg\max_{y \in F} \Pr(\mathbf{q}|y, \mathbf{t},
+\mathbf{d}, \mathbf{f}) \label{eq:backward} \end{equation}
 
 Here, we use the term \emph{trigger} to describe the relationship between the
 facet and the term since there is no direct dependencies in between two nodes
@@ -184,6 +160,7 @@ next section we show that both ranking schemes only differ in the
 facet-specific normalization factor.
 
 \section{Inference}
+\comment{FIXME: All these derivation look too sketchy.}
 
 \subsection{The Forward Problem}
 We begin by deriving the solution for the forward problem shown in
@@ -268,12 +245,17 @@ Therefore, the final form of Equation~\eqref{eq:backward} is as follow:
 
 \section{Evaluation}
 
-%--------------------------------------------------
-% \comment{(1 1/2 pages) We briefly introduce the way we evaluate the performance.  Performance
-% could be measured in terms of precision/recall (or accuracy only) by letting a
-% domain expert explicitly annotating the entire query set.  Then we introduce
-% the benchmark (Dansin dataset and the corresponding query set).}
-%-------------------------------------------------- 
+\comment{(1 page) The thought flow: \begin{itemize} \item The task is to rank
+facets and measure model performance by precision/recall or NDCG.  \item No
+standard benchmark.  We created a benchmark based on our own application.
+\item Some checklist for making a benchmark: \begin{itemize} \item Documents
+contains fulltext as well as facets. \item Query topics come from real queries,
+i.e., query logs. \item Relevant judgment (from the in-house domain
+expert) is available. \item Better start off with facets in only one aspect,
+e.g., person names. \end{itemize}  \item Describe the dataset.  \item Describe
+the preprocessing step for getting query topics.  \item Describe how we get
+relevance judgments.  \item Describe the test runs (forward/backward model +
+choice of priors).\end{itemize}}
 
 The best task for evaluating the model is facet ranking.  Given a set of query
 topics, the model should output a ranked list of facets; the model performance
@@ -305,7 +287,7 @@ topics were randomly drawn from the population and used in the evaluation.
 \section{Results}
 
 \comment{ (2 pages) Here we present the experimental results.  Precision/recall
-plot would be great.  Another way to evaluate is the Spearman's rho by asking
+or NDCG plot would be great.  Another way to evaluate is the Spearman's rho by asking
 the domain experts to rank the facets explicitly and the annotations should
 serve as gold standard for all the models to compare with. }
 
@@ -313,6 +295,13 @@ serve as gold standard for all the models to compare with. }
 
 \comment{ (Half a page) Introduce the related work in the following domains:
 (1) language modeling, (2) faceted search, and (3) expert finding. }
+
+%--------------------------------------------------
+% Along with the wide acceptance of faceted search interface in the digital
+% library community, an noticable amount of efforts has recently been put on
+% usability tests and discovery of more advanced usage.  Previous efforts
+% include... \comment{ Related work }
+%-------------------------------------------------- 
 
 Among the previous research, one closest effort to our approach is found in the
 domain of expert finding.  Balog et al. \cite{balog2009language} proposed a
@@ -325,31 +314,14 @@ formula for online query support.
  
 \section{Discussion and Concluding Remarks}
 
-\comment{ (2 pages) Several issues that should be brought up here: (1) Why
+\comment{ (1 pages) Several issues that should be brought up here: (1) Why
 relevance is also important in exploratory task, (2) the possible opposite
 formulation of the model for novelty discovery (i.e., $\Pr(Q|f)$), and (3)
 possible future directions.  Also draw conclusion here. }
 
-%--------------------------------------------------
-% \subsection{Measures}
-% 
-% The evaluation measures we used to assess the similarity between the original
-% facets and the approximation is as follows.
-% 
-% \begin{enumerate}
-% \item $p$-norm: The measure evaluates the distance between two vectors.  In this work, we use only L1 and L2 norms.
-% \item Jaccard coefficient: The measure assesses the similarity between two sets, defined by
-% \[ J(X,Y) = \frac{X \cap Y}{X \cup Y}. \]
-% \item Spearman's rho: The measure assesses the rank correlation between two rank lists, defined by
-% \[ \rho(X,Y) = 1. \]
-% \end{enumerate}
-% 
-% \subsection{Results}
-% Here we demonstrate the experimental results and give a brief analysis.
-%-------------------------------------------------- 
-
 \section{Acknowledgments}
 
-We thank Po-Yu Chen for his support on the Tan-Hsin Archive.  This study is sponsored by
-National Science Council, Taiwan, under the title ``National Taiwan University Digital
-Archives Project'' (Project No.  NSC-98-2631-H-002-005).
+We thank Po-Yu Chen for his support on preparation of the test data.  The
+research efforts described in this paper are supported under the National Taiwan
+University Digital Archives Project (Project No.  NSC-98-2631-H-002-005), which
+is sponsored by National Science Council, Taiwan, 
