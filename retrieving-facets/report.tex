@@ -325,18 +325,45 @@ the conclusion.
 The participating facet ranking algorithms are summarized as follows:
 \begin{itemize}
   \item {\tt baseline}:  The facets are ranked by the corresponding number of counts in the result set.
-  \item {\tt bayesian-forward}:  The facets are ranked by the forward model using Equation~\eqref{eq:forward}, with Dirichlet-smoothed prior for $\alpha$ and a symmeteric Dirichlet for $\beta$.
-  \item {\tt bayesian-backward}:  The facets are ranked by the backward model using Equation~\eqref{eq:backward}, with Dirichlet-smoothed prior for $\alpha$ and a symmeteric Dirichlet for $\beta$.
+  \item {\tt symmetric-forward}:  The facets are ranked by the forward model using Equation~\eqref{eq:forward}, with Dirichlet-smoothed prior for $\alpha$ and a symmeteric Dirichlet for $\beta$.
+  \item {\tt symmetric-backward}:  The facets are ranked by the backward model using Equation~\eqref{eq:backward}, with Dirichlet-smoothed prior for $\alpha$ and a symmeteric Dirichlet for $\beta$.
   \item {\tt dirichlet-forward}:  The facets are ranked by the forward model using Equation~\eqref{eq:forward}, with Dirichlet-smoothed prior for both $\alpha$ and $\beta$.
   \item {\tt dirichlet-backward}:  The facets are ranked by the backward model using Equation~\eqref{eq:backward}, with Dirichlet-smoothed prior for both $\alpha$ and $\beta$.
 \end{itemize}
 
 \section{Results}
 
-\comment{ (2 pages) Here we present the experimental results.  Precision/recall
-or NDCG plot would be great.  Another way to evaluate is the Spearman's rho by asking
-the domain experts to rank the facets explicitly and the annotations should
-serve as gold standard for all the models to compare with. }
+%--------------------------------------------------
+% \comment{ (2 pages) Here we present the experimental results.  Precision/recall
+% or NDCG plot would be great.  Another way to evaluate is the Spearman's rho by asking
+% the domain experts to rank the facets explicitly and the annotations should
+% serve as gold standard for all the models to compare with. }
+%-------------------------------------------------- 
+
+The model performance is measured both in terms of mean-average precision (MAP)
+and precision-at-10 (P@10).  
+
+\begin{table}[ht!]
+  \centering
+  \begin{tabular}{llll}
+    Method & & MAP & P@10 \\
+    \hline
+    {\tt baseline} & & 0.2996 & 0.3857 \\
+    {\tt symmetric-forward} & $\beta = 0$ & 0.5775 & 0.6179\\
+    {\tt symmetric-forward} & $\beta = 10$ & 0.5877$^*$ & 0.6464$^*$ \\
+    {\tt symmetric-backward} & $\beta = 0$ & 0.4145 & 0.4500\\
+    {\tt symmetric-backward} & $\beta = 10$ & 0.4252 & 0.4607\\
+    {\tt dirichlet-forward} & $\mu = 0.01$ & 0.5781 & 0.6179 \\
+    {\tt dirichlet-forward} & $\mu = 1$ & 0.5782 & 0.6214 \\
+    {\tt dirichlet-forward} & $\mu = 100$ & 0.4956 & 0.5429 \\
+    {\tt dirichlet-backward} & $\mu = 0.01$ & 0.4155 & 0.4469 \\
+    {\tt dirichlet-backward} & $\mu = 1$ & 0.4086 & 0.4500 \\
+    {\tt dirichlet-backward} & $\mu = 100$ & 0.3909 & 0.4071 \\
+    \\
+  \end{tabular}
+  \caption{The performance results for all the test runs.  The top-performer is indicated by an asterisk in the superscript.}
+  \label{t:performance}
+\end{table}
 
 \section{Related Work}
 
