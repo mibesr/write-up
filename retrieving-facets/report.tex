@@ -32,25 +32,27 @@ catalogs \cite{roy2008minimum}; the technique has also given rise to a number
 of interesting research results that application developers could immediately
 benefit from, such as the usability of the faceted interface
 \cite{kules2009what} and the approach for automatically extracting facets from
-the texts \cite{mimno2007organizing}.  Intuitively, faceted search can be seen
-as a two-phase extension of the ordinary retrieval task: In the first phase,
-one populates a set of document (\emph{result set}) by querying the underlying
-retrieval model; then, in the second phase, one exploits the associations
-between the facet entries and the documents, and returns the facet items back
-to the users.  In mathematical terms, supposed that the result set of query
-$\mathbf{q}$ is denoted as $R_{q}$ and the associated facet items of document
-$d$ is represented as a set $F_d$, we expect the faceted interface returns this
-set of facet items: \[ \{ f \in F_d | d \in R_{\mathbf{q}} \}.  \]
+the texts \cite{mimno2007organizing}.  
 
-Conventionally, these discovered facets are presented either in lexicographical
-order or in descending order of the number of corresponding occurrences in the
-result set.  This type of setup has been shown 
-
-
-%--------------------------------------------------
-% This type of arrangement fails to take relevance into
-% consideration. 
-%-------------------------------------------------- 
+Intuitively, faceted search can be seen as a two-phase extension of the
+ordinary retrieval task: In the first phase, one populates a set of document
+(\emph{result set}) by querying the underlying retrieval model; then, in the
+second phase, one exploits the associations between the facet entries and the
+documents, and returns the facet items back to the users.  In mathematical
+terms, supposed that the result set of query $\mathbf{q}$ is denoted as $R_{q}$
+and the associated facet items of document $d$ is represented as a set $F_d$,
+we expect the faceted interface returns this set of facet items: \[ \{ f \in
+F_d | d \in R_{\mathbf{q}} \}.  \] Conventionally, these discovered facets are
+presented in descending order of the number of corresponding occurrences in the
+result set, or in fewer cases in lexicographical order.  We refer this type of
+presentation scheme as \emph{count-based}.  The count-based method has at least
+three advantages: being fast, being easy to implement, and being
+straightforward so that users do not get confused.  While being as widely
+accepted across applications, the count-based method suffers from its lack of
+interpretability to the the \emph{relevance} of the discovered facets.  This
+may lead to a bizzare scenario that, in a system where documents are retrieved
+in terms of relevance, the facets discovered in the collection could only be
+reported based on the number of counts.
 
 Another interesting aspect that we discovered in the development of testbed
 systems is that users tend to follow top-ranked facets.  According to our
