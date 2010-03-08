@@ -354,8 +354,9 @@ here or in Section 2)}.  The output is a sorted list of all the associated
 facets in descending order of the ranking score.  For efficiency, we use only
 the top-100 facets returned by each run as the final results.  The performance
 is assessed both in terms of mean-average precision (MAP) and precision-at-10
-(P@10).  Table~\ref{t:performance} shows the performance results for all the
-participating runs.
+(P@10).  As an initial investigation, we also sent off multiple runs for the
+same method with different hyperparameters.  Table~\ref{t:performance} shows
+the performance results for all the participating runs.
 
 \begin{table}[ht!]
   \centering
@@ -381,7 +382,21 @@ participating runs.
   \label{t:performance}
 \end{table}
 
+The first thing to note is that the performance of the baseline method is quite
+moderate, with MAP a bit less than 0.3 and P@10 around 0.39.  That means, in
+general, users might find 4 out of the top-10 facets relevant to the query
+topic.  The reported P@10 value fitted our expectation; however, we expected a
+higher MAP value for the baseline between 0.33 and 0.35.  Second, all the other
+proposed run outperformed the baseline model.  What is more encouraging is
+that, for all the models, the improvement over the baseline is significant,
+ranging from 30\% to 100\% in terms of MAP.  This result confirms the validity
+of our idea, indicating that a relevance-weighted model is probably more useful
+than a count-based model in the facet ranking task.  
 
+The result encouraged us to further investigate the differences between the
+proposed models.  Even though these model roughly got comparable performance, we
+find that the forward model seems to work better than the backward model, and
+the symmetric prior in most cases outperforms smoothed prior.
 
 \section{Related Work}
 
