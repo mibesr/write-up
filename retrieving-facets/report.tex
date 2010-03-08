@@ -257,16 +257,22 @@ the preprocessing step for getting query topics.  \item Describe how we get
 relevance judgments.  \item Describe the test runs (forward/backward model +
 choice of priors).\end{itemize}}
 
-The best task for evaluating the model is facet ranking.  Given a set of query
-topics, the model should output a ranked list of facets; the model performance
-can be measured in precision and recall, by consulting the relevance judgment
-created by human assessor.  
+One major difficulty that we faced in this work is the lack of standard
+benchmark on the facet ranking task.  In this work, we decided to develop a
+custom benchmark based on one text collection in our own applications.  The
+advantage of using this benchmark lies in the availability of the following
+three type of data:
+\begin{itemize}
+\item \emph{Facets}: Each document in the test collection is formed by the fulltext content and a list of relevant facets, which is exactly what we need as input of the facet ranking algorithm.
+\item \emph{Query logs}: The test collection has been open to public access and accumulated certain amount of query logs; we figured it a good source for collecting query topics.
+\item \emph{Relevance judgments}: The collection was studied by a group of in-house domain experts; we figured it easier for the domain experts to create relevant judgments on a dataset they are more familiar with.
+\end{itemize}
 
-We chose the Tan-Hsin Archive \zhtw{(淡新檔案) }as the test corpus.  The
+The test corpus that we chose is the Tan-Hsin Archive \zhtw{(淡新檔案)}.  The
 Tan-Hsin Archive is currently the most sizable and complete collection of
 historical documents in Taiwan dating back from 1776 to 1895, when Taiwan was
 ruled by Qing dynasty.  The collection contains nearly 20,000 administrative
-and judicial documents.  Each documents comes in as an XML file that contains
+and judicial documents, each comes as an XML file that contains
 fulltext transcripts, metadata items, and associated human-annotated facets.
 The average number of facets associated with a document in the dataset is
 \comment{N.NNN}.  There are two types of facets involved in this study:
@@ -274,6 +280,7 @@ contents of certain selected fields, and hand-labeled concepts.  Hand-labeled
 concepts, in fact, are created by a group of annotators.  All these information
 are already made available in the metadata of the documents.
 
+We took a subset of 15,314 documents from the collection as the test data.
 To prepare the query topics, we consulted the database where the Tan-Hsin
 Archive was previously made available and obtained a set of query log entries.
 We preprocessed the log and removed all the entries were follow-up clicks on
