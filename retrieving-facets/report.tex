@@ -12,10 +12,11 @@ The task has no standard benchmark.  We created one in our own application.
 \item Highlight contributions.  \item Present the outline. \end{itemize} }
 
 Over the past few years, faceted search has started playing an essential role
-in exploratory task for digital library applications.  While being recognized
-as an eminent information seeking tool, usability of faceted search remains an
-open issue for researchers to work on.  Conventional faceted search presents
-the discovered facets based on the number of counts.  This type of arrangement
+in exploratory task for digital library applications
+\cite{hearst2006clustering,kules2009what}.  While being recognized as an
+eminent information seeking tool, usability of faceted search remains an open
+issue for researchers to work on.  Conventional faceted search presents the
+discovered facets based on the number of counts.  This type of arrangement
 fails to take relevance into consideration. 
 
 Conventional faceted search can be seen as an two-phase extension of the
@@ -169,7 +170,7 @@ a prior as a vector over the entire facet domain: $(\beta_1, \beta_2, \ldots,
 \emph{symmetric Dirichlet}: \[ (c, c, \ldots, c), \] in which we let $\beta_i = c$ for
 each $i \in [1, F]$ and $c$ denotes some constant.  The second one is called
 \emph{smoothed-Dirichlet}, which is commonly-seen in information retrieval
-literature: \[ (\mu \Pr(f_1|C), \mu \Pr(f_2|C), \ldots, \mu \Pr(f_F|C)). \]
+literature \cite{zhai2004study}: \[ (\mu \Pr(f_1|C), \mu \Pr(f_2|C), \ldots, \mu \Pr(f_F|C)). \]
 
 \section{Inference}
 \comment{FIXME: All these derivation look too sketchy.}
@@ -400,8 +401,10 @@ the symmetric prior in most cases outperforms smoothed prior.
 
 \section{Related Work}
 
-\comment{ (Half a page) Introduce the related work in the following domains:
-(1) language modeling, (2) faceted search, and (3) expert finding. }
+%--------------------------------------------------
+% \comment{ (Half a page) Introduce the related work in the following domains:
+% (1) language modeling, (2) faceted search, and (3) expert finding. }
+%-------------------------------------------------- 
 
 %--------------------------------------------------
 % Along with the wide acceptance of faceted search interface in the digital
@@ -410,14 +413,25 @@ the symmetric prior in most cases outperforms smoothed prior.
 % include... \comment{ Related work }
 %-------------------------------------------------- 
 
-Among the previous research, one closest effort to our approach is found in the
-domain of expert finding.  Balog et al. \cite{balog2009language} proposed a
+Our model is inspired by some recent progress on language modeling applications
+in information retrieval \cite{lavrenko2001relevance,zaragorza2003bayesian}.
+In this aspect, the proposed framework can be seen as a two-stage extension of
+the regular language model; however, in considering the integration of prior
+knowledge on facet distribution, our model departs from the conventional
+language modeling approaches.  
+
+To our best knowledge, our work is among the earliest attempt for retrieving
+relevant facets in the digital library community.  What is interesting to note
+is that we find similar attempts were already made in the area of expert
+finding.  In 2008, Amitay et al. \cite{amitay2008finding} formulated the
+problem of expert finding as a two-layered retrieval task and proposed a
+solution based on the \emph{inverse entity-frequency}.  Balog et al.
+\cite{balog2009language} followed up in the same direction by proposing a
 language modeling framework with the similar rationale to extend the use of
 language model to the underlying co-occurrence statistics by exploiting
-person-term and person-document links.  The difference between our contribution
-and theirs lies, not only in the application domain, but in the way relevance
-is introduced into the model against the facets and the explicit scoring
-formula for online query support.
+person-term and person-document links.  Our contribution departs from these two
+works, not only in the application domain, but in the way document relevance is
+incorporated into the model and the support for prior belief.  
  
 \section{Discussion and Concluding Remarks}
 
