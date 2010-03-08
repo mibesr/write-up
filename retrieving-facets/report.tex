@@ -155,14 +155,12 @@ most probable facet $f$ that triggers the query $\mathbf{q}$.
 Here, we use the term \emph{trigger} to describe the relationship between the
 facet and the term since there is no direct dependencies in between two nodes
 in the graphical model.  By solving either the forward or the backward problem,
-we may rank all the facets based on the likelihood scores.  Furthermore, in the
-next section we show that both ranking schemes only differ in the
-facet-specific normalization factor.
+we may rank all the facets based on the likelihood scores.  
 
 \section{Inference}
 \comment{FIXME: All these derivation look too sketchy.}
 
-\subsection{The Forward Problem}
+\subsection{The Forward Model}
 We begin by deriving the solution for the forward problem shown in
 Equation~\eqref{eq:forward}. 
 \begin{eqnarray}
@@ -181,7 +179,7 @@ The last line follows the conjugacy of Dirichlet distribution, as in:
 \Pr(\tau^{(x)}|d_x, \mathbf{t_x}) &\sim& \mathrm{Dirichlet}(\{\alpha_i + c_{i,x}; \forall i \}).
 \end{eqnarray*}
 
-\subsection{The Backward Problem}
+\subsection{The Backward Model}
 The backward problem shown in Equation~\eqref{eq:backward} is solved in similar way.
 \begin{eqnarray}
   \Pr(\mathbf{q}|y, \mathbf{t}, \mathbf{d}, \mathbf{f}) 
@@ -245,42 +243,50 @@ Therefore, the final form of Equation~\eqref{eq:backward} is as follow:
 
 \section{Evaluation}
 
-\comment{(1 page) The thought flow: \begin{itemize} \item The task is to rank
-facets and measure model performance by precision/recall or NDCG.  \item No
-standard benchmark.  We created a benchmark based on our own application.
-\item Some checklist for making a benchmark: \begin{itemize} \item Documents
-contains fulltext as well as facets. \item Query topics come from real queries,
-i.e., query logs. \item Relevant judgment (from the in-house domain
-expert) is available. \item Better start off with facets in only one aspect,
-e.g., person names. \end{itemize}  \item Describe the dataset.  \item Describe
-the preprocessing step for getting query topics.  \item Describe how we get
-relevance judgments.  \item Describe the test runs (forward/backward model +
-choice of priors).\end{itemize}}
+%--------------------------------------------------
+% \comment{(1 page) The thought flow: \begin{itemize} \item The task is to rank
+% facets and measure model performance by precision/recall or NDCG.  \item No
+% standard benchmark.  We created a benchmark based on our own application.
+% \item Some checklist for making a benchmark: \begin{itemize} \item Documents
+% contains fulltext as well as facets. \item Query topics come from real queries,
+% i.e., query logs. \item Relevant judgment (from the in-house domain
+% expert) is available. \item Better start off with facets in only one aspect,
+% e.g., person names. \end{itemize}  \item Describe the dataset.  \item Describe
+% the preprocessing step for getting query topics.  \item Describe how we get
+% relevance judgments.  \item Describe the test runs (forward/backward model +
+% choice of priors).\end{itemize}}
+%-------------------------------------------------- 
 
 One major difficulty that we faced in this work is the lack of standard
 benchmark on the facet ranking task.  In this work, we decided to develop a
 custom benchmark based on one text collection in our own applications.  The
 advantage of using this benchmark lies in the availability of the following
 three type of data:
-\begin{itemize}
-\item \emph{Facets}: Each document in the test collection is formed by the fulltext content and a list of relevant facets, which is exactly what we need as input of the facet ranking algorithm.
-\item \emph{Query logs}: The test collection has been open to public access and accumulated certain amount of query logs; we figured it a good source for collecting query topics.
-\item \emph{Relevance judgments}: The collection was studied by a group of in-house domain experts; we figured it easier for the domain experts to create relevant judgments on a dataset they are more familiar with.
-\end{itemize}
+\begin{itemize} \item \emph{Facets}: Each document in the test collection is
+formed by the fulltext content and a list of relevant facets, which is exactly
+what we need as input of the facet ranking algorithm.  \item \emph{Query logs}:
+The test collection has been open to public access and accumulated certain
+amount of query logs; we figured it a good source for collecting query topics.
+\item \emph{Relevance judgments}: The collection was studied by a group of
+in-house domain experts; we figured it easier for the domain experts to create
+relevant judgments on a dataset they are more familiar with.  \end{itemize}
 
 The test corpus that we chose is the Tan-Hsin Archive \zhtw{(淡新檔案)}.  The
 Tan-Hsin Archive is currently the most sizable and complete collection of
 historical documents in Taiwan dating back from 1776 to 1895, when Taiwan was
 ruled by Qing dynasty.  The collection contains nearly 20,000 administrative
-and judicial documents, each comes as an XML file that contains
-fulltext transcripts, metadata items, and associated human-annotated facets.
-The average number of facets associated with a document in the dataset is
-\comment{N.NNN}.  There are two types of facets involved in this study:
-contents of certain selected fields, and hand-labeled concepts.  Hand-labeled
-concepts, in fact, are created by a group of annotators.  All these information
-are already made available in the metadata of the documents.
+and judicial documents.  We took a subset of 15,314 documents from the
+collection to form the test set.  Each document is an XML file that contains
+fulltext transcripts, metadata items, and associated human-annotated facets.  
 
-We took a subset of 15,314 documents from the collection as the test data.
+There are three types of facets in the dataset: person names, geographical
+names, and time.  By considering topic coverage and ease of evaluation, we
+tested model performance only for the person-name facets.  The number of unique
+person names in the dataset is 10,918, and the total number of occurrences of
+these facets is 37,489.  Thus, the average number of person names associated
+with a document is 2.45.  All these information are already made available in
+the metadata of the documents.  
+
 To prepare the query topics, we consulted the database where the Tan-Hsin
 Archive was previously made available and obtained a set of query log entries.
 We preprocessed the log and removed all the entries were follow-up clicks on
@@ -288,8 +294,28 @@ the relevant facets and leave only original user queries in the file.  The
 total amount of unique identifiable query topics is \comment{NN,NNN}.  After
 manually removing incomplete and corrupted log entries, we let a domain expert
 eyeball through the entire query set to filter out irrelevant queries.   The
-final number on the query set size is \comment{NNN}.  Finally, \comment{NN}
+final number on the query set size is \comment{NNN}.  Finally, totally 28
 topics were randomly drawn from the population and used in the evaluation.
+
+The relevance judgment is made by an in-house domain expert.  For each query
+topics, we prepare a list of the top 100 facets returned by the baseline
+retriever, which ranks facets according to occurrence counts; the domain expert
+then went over the entire list, making judgment based on his knowledge about
+the query topic.  One special criteria that we followed throughout the creation
+of the benchmark is that, for any facet being labeled as \emph{relevant} to a
+query, we required that at least one document in the test collection exhibits
+such correlation.  Therefore, the expert was allowed to use the database system
+to research on the query topics and look into the facet statistics for making
+the conclusion.
+
+The participating facet ranking algorithms are summarized as follows:
+\begin{itemize}
+  \item {\tt baseline}:  The facets are ranked by the corresponding number of counts in the result set.
+  \item {\tt bayesian-forward}:  The facets are ranked by the forward model using Equation~\eqref{eq:forward}, with Dirichlet-smoothed prior for $\alpha$ and a symmeteric Dirichlet for $\beta$.
+  \item {\tt bayesian-backward}:  The facets are ranked by the backward model using Equation~\eqref{eq:backward}, with Dirichlet-smoothed prior for $\alpha$ and a symmeteric Dirichlet for $\beta$.
+  \item {\tt dirichlet-forward}:  The facets are ranked by the forward model using Equation~\eqref{eq:forward}, with Dirichlet-smoothed prior for both $\alpha$ and $\beta$.
+  \item {\tt dirichlet-backward}:  The facets are ranked by the backward model using Equation~\eqref{eq:backward}, with Dirichlet-smoothed prior for both $\alpha$ and $\beta$.
+\end{itemize}
 
 \section{Results}
 
