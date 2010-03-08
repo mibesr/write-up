@@ -1,3 +1,14 @@
+\begin{abstract}
+  \comment{ABSTRACT goes here.  ABSTRACT goes here.  ABSTRACT goes here.  ABSTRACT goes here.  
+  ABSTRACT goes here.  ABSTRACT goes here.  ABSTRACT goes here.  ABSTRACT goes here.  
+  ABSTRACT goes here.  ABSTRACT goes here.  ABSTRACT goes here.  ABSTRACT goes here.  
+  ABSTRACT goes here.  ABSTRACT goes here.  ABSTRACT goes here.  ABSTRACT goes here.  
+  ABSTRACT goes here.  ABSTRACT goes here.  ABSTRACT goes here.  ABSTRACT goes here.  
+  ABSTRACT goes here.  ABSTRACT goes here.  ABSTRACT goes here.  ABSTRACT goes here.  
+  ABSTRACT goes here.  ABSTRACT goes here.  ABSTRACT goes here.  ABSTRACT goes here.  
+  ABSTRACT goes here.  ABSTRACT goes here.  ABSTRACT goes here.  ABSTRACT goes here. }
+\end{abstract}
+
 \section{Introduction}
 
 \comment{ (1 pages) The thought flow: \begin{itemize} \item Faceted search gets
@@ -390,21 +401,24 @@ topic.  The reported P@10 value fitted our expectation; however, we expected a
 higher MAP value for the baseline between 0.33 and 0.35.  Second, all the other
 proposed run outperformed the baseline model.  What is more encouraging is
 that, for all the models, the improvement over the baseline is significant,
-ranging from 30\% to 100\% in terms of MAP.  This result confirms the validity
-of our idea, indicating that a relevance-weighted model is probably more useful
-than a count-based model in the facet ranking task.  
+ranging from 30\% to 100\% in terms of MAP.  The full result is shown in
+Figure~\ref{f:performance}.  This result confirms the validity of our idea,
+indicating that a relevance-weighted model is probably more useful than a
+count-based model in the facet ranking task.  
+
+\begin{figure}[ht!]
+  \centering
+  \includegraphics[width=10cm]{performance.eps}
+  \caption{The performance results for all the test runs.  The x-axis indicates the model parameter: $\beta$ in symmetric model and $\mu$ in smoothed model.  The y-axis indicates the resulting MAP values.  This figure shows the proposed ranking models outperforms the baseline approach across different settings of parameters.}
+  \label{f:performance}
+\end{figure}
 
 The result encouraged us to further investigate the differences between the
 proposed models.  Even though these model roughly got comparable performance, we
 find that the forward model seems to work better than the backward model, and
-the symmetric prior in most cases outperforms smoothed prior.
+the symmetric prior in most cases outperforms smoothed prior. 
 
 \section{Related Work}
-
-%--------------------------------------------------
-% \comment{ (Half a page) Introduce the related work in the following domains:
-% (1) language modeling, (2) faceted search, and (3) expert finding. }
-%-------------------------------------------------- 
 
 %--------------------------------------------------
 % Along with the wide acceptance of faceted search interface in the digital
@@ -412,13 +426,6 @@ the symmetric prior in most cases outperforms smoothed prior.
 % usability tests and discovery of more advanced usage.  Previous efforts
 % include... \comment{ Related work }
 %-------------------------------------------------- 
-
-Our model is inspired by some recent progress on language modeling applications
-in information retrieval \cite{lavrenko2001relevance,zaragorza2003bayesian}.
-In this aspect, the proposed framework can be seen as a two-stage extension of
-the regular language model; however, in considering the integration of prior
-knowledge on facet distribution, our model departs from the conventional
-language modeling approaches.  
 
 To our best knowledge, our work is among the earliest attempt for retrieving
 relevant facets in the digital library community.  What is interesting to note
@@ -433,12 +440,23 @@ person-term and person-document links.  Our contribution departs from these two
 works, not only in the application domain, but in the way document relevance is
 incorporated into the model and the support for prior belief.  
  
+Our model is inspired by some recent progress on language modeling applications
+in information retrieval \cite{lavrenko2001relevance,zaragorza2003bayesian}.
+In this aspect, the proposed framework can be seen as a two-stage extension of
+the regular language model; however, in considering the integration of prior
+knowledge on facet distribution, our model departs from the conventional
+language modeling approaches.  
+
 \section{Discussion and Concluding Remarks}
 
-\comment{ (1 pages) Several issues that should be brought up here: (1) Why
-relevance is also important in exploratory task, (2) the possible opposite
-formulation of the model for novelty discovery (i.e., $\Pr(Q|f)$), and (3)
-possible future directions.  Also draw conclusion here. }
+\comment{ (1 page) The thought flow: \begin{itemize} \item Facet ranking is useful in certain applications \begin{itemize} \item Offering an alternative, standalone ``relevant facet'' interface for fast navigation.  \item Resource selection for generating summary.  \item (Most importantly) Assistance in exploratory task. \end{itemize}  \item Our study shows that rank-based model is superior to count-based one.  \item We also look into the effect of priors.  \item Backward model = novelty model?  \item Future direction: benchmark.  \item Future direction: thorough study on multi-facet dataset. \end{itemize}}
+
+%--------------------------------------------------
+% \comment{ (1 pages) Several issues that should be brought up here: (1) Why
+% relevance is also important in exploratory task, (2) the possible opposite
+% formulation of the model for novelty discovery (i.e., $\Pr(Q|f)$), and (3)
+% possible future directions.  Also draw conclusion here. }
+%-------------------------------------------------- 
 
 \section{Acknowledgments}
 
