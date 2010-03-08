@@ -255,7 +255,7 @@ Therefore, the final form of Equation~\eqref{eq:backward} is as follow:
 % \end{eqnarray}
 %-------------------------------------------------- 
 
-\section{Evaluation}
+\section{Experimental Setup}
 
 %--------------------------------------------------
 % \comment{(1 page) The thought flow: \begin{itemize} \item The task is to rank
@@ -322,15 +322,6 @@ such correlation.  Therefore, the expert was allowed to use the database system
 to research on the query topics and look into the facet statistics for making
 the conclusion.
 
-The participating facet ranking algorithms are summarized as follows:
-\begin{itemize}
-  \item {\tt baseline}:  The facets are ranked by the corresponding number of counts in the result set.
-  \item {\tt symmetric-forward}:  The facets are ranked by the forward model using Equation~\eqref{eq:forward}, with Dirichlet-smoothed prior for $\alpha$ and a symmeteric Dirichlet for $\beta$.
-  \item {\tt symmetric-backward}:  The facets are ranked by the backward model using Equation~\eqref{eq:backward}, with Dirichlet-smoothed prior for $\alpha$ and a symmeteric Dirichlet for $\beta$.
-  \item {\tt dirichlet-forward}:  The facets are ranked by the forward model using Equation~\eqref{eq:forward}, with Dirichlet-smoothed prior for both $\alpha$ and $\beta$.
-  \item {\tt dirichlet-backward}:  The facets are ranked by the backward model using Equation~\eqref{eq:backward}, with Dirichlet-smoothed prior for both $\alpha$ and $\beta$.
-\end{itemize}
-
 \section{Results}
 
 %--------------------------------------------------
@@ -339,9 +330,32 @@ The participating facet ranking algorithms are summarized as follows:
 % the domain experts to rank the facets explicitly and the annotations should
 % serve as gold standard for all the models to compare with. }
 %-------------------------------------------------- 
+\subsection{Performance}
 
-The model performance is measured both in terms of mean-average precision (MAP)
-and precision-at-10 (P@10).  
+There are totally 5 runs participating in the experiment.  The facet ranking
+algorithm used in each run is summarized as follows: \begin{itemize} \item {\tt
+baseline}:  The facets are ranked by the corresponding number of counts in the
+result set.  \item {\tt forward-symmetric}:  The facets are ranked by the
+forward model, with a symmeteric Dirichlet for $\beta$.  \item {\tt
+forward-smoothed}:  The facets are ranked by the forward model, with
+Dirichlet-smoothed prior for $\beta$.  \item {\tt backward-symmetric}:  The
+facets are ranked by the backward model, with a symmeteric Dirichlet for
+$\beta$.  \item {\tt backward-smoothed}:  The facets are ranked by the backward
+model, with Dirichlet-smoothed prior for $\beta$.  \end{itemize}
+
+To draw a fair comparison, we take the top-1000 documents retrieved by using
+Dirichlet-smoothed language model with $\mu = 2,500$ as the result set.  The
+hyperparameter is determined through experimentaion.  All the methods took the
+same set of document identifiers as input.  For our proposed models, we reused
+the retrieved scores returned by the document retrieveal language model; the
+score can be easily integrated into our framework by assuming that we had the
+prior $alpha$ assigned as a Dirichlet-smoothed prior \comment{(Elaborate in
+here or in Section 2)}.  The output is a sorted list of all the associated
+facets in descending order of the ranking score.  For efficiency, we use only
+the top-100 facets returned by each run as the final results.  The performance
+is assessed both in terms of mean-average precision (MAP) and precision-at-10
+(P@10).  Table~\ref{t:performance} shows the performance results for all the
+participating runs.
 
 \begin{table}[ht!]
   \centering
@@ -349,21 +363,25 @@ and precision-at-10 (P@10).
     Method & & MAP & P@10 \\
     \hline
     {\tt baseline} & & 0.2996 & 0.3857 \\
-    {\tt symmetric-forward} & $\beta = 0$ & 0.5775 & 0.6179\\
-    {\tt symmetric-forward} & $\beta = 10$ & 0.5877$^*$ & 0.6464$^*$ \\
-    {\tt symmetric-backward} & $\beta = 0$ & 0.4145 & 0.4500\\
-    {\tt symmetric-backward} & $\beta = 10$ & 0.4252 & 0.4607\\
-    {\tt dirichlet-forward} & $\mu = 0.01$ & 0.5781 & 0.6179 \\
-    {\tt dirichlet-forward} & $\mu = 1$ & 0.5782 & 0.6214 \\
-    {\tt dirichlet-forward} & $\mu = 100$ & 0.4956 & 0.5429 \\
-    {\tt dirichlet-backward} & $\mu = 0.01$ & 0.4155 & 0.4469 \\
-    {\tt dirichlet-backward} & $\mu = 1$ & 0.4086 & 0.4500 \\
-    {\tt dirichlet-backward} & $\mu = 100$ & 0.3909 & 0.4071 \\
+    {\tt forward-symmetric} & $\beta = 0$ & 0.5775 & 0.6179\\
+    & $\beta = 1$ & 0.5899$^*$ & 0.6464$^*$ \\
+    & $\beta = 10$ & 0.5877 & 0.6464$^*$ \\
+    {\tt forward-smoothed} & $\mu = 0.01$ & 0.5781 & 0.6179 \\
+    & $\mu = 1$ & 0.5782 & 0.6214 \\
+    & $\mu = 100$ & 0.4956 & 0.5429 \\
+    {\tt backward-symmetric} & $\beta = 0$ & 0.4145 & 0.4500\\
+    & $\beta = 1$ & 0.4252 & 0.4607\\
+    & $\beta = 10$ & 0.4252 & 0.4607\\
+    {\tt backward-smoothed} & $\mu = 0.01$ & 0.4155 & 0.4469 \\
+    & $\mu = 1$ & 0.4086 & 0.4500 \\
+    & $\mu = 100$ & 0.3909 & 0.4071 \\
     \\
   \end{tabular}
   \caption{The performance results for all the test runs.  The top-performer is indicated by an asterisk in the superscript.}
   \label{t:performance}
 \end{table}
+
+
 
 \section{Related Work}
 
