@@ -34,36 +34,57 @@ benefit from, such as the usability of the faceted interface
 \cite{kules2009what} and the approach for automatically extracting facets from
 the texts \cite{mimno2007organizing}.  
 
-Intuitively, faceted search can be seen as a two-phase extension of the
-ordinary retrieval task: In the first phase, one populates a set of document
-(\emph{result set}) by querying the underlying retrieval model; then, in the
-second phase, one exploits the associations between the facet entries and the
-documents, and returns the facet items back to the users.  In mathematical
-terms, supposed that the result set of query $\mathbf{q}$ is denoted as $R_{q}$
-and the associated facet items of document $d$ is represented as a set $F_d$,
-we expect the faceted interface returns this set of facet items: \[ \{ f \in
-F_d | d \in R_{\mathbf{q}} \}.  \] Conventionally, these discovered facets are
-presented in descending order of the number of corresponding occurrences in the
-result set, or in fewer cases in lexicographical order.  We refer this type of
-presentation scheme as \emph{count-based}.  The count-based method has at least
-three advantages: being fast, being easy to implement, and being
-straightforward so that users do not get confused.  While being as widely
-accepted across applications, the count-based method suffers from its lack of
-interpretability to the the \emph{relevance} of the discovered facets.  This
-may lead to a bizzare scenario that, in a system where documents are retrieved
-in terms of relevance, the facets discovered in the collection could only be
-reported based on the number of counts.
+Faceted search can be seen as a two-phase extension of the ordinary retrieval
+task: In the first phase, one populates a set of document (\emph{result set})
+by querying the underlying retrieval model; then, in the second phase, one
+exploits the associations between the facet entries and the documents, and
+returns the facet items back to the users.  In mathematical terms, supposed
+that the result set of query $\mathbf{q}$ is denoted as $R_{q}$ and the
+associated facet items of document $d$ is represented as a set $F_d$, we expect
+the faceted interface returns this set of facet items: \[ \{ f \in F_d | d \in
+R_{\mathbf{q}} \}.  \] Conventionally, these discovered facets are presented in
+descending order of the number of corresponding occurrences in the result set,
+which we called ``count-based'' scheme.  \footnote{In very few cases that we
+has noted, the facets are presented in lexicographical order.}  The count-based
+scheme has a number of advantages, including its being fast, being easy to
+implement, and being simple and straightforward in the user interface design.
+However, with this style of presentation the users is unaware of the the
+\emph{relevance} of the discovered facets to the query.  The incapability to
+address relevance might sometimes result in bitter user experience.  In one
+hand, if we assume that all the documents that match the query topic are
+equally relevant, then the ranking of the facets might not be so important.  On
+the other hand, on the systems that equipped with fuzzy-matching search
+facilities, documents at different ranks pose different degrees of relevance;
+therefore, the facets triggered by documents at different ranks should be
+accounted for differently.  In real-world applications, we find the latter case
+occurs more often than the former. \comment{(Need a few sentence here to link to the next paragraph...)}
 
-Another interesting aspect that we discovered in the development of testbed
-systems is that users tend to follow top-ranked facets.  According to our
-internal study on the click-through log, the average click-through rank of the
-facets falls in the top 20\% of the presented facets.  This fact also motivates
-our research toward integration of relevance into faceted interface, in which
-users could gain better insight of the content even though they do not explicit
-go through every facet that we discovered.
+This work is motivated by the recognizing \emph{facet ranking} as a task for
+improving user experience in digital library systems.  In this paper, we
+propose an alternative solution to take the place of the count-based method by
+ranking the discovered facet based their relevance to the query.  We conducted
+a series of experiments on a custom benchmark.  The result shows that our
+proposed method outperforms the regular count-based approach, achieving high
+improvement in terms of mean-average precision and precision-at-10.
 
-In this work, we attempt to improve faceted search usability by introducing the
-notion of relevance into the facet interface.  
+The rest of the work is organzed as follows: We introduce a Bayesian language
+modeling approach in Section~\ref{s:model} and propose two different models for
+facet ranking.  We further elaborate the proposed solutions in
+Section~\ref{s:inference}.  Section~\ref{s:experimental-setup} presents the
+experiment for evaluating the proposed methods, and the creation of the
+benchmark; the experimental result is shown in Section~\ref{s:results}.  We
+briefly summarize the related work in Section~\ref{s:related-work} and give out
+concluding remarks in Section~\ref{s:concluding-remarks}.
+
+%--------------------------------------------------
+% Another interesting aspect that we discovered in the development of testbed
+% systems is that users tend to follow top-ranked facets.  According to our
+% internal study on the click-through log, the average click-through rank of the
+% facets falls in the top 20\% of the presented facets.  This fact also motivates
+% our research toward integration of relevance into faceted interface, in which
+% users could gain better insight of the content even though they do not explicit
+% go through every facet that we discovered.
+%-------------------------------------------------- 
 
 %--------------------------------------------------
 % Employing a relational database backend is the easiest, while also the most
@@ -85,7 +106,7 @@ notion of relevance into the facet interface.
 % interaction to the retrieval model and degrade the performance.
 %-------------------------------------------------- 
 
-\section{Model}
+\section{Model}\label{s:model}
 
 \comment{Here, instead of directly jumping into the model, we had better start with some rationales.}
 
@@ -194,10 +215,10 @@ each $i \in [1, F]$ and $c$ denotes some constant.  The second one is called
 \emph{smoothed-Dirichlet}, which is commonly-seen in information retrieval
 literature \cite{zhai2004study}: \[ (\mu \Pr(f_1|C), \mu \Pr(f_2|C), \ldots, \mu \Pr(f_F|C)). \]
 
-\section{Inference}
+\section{Inference}\label{s:inference}
 \comment{FIXME: All these derivation look too sketchy.}
 
-\subsection{The Forward Model}
+\subsection{The Forward Model}\label{ss:forward-model}
 We begin by deriving the solution for the forward model shown in
 Equation~\eqref{eq:forward}. 
 \begin{eqnarray}
@@ -216,7 +237,7 @@ The last line follows the conjugacy of Dirichlet distribution, as in:
 \Pr(\tau^{(x)}|d_x, \mathbf{t_x}) &\sim& \mathrm{Dirichlet}(\{\alpha_i + c_{i,x}; \forall i \}).
 \end{eqnarray*}
 
-\subsection{The Backward Model}
+\subsection{The Backward Model}\label{ss:backward-model}
 The backward model shown in Equation~\eqref{eq:backward} is solved in similar way.
 \begin{eqnarray}
   \Pr(\mathbf{q}|y, \mathbf{t}, \mathbf{d}, \mathbf{f}) 
@@ -278,7 +299,7 @@ Therefore, the final form of Equation~\eqref{eq:backward} is as follow:
 % \end{eqnarray}
 %-------------------------------------------------- 
 
-\section{Experimental Setup}
+\section{Experimental Setup}\label{s:experimental-setup}
 
 %--------------------------------------------------
 % \comment{(1 page) The thought flow: \begin{itemize} \item The task is to rank
@@ -345,7 +366,7 @@ such correlation.  Therefore, the expert was allowed to use the database system
 to research on the query topics and look into the facet statistics for making
 the conclusion.
 
-\section{Results}
+\section{Results}\label{s:results}
 
 %--------------------------------------------------
 % \comment{ (2 pages) Here we present the experimental results.  Precision/recall
@@ -353,7 +374,7 @@ the conclusion.
 % the domain experts to rank the facets explicitly and the annotations should
 % serve as gold standard for all the models to compare with. }
 %-------------------------------------------------- 
-\subsection{Performance}
+\subsection{Performance}\label{ss:performance}
 
 There are totally 5 runs participating in the experiment.  The facet ranking
 algorithm used in each run is summarized as follows: \begin{itemize} \item {\tt
@@ -429,7 +450,7 @@ proposed models.  Even though these model roughly got comparable performance, we
 find that the forward model seems to work better than the backward model, and
 the symmetric prior in most cases outperforms smoothed prior. 
 
-\section{Related Work}
+\section{Related Work}\label{s:related-work}
 
 %--------------------------------------------------
 % Along with the wide acceptance of faceted search interface in the digital
@@ -458,7 +479,7 @@ the regular language model; however, in considering the integration of prior
 knowledge on facet distribution, our model departs from the conventional
 language modeling approaches.  
 
-\section{Discussion and Concluding Remarks}
+\section{Concluding Remarks}\label{s:concluding-remarks}
 
 \comment{ (1 page) The thought flow: \begin{itemize} \item Facet ranking is useful in certain applications \begin{itemize} \item Offering an alternative, standalone ``relevant facet'' interface for fast navigation.  \item Resource selection for generating summary.  \item (Most importantly) Assistance in exploratory task. \end{itemize}  \item Our study shows that rank-based model is superior to count-based one.  \item We also look into the effect of priors.  \item Backward model = novelty model?  \item Future direction: benchmark.  \item Future direction: thorough study on multi-facet dataset. \end{itemize}}
 
