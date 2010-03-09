@@ -1,12 +1,16 @@
-\begin{abstract}
-  \comment{ABSTRACT goes here.  ABSTRACT goes here.  ABSTRACT goes here.  ABSTRACT goes here.  
-  ABSTRACT goes here.  ABSTRACT goes here.  ABSTRACT goes here.  ABSTRACT goes here.  
-  ABSTRACT goes here.  ABSTRACT goes here.  ABSTRACT goes here.  ABSTRACT goes here.  
-  ABSTRACT goes here.  ABSTRACT goes here.  ABSTRACT goes here.  ABSTRACT goes here.  
-  ABSTRACT goes here.  ABSTRACT goes here.  ABSTRACT goes here.  ABSTRACT goes here.  
-  ABSTRACT goes here.  ABSTRACT goes here.  ABSTRACT goes here.  ABSTRACT goes here.  
-  ABSTRACT goes here.  ABSTRACT goes here.  ABSTRACT goes here.  ABSTRACT goes here.  
-  ABSTRACT goes here.  ABSTRACT goes here.  ABSTRACT goes here.  ABSTRACT goes here. }
+\begin{abstract} Faceted search has been recognized as an eminent tool for
+assisting users in discovering relevant topics in digital library applications.
+Conventional count-based presentation scheme usually presents the discovered
+facets according to the corresponding numbers of counts in the result set,
+without considering the relevance between the facet and the query.  We argue
+that this approach might work well only when the retrieved documents are all
+highly relevant, which is not usually the case in the real-world query
+sessions.  In this work,  we investigated an alternative solution for ranking
+the discovered facets.  We proposed a generative Bayesian framework to better
+account for different degrees of the relevant contribution from the retrieved
+documents to the discovered facets.  The evaluation result showed that our
+method significantly outperformed the baseline approach, improving the
+retrieval accuracy from 33\% to 100\% in terms of mean-average precision.
 \end{abstract}
 
 \section{Introduction}
@@ -57,13 +61,14 @@ proposed method outperforms the regular count-based approach in regular query
 sessions, achieving high improvement in terms of mean-average precision and
 precision-at-10.
 
-The rest of the work is organzed as follows: We introduce a Bayesian language
+The rest of the work is organized as follows: We introduce a Bayesian language
 modeling approach in Section~\ref{s:model} and propose two different models for
 facet ranking.  We further elaborate the proposed solutions in
 Section~\ref{s:inference}.  Section~\ref{s:experimental-setup} presents the
 experiment for evaluating the proposed methods, and the creation of the
 benchmark; the experimental result is shown in Section~\ref{s:results}.  We
-briefly summarize the related work in Section~\ref{s:related-work} and give out
+briefly summarize the related work in Section~\ref{s:related-work}; finally, we
+discuss a few issues raised in the development of the work and give out
 concluding remarks in Section~\ref{s:concluding-remarks}.
 
 \section{Model}\label{s:model}
@@ -128,7 +133,7 @@ $f$ that triggers the query $\mathbf{q}$:  \begin{equation}y^*_{\rm b} =
 \label{eq:backward} \end{equation} 
 
 Here, we coin the term \emph{trigger} because there is no direct
-ancestor/descendent relation between the facet nodes and the term nodes.  The
+ancestor/descendant relation between the facet nodes and the term nodes.  The
 full generative process is shown in Figure~\ref{f:model}.  
 
 \begin{figure}[ht!]
@@ -375,24 +380,23 @@ the conclusion.
 % the domain experts to rank the facets explicitly and the annotations should
 % serve as gold standard for all the models to compare with. }
 %-------------------------------------------------- 
-\subsection{Performance}\label{ss:performance}
 
 There are totally 5 runs participating in the experiment.  The facet ranking
 algorithm used in each run is summarized as follows: \begin{itemize} \item {\tt
 baseline}:  The facets are ranked by the corresponding number of counts in the
 result set.  \item {\tt forward-symmetric}:  The facets are ranked by the
-forward model, with a symmeteric Dirichlet for $\beta$.  \item {\tt
+forward model, with a symmetric Dirichlet for $\beta$.  \item {\tt
 forward-smoothed}:  The facets are ranked by the forward model, with
 Dirichlet-smoothed prior for $\beta$.  \item {\tt backward-symmetric}:  The
-facets are ranked by the backward model, with a symmeteric Dirichlet for
+facets are ranked by the backward model, with a symmetric Dirichlet for
 $\beta$.  \item {\tt backward-smoothed}:  The facets are ranked by the backward
 model, with Dirichlet-smoothed prior for $\beta$.  \end{itemize}
 
 To draw a fair comparison, we take the top-1000 documents retrieved by using
 Dirichlet-smoothed language model with $\mu = 2,500$ as the result set.  The
-hyperparameter is determined through experimentaion.  All the methods took the
+hyperparameter is determined through experimentation.  All the methods took the
 same set of document identifiers as input.  For our proposed models, we reused
-the retrieved scores returned by the document retrieveal language model, as
+the retrieved scores returned by the document retrieval language model, as
 stated in Section~\ref{ss:integration}.  The output is a sorted list of all the
 associated facets in descending order of the ranking score.  For efficiency, we
 use only the top-100 facets returned by each run as the final results.  The
@@ -435,15 +439,23 @@ proposed run outperformed the baseline model.  Second, all the proposed models
 show significant improvement over the baseline, ranging from 30\% to 100\% in
 terms of MAP.  Encouraged by the initial results, we ran a line search for each
 model by varying the hyperparameter $\beta$.  Figure~\ref{f:performance} shows
-the full result.  We found that model performance were quite stable across
-different experimental runs.  Generally, {\tt forward-symmetric} and {\tt
-forward-smoothed} achieved better performance than the others; the best
-performance was found in the {\tt forward-symetric} run with $\beta = 0.01$.
-Both two backward model did not improve performance as much as the forward
-models did, while they still generally worked better than the baseline method
-by 33\% in terms of MAP.  The positive observation in this experiment suggests
-that a relevance-based weighted-sum model is probably more effective than a
-count-based model in the facet ranking task.  
+the full result.  
+
+We found that model performance were quite stable across different experimental
+runs.  In one hand, {\tt forward-symmetric} and {\tt forward-smoothed}
+generally achieved better performance than the others; the best performance was
+found in the {\tt forward-symmetric} run with $\beta = 0.2$, achieving $0.5908$
+in MAP.  On the other hand, both two backward model did not improve performance
+as much as the forward models did, while they still generally worked better
+than the baseline method by 33\% in terms of MAP.  The positive observation in
+this experiment suggests that a relevance-based weighted-sum model is probably
+more effective than a count-based model in the facet ranking task.  
+
+We also noticed a significant performance gap between the models.  Even though
+these models roughly achieved comparable ranking accuracy, we found that the
+forward model seemed to work better than the backward model, and the symmetric
+prior in most cases outperforms smoothed prior.  Further discussion on the
+model difference is stated in Section~\ref{s:concluding-remarks}.
 
 \begin{figure}[ht!]
   \centering
@@ -455,11 +467,6 @@ count-based model in the facet ranking task.
   settings of parameters.} \label{f:performance}
 \end{figure}
 
-The result encouraged us to further investigate the differences between the
-proposed models.  Even though these model roughly got comparable performance, we
-find that the forward model seems to work better than the backward model, and
-the symmetric prior in most cases outperforms smoothed prior. 
-
 \section{Related Work}\label{s:related-work}
 
 %--------------------------------------------------
@@ -469,7 +476,7 @@ the symmetric prior in most cases outperforms smoothed prior.
 % include... \comment{ Related work }
 %-------------------------------------------------- 
 
-To our best knowledge, our work is among the earliest attempt for retrieving
+To the best of our knowledge, this work is among the earliest attempt for retrieving
 relevant facets in the digital library community.  What is interesting to note
 is that we find similar attempts were already made in the area of expert
 finding.  In 2008, Amitay et al. \cite{amitay2008finding} formulated the
@@ -489,16 +496,48 @@ the regular language model; however, in considering the integration of prior
 knowledge on facet distribution, our model departs from the conventional
 language modeling approaches.  
 
-\section{Concluding Remarks}\label{s:concluding-remarks}
-
-\comment{ (1 page) The thought flow: \begin{itemize} \item Facet ranking is useful in certain applications \begin{itemize} \item Offering an alternative, standalone ``relevant facet'' interface for fast navigation.  \item Resource selection for generating summary.  \item (Most importantly) Assistance in exploratory task. \end{itemize}  \item Our study shows that rank-based model is superior to count-based one.  \item We also look into the effect of priors.  \item Backward model = novelty model?  \item Future direction: benchmark.  \item Future direction: thorough study on multi-facet dataset. \end{itemize}}
+\section{Discussion and Concluding Remarks}\label{s:concluding-remarks}
 
 %--------------------------------------------------
-% \comment{ (1 pages) Several issues that should be brought up here: (1) Why
-% relevance is also important in exploratory task, (2) the possible opposite
-% formulation of the model for novelty discovery (i.e., $\Pr(Q|f)$), and (3)
-% possible future directions.  Also draw conclusion here. }
+% \comment{ (1 page) The thought flow: \begin{itemize} \item Facet ranking is
+% useful in certain applications \begin{itemize} \item Offering an alternative,
+% standalone ``relevant facet'' interface for fast navigation.  \item Resource
+% selection for generating summary.  \item (Most importantly) Assistance in
+% exploratory task. \end{itemize}  \item Our study shows that rank-based model is
+% superior to count-based one.  \item We also look into the effect of priors.
+% \item Backward model = novelty model?  \item Future direction: benchmark.
+% \item Future direction: thorough study on multi-facet dataset. \end{itemize}}
 %-------------------------------------------------- 
+
+Our study toward a practical facet ranking algorithm has given rise to a few
+interesting questions.  First, all the proposed Bayesian models seem to work
+better with smaller priors.  Take the forward models as an example.  According
+to the results, the best performance of {\tt forward-symmetric} was achieved
+with $\beta = 0.2$ and that of {\tt forward-smoothed} was achieved with $\beta
+= 3.6$.  Furthermore, increasing the prior value generally resulted in loss in
+retrieval accuracy.  This phenomenon is probably caused by the low average
+number of facets in a document.  In our dataset, each document triggers no more
+than three facets; larger priors might not work well in this case.  Second, the
+result also suggests that the simple symmetric prior being superior to the
+smoothed one.  This indicates that, at least in our test collection, the prior
+$\Pr(y|C)$ did not make good estimation for $\Pr(y|d)$.  We also found that
+models with zero prior (i.e., $\beta = 0$) remains in the top-performer of the
+ranking task, suggesting that using the maximum likelihood estimate alone may
+already fit the data well.  So far, we do not have a good explanation to this;
+a further investigation into the data is needed.
+
+In this work, we proposed a Bayesian language modeling framework for ranking
+facets.  We achieved encouraging result on our custom benchmark, improving the
+baseline performance by roughly 100\% in MAP.  Moreover, our methods can work
+with a language-model-based retrieval engine to achieve high efficiency in
+performing the ranking task.  Despite the success in the evaluation results,
+there is still room for improving the ranking accuracy.  We see our efforts
+here as a starting point toward further exploration on several issues that have
+not yet been covered in the study: the use of different distribution families
+in the model, a more formal model on the inference for hyperparameters, the
+applications on larger datasets, and so on.  These challenges should be the
+focus of our future work.
+
 %--------------------------------------------------
 % Another interesting aspect that we discovered in the development of testbed
 % systems is that users tend to follow top-ranked facets.  According to our
@@ -529,8 +568,7 @@ language modeling approaches.
 % interaction to the retrieval model and degrade the performance.
 %-------------------------------------------------- 
 
-
-\section{Acknowledgments}
+\section*{Acknowledgments}
 
 We thank Po-Yu Chen for his support on preparation of the test data.  The
 research efforts described in this paper are supported under the National Taiwan
