@@ -11,19 +11,6 @@
 
 \section{Introduction}
 
-%--------------------------------------------------
-% \comment{ (1 pages) The thought flow: \begin{itemize} \item Faceted search gets
-% popular lately.  \item One possible way to improve faceted search is through
-% facet ranking, an issue that ordinary interface failed to address.  \item We
-% want the model assign high score to the facets discovered in high-relevance
-% documents.  \item An intuitive solution is to assign weighted score to facets,
-% but the complexity varies from model to model.  \item Our idea is to extend the
-% standard language modeling to offer ranking over the facets.  It is intuitively
-% appealing since we do not need another ``weighting scheme'' for facets.  \item
-% The task has no standard benchmark.  We created one in our own application.
-% \item Highlight contributions.  \item Present the outline. \end{itemize} }
-%-------------------------------------------------- 
-
 In the past few years, faceted search has gained wide acceptance in the digital
 library and the Web community.  We have seen many successful applications of
 this search technique in different domains, including the Web
@@ -34,38 +21,41 @@ benefit from, such as the usability of the faceted interface
 \cite{kules2009what} and the approach for automatically extracting facets from
 the texts \cite{mimno2007organizing}.  
 
-Faceted search can be seen as a two-phase extension of the ordinary retrieval
-task: In the first phase, one populates a set of document (\emph{result set})
-by querying the underlying retrieval model; then, in the second phase, one
-exploits the associations between the facet entries and the documents, and
-returns the facet items back to the users.  In mathematical terms, supposed
-that the result set of query $\mathbf{q}$ is denoted as $R_{q}$ and the
-associated facet items of document $d$ is represented as a set $F_d$, we expect
-the faceted interface returns this set of facet items: \[ \{ f \in F_d | d \in
-R_{\mathbf{q}} \}.  \] Conventionally, these discovered facets are presented in
-descending order of the number of corresponding occurrences in the result set,
-which we called ``count-based'' scheme.  \footnote{In very few cases that we
-has noted, the facets are presented in lexicographical order.}  The count-based
-scheme has a number of advantages, including its being fast, being easy to
-implement, and being simple and straightforward in the user interface design.
-However, with this style of presentation the users is unaware of the the
-\emph{relevance} of the discovered facets to the query.  The incapability to
-address relevance might sometimes result in bitter user experience.  In one
-hand, if we assume that all the documents that match the query topic are
-equally relevant, then the ranking of the facets might not be so important.  On
-the other hand, on the systems that equipped with fuzzy-matching search
-facilities, documents at different ranks pose different degrees of relevance;
-therefore, the facets triggered by documents at different ranks should be
-accounted for differently.  In real-world applications, we find the latter case
-occurs more often than the former. \comment{(Need a few sentence here to link to the next paragraph...)}
+Generally, faceted search can be seen as a two-phase extension of the ordinary
+retrieval task: In the first phase, one populates a set of document
+(\emph{result set}) by querying the underlying retrieval model; then, in the
+second phase, one exploits the associations between the facet entries and the
+documents, and returns the facet items back to the users.  In mathematical
+terms, supposed that the result set of query $\mathbf{q}$ is denoted as $R_{q}$
+and the associated facet items of document $d$ is represented as a set $F_d$,
+we expect the faceted interface returns this set of facet items: \[ \{ f \in
+F_d | d \in R_{\mathbf{q}} \}.  \] Conventionally, these discovered facets are
+presented in descending order of the number of corresponding occurrences in the
+result set, which we called ``count-based'' scheme.  \footnote{In very few
+cases that we has noted, the facets are presented in lexicographical order.}
+The count-based scheme has a number of advantages, including its being fast,
+being easy to implement, and being simple and straightforward in the user
+interface design.  However, with this style of presentation the users is
+unaware of the the \emph{relevance} of the discovered facets to the query.  The
+incapability to address relevance might sometimes result in bitter user
+experience.  In one hand, if we assume that all the documents that match the
+query topic are equally relevant, then the ranking of the facets might not be
+so important.  On the other hand, on the systems that equipped with
+fuzzy-matching search facilities, documents at different ranks pose different
+degrees of relevance; therefore, the facets triggered by documents at different
+ranks should be accounted for differently.  In real-world applications, we find
+the latter case occurs more often than the former.  We define the task for
+assigning appropriate importance or relevance to facet as \emph{facet ranking}.
 
-This work is motivated by the recognizing \emph{facet ranking} as a task for
-improving user experience in digital library systems.  In this paper, we
-propose an alternative solution to take the place of the count-based method by
-ranking the discovered facet based their relevance to the query.  We conducted
-a series of experiments on a custom benchmark.  The result shows that our
-proposed method outperforms the regular count-based approach, achieving high
-improvement in terms of mean-average precision and precision-at-10.
+Our work serves as a preliminary study toward good facet ranking algorithms,
+largely motivated by the impression that improvements on facet ranking leads to
+better user experience for faceted search in digital library systems.  In this
+paper, we propose an alternative solution to take the place of the count-based
+method by ranking the discovered facet based their relevance to the query.  We
+conducted a series of experiments on a custom benchmark, and show that our
+proposed method outperforms the regular count-based approach in regular query
+sessions, achieving high improvement in terms of mean-average precision and
+precision-at-10.
 
 The rest of the work is organzed as follows: We introduce a Bayesian language
 modeling approach in Section~\ref{s:model} and propose two different models for
@@ -78,7 +68,18 @@ concluding remarks in Section~\ref{s:concluding-remarks}.
 
 \section{Model}\label{s:model}
 
-\comment{Here, instead of directly jumping into the model, we had better start with some rationales.}
+An intuitive solution for facet ranking is to consider the relevance of the
+documents that covers the facet: The facet discovered in a highly-relevant
+document should be assigned a higher weight, and the facet found in documents
+that get low relevance scores should be ranked lower accordingly.  Our idea is
+to model the contribution of relevance from document to facet by extending the
+existing retrieval model.  Since each facet discovered in the query session
+might have a number of source documents contributing different degrees of
+importance, a natural way to integrate these data is through a weighted sum.
+
+One difficulty for deriving such an model lies in the integration of the
+document relevance score.  We find it more appealing to apply this idea on a
+language-model-based backend, for that ... \comment{FIXME}
 
 Consider a document collection of size $N$, in which each document $d_j$ is
 associated with a set of terms $T_j$ and a set of facets $F_j$.  We assume that
@@ -94,7 +95,6 @@ numbers are pre-determined for each document $d_j$.}
 
 \begin{itemize} 
   \item For each document $d_j$, \begin{enumerate}
-    \item Assign $d_j = j$
     \item $\tau^{(j)} \sim \textrm{Dirichlet}(\alpha_i; i \in [1, |T|])$
     \item $\phi^{(j)} \sim \textrm{Dirichlet}(\beta_k; i \in [1, |F|])$
     \item For $i \in \{ 1, \ldots, |T_j| \}$, $t_i \sim \textrm{Mult}(\tau^{(j)})$ 
