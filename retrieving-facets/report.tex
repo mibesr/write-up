@@ -76,36 +76,6 @@ benchmark; the experimental result is shown in Section~\ref{s:results}.  We
 briefly summarize the related work in Section~\ref{s:related-work} and give out
 concluding remarks in Section~\ref{s:concluding-remarks}.
 
-%--------------------------------------------------
-% Another interesting aspect that we discovered in the development of testbed
-% systems is that users tend to follow top-ranked facets.  According to our
-% internal study on the click-through log, the average click-through rank of the
-% facets falls in the top 20\% of the presented facets.  This fact also motivates
-% our research toward integration of relevance into faceted interface, in which
-% users could gain better insight of the content even though they do not explicit
-% go through every facet that we discovered.
-%-------------------------------------------------- 
-
-%--------------------------------------------------
-% Employing a relational database backend is the easiest, while also the most
-% practical, approach towards construction of this function.  The document
-% contents are usually stored in one table and associated facet records in
-% another, and then implement the search function with a plain SQL text match
-% against the documents.  The set of facets associated with all the matched
-% document and their corresponding counts of occurrences can be pulled out as
-% easily with a join or SQL aggregation functions such as {\tt GROUP BY} and {\tt
-% COUNT}.  The downside of this approach is we compromise retrieval quality in
-% favor of ease of extra efforts because most of the modern relational database
-% systems do not really support fuzzy-match in text fields, least to say the
-% state-of-the-art document retrieval models.  A proposed workaround for this is
-% to host retrieval engine and document representation somewhere else and access
-% the RDBMS only for aggregating facet counts.  This could be done fairly easily
-% by using the retrieved document identifiers to explicitly form a (probably very
-% long) {\tt SELECT} query.  Unfortunately, this solution might not scale well,
-% since serving data in an RDBMS way, on the other hand, can obstruct the
-% interaction to the retrieval model and degrade the performance.
-%-------------------------------------------------- 
-
 \section{Model}\label{s:model}
 
 \comment{Here, instead of directly jumping into the model, we had better start with some rationales.}
@@ -489,6 +459,36 @@ language modeling approaches.
 % formulation of the model for novelty discovery (i.e., $\Pr(Q|f)$), and (3)
 % possible future directions.  Also draw conclusion here. }
 %-------------------------------------------------- 
+%--------------------------------------------------
+% Another interesting aspect that we discovered in the development of testbed
+% systems is that users tend to follow top-ranked facets.  According to our
+% internal study on the click-through log, the average click-through rank of the
+% facets falls in the top 20\% of the presented facets.  This fact also motivates
+% our research toward integration of relevance into faceted interface, in which
+% users could gain better insight of the content even though they do not explicit
+% go through every facet that we discovered.
+%-------------------------------------------------- 
+
+%--------------------------------------------------
+% Employing a relational database backend is the easiest, while also the most
+% practical, approach towards construction of this function.  The document
+% contents are usually stored in one table and associated facet records in
+% another, and then implement the search function with a plain SQL text match
+% against the documents.  The set of facets associated with all the matched
+% document and their corresponding counts of occurrences can be pulled out as
+% easily with a join or SQL aggregation functions such as {\tt GROUP BY} and {\tt
+% COUNT}.  The downside of this approach is we compromise retrieval quality in
+% favor of ease of extra efforts because most of the modern relational database
+% systems do not really support fuzzy-match in text fields, least to say the
+% state-of-the-art document retrieval models.  A proposed workaround for this is
+% to host retrieval engine and document representation somewhere else and access
+% the RDBMS only for aggregating facet counts.  This could be done fairly easily
+% by using the retrieved document identifiers to explicitly form a (probably very
+% long) {\tt SELECT} query.  Unfortunately, this solution might not scale well,
+% since serving data in an RDBMS way, on the other hand, can obstruct the
+% interaction to the retrieval model and degrade the performance.
+%-------------------------------------------------- 
+
 
 \section{Acknowledgments}
 
