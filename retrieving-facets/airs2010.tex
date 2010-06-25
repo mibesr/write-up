@@ -1,0 +1,103 @@
+\documentclass[runningheads,a4paper]{llncs}
+\usepackage{amssymb}
+\setcounter{tocdepth}{3}
+\usepackage{graphicx}
+
+\usepackage{url}
+\urldef{\mailsa}\path|cobain@turing.csie.ntu.edu.tw|
+\urldef{\mailsb}\path|cmtsai@mail.lis.ntu.edu.tw|
+\urldef{\mailsc}\path|jhsiang@ntu.edu.tw|
+%--------------------------------------------------
+% \urldef{\mailsa}\path||
+% \urldef{\mailsb}\path|cobain@turing.csie.ntu.edu.tw, cmtsai@mail.lis.ntu.edu.tw, jhsiang@ntu.edu.tw|
+% \urldef{\mailsc}\path||
+%-------------------------------------------------- 
+%--------------------------------------------------
+% \urldef{\mailsa}\path|{alfred.hofmann, brigitte.apfel, ursula.barth, christine.guenther,|
+% \urldef{\mailsb}\path|ingrid.haas, frank.holzwarth, anna.kramer, leonie.kunz, nicole.sator,|
+% \urldef{\mailsc}\path|erika.siebert-cole, peter.strasser, lncs}@springer.com|
+%-------------------------------------------------- 
+\newcommand{\keywords}[1]{\par\addvspace\baselineskip
+\noindent\keywordname\enspace\ignorespaces#1}
+
+%--------------------------------------------------
+% % Traditional-Chinese support
+%-------------------------------------------------- 
+%--------------------------------------------------
+% \usepackage[cjkbg5]{ucs}
+% \usepackage[utf8x]{inputenc}
+% \usepackage[C00,T1]{fontenc}
+% \DeclareFontSubstitution{C00}{bsmi}{m}{n}
+% \newcommand\zhtw[1]{\bgroup\fontencoding{C00}\fontfamily{ming}\selectfont%
+% \SetUnicodeOption{cjkbg5}#1\egroup}
+%-------------------------------------------------- 
+\newcommand\zhtw[1]{}
+
+\usepackage{amsmath}
+\usepackage{pst-all} % PSTricks
+\usepackage{com.braju.graphicalmodels} % The package that really does the hard work
+\catcode`\@=11%
+
+\usepackage{color}
+\newcommand{\comment}[1]{{\color{red}#1}}
+
+\begin{document}
+\mainmatter  % start of an individual contribution
+\title{Bringing Order to Facets: A Bayesian Language Modeling Approach}
+\titlerunning{Bringing Order to Facets: A Bayesian Language Modeling Approach}
+
+\author{Ruey-Cheng Chen\and Chiung-Min Tsai\and Jieh Hsiang}
+\authorrunning{Bringing Order to Facets: A Bayesian Language Modeling Approach}
+
+% the affiliations are given next; don't give your e-mail address
+% unless you accept that it will be published
+\institute{National Taiwan University,\\
+1 Roosevelt Rd. Sec. 4, Taipei 106, Taiwan\\
+\mailsa\\
+\mailsb\\
+\mailsc\\
+}
+
+%
+% NB: a more complex sample for affiliations and the mapping to the
+% corresponding authors can be found in the file "llncs.dem"
+% (search for the string "\mainmatter" where a contribution starts).
+% "llncs.dem" accompanies the document class "llncs.cls".
+%
+
+\toctitle{}
+\tocauthor{}
+\maketitle
+\input{report.tex}
+\bibliography{report}
+\bibliographystyle{splncs03}
+
+%--------------------------------------------------
+% \begin{thebibliography}{4}
+% 
+% \bibitem{jour} Smith, T.F., Waterman, M.S.: Identification of Common Molecular
+% Subsequences. J. Mol. Biol. 147, 195--197 (1981)
+% 
+% \bibitem{lncschap} May, P., Ehrlich, H.C., Steinke, T.: ZIB Structure Prediction Pipeline:
+% Composing a Complex Biological Workflow through Web Services. In: Nagel,
+% W.E., Walter, W.V., Lehner, W. (eds.) Euro-Par 2006. LNCS, vol. 4128,
+% pp. 1148--1158. Springer, Heidelberg (2006)
+% 
+% \bibitem{book} Foster, I., Kesselman, C.: The Grid: Blueprint for a New Computing
+% Infrastructure. Morgan Kaufmann, San Francisco (1999)
+% 
+% \bibitem{proceeding1} Czajkowski, K., Fitzgerald, S., Foster, I., Kesselman, C.: Grid
+% Information Services for Distributed Resource Sharing. In: 10th IEEE
+% International Symposium on High Performance Distributed Computing, pp.
+% 181--184. IEEE Press, New York (2001)
+% 
+% \bibitem{proceeding2} Foster, I., Kesselman, C., Nick, J., Tuecke, S.: The Physiology of the
+% Grid: an Open Grid Services Architecture for Distributed Systems
+% Integration. Technical report, Global Grid Forum (2002)
+% 
+% \bibitem{url} National Center for Biotechnology Information, \url{http://www.ncbi.nlm.nih.gov}
+% 
+% \end{thebibliography}
+%-------------------------------------------------- 
+
+\end{document}
