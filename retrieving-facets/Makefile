@@ -46,7 +46,7 @@ svninfo		:= $$Id: Makefile 58 2009-09-25 15:21:18Z shiblon $$
 #onlysources.eps	?=
 #
 # If you list files here, they will be treated as _include_ files
-includes.tex		?= report.tex airs2010.tex
+includes.tex		?= report.tex jcdl2010.tex ecdl2010.tex
 #includes.tex.sh	?=
 #includes.rst		?=
 #includes.fig		?=
