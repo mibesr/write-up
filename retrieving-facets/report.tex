@@ -1,11 +1,11 @@
 \begin{abstract} Faceted search has been recognized as an eminent tool for
 assisting users in discovering relevant topics in digital library applications.
-Conventional count-based presentation scheme usually presents the discovered
+Conventional count-based presentation schemes usually present the discovered
 facets according to the corresponding numbers of counts in the result set,
 without considering the relevance between the facet and the query.  We argue
 that this approach might work well only when the retrieved documents are all
 highly relevant, which is not usually the case in the real-world query
-sessions.  In this work,  we investigated an alternative solution for ranking
+sessions.  In this work, we investigated an alternative solution for ranking
 the discovered facets.  We proposed a generative Bayesian framework to better
 account for different degrees of relevance contributions from the retrieved
 documents to the facets.  The evaluation result showed that our
@@ -36,7 +36,7 @@ as $F_d$, we expect the faceted interface returns the following set of facet
 items: \[ \{ f \in F_d | d \in R_{\mathbf{q}} \}.  \] Conventionally, the
 discovered facets are presented in descending order of the corresponding number
 of occurrences in the result set.  Here, we describe such a ranking scheme as
-\emph{count-based}.  \footnote{In very few cases that we has noted, the facets
+\emph{count-based}.  \footnote{In very few cases that we have noted, the facets
 are presented in lexicographical order.} The count-based scheme is usually
 preferable because it is fast and easy to implement.  However, the problem with
 this ranking scheme is that it treats all the facet counts equally important:
@@ -74,14 +74,14 @@ This can be stated as the following two criteria: \begin{itemize} \item A facet
 should receive greater weight if it is covered by a highly-relevant document and
 less weight if it is covered by an irrelevant one. \item There
 should be a way to accumulate the weights received from multiple documents.
-\end{itemize} Based on this idea, we exploits the document retrieval scores to
+\end{itemize} Based on this idea, we exploit the document retrieval scores to
 model the contribution of relevance.  We find it more appealing to apply this
 technique on a language-model-based backend, since the document relevance score
 can be easily integrated into the final ranking results; the detail is
 elaborated in Section~\ref{ss:integration}.
 
-Our proposed framework is a Bayesian generative process.  Let $D$ denotes the document
-domain, $T$ the term domain, and $F$ the facet domain.  Let $C$ denotes the
+Our proposed framework is a Bayesian generative process.  Let $D$ denote the document
+domain, $T$ the term domain, and $F$ the facet domain.  Let $C$ denote the
 entire document collection.  Consider a document collection of size $N$, in
 which each document $d_j$ is associated with a set of terms $T_j$ and a set of
 facets $F_j$.  First, we assume that each term $t_i \in T_j$ and each facet
@@ -273,7 +273,7 @@ about the facets relatively easy, we study two kinds of such distributions.
 Consider a prior as a vector of size $|F|$: $(\beta_1, \beta_2, \ldots,
 \beta_{|F|})$.  The first one is the \emph{symmetric Dirichlet}: \[ (c, c,
 \ldots, c), \] in which we let $\beta_i = c$ for each $i \in [1, |F|]$ and $c$
-denotes some constant.  The second one is called \emph{smoothed-Dirichlet},
+denote some constant.  The second one is called \emph{smoothed-Dirichlet},
 which is widely-used as a smoothing method in the language modeling
 applications for information retrieval \cite{zhai2004study}: \[ (\mu
 \Pr(f_1|C), \mu \Pr(f_2|C), \ldots, \mu \Pr(f_{|F|}|C)), \] where $\mu$ denotes
@@ -322,9 +322,9 @@ benchmark resides in the availability of the following three type of data:
 formed by the fulltext content and a list of relevant facets, which is exactly
 what we need as input of the facet ranking algorithm.  \item \emph{Query logs}:
 The test collection has been open to public access and accumulated certain
-amount of query logs; we figured it a good source for collecting query topics.
+amount of query logs; our choice over the collection is made for its being good source for collecting query topics.
 \item \emph{Relevance judgments}: The collection was studied by a group of
-in-house domain experts; we figured it easier for the domain experts to create
+in-house domain experts, which would make it easier for the domain experts to create
 relevant judgments on a dataset they are more familiar with.  \end{itemize}
 
 The test corpus that we chose is the Tan-Hsin Archive \zhtw{(淡新檔案)}.  The
@@ -387,7 +387,7 @@ model, with Dirichlet-smoothed prior for $\beta$.  \end{itemize}
 
 To draw a fair comparison, we took the top-1000 documents retrieved by using
 Dirichlet-smoothed language model with $\mu = 2,500$ as the result set.  The
-hyperparameter was per-determined through experimentation.  All the algorithms took the
+hyperparameter was pre-determined through experimentation.  All the algorithms took the
 same set of document IDs as input.  For our proposed methods, we reused
 the retrieved scores returned by the document-level retrieval model, as
 stated in Section~\ref{ss:integration}.  The output was a sorted list of all the
@@ -563,4 +563,4 @@ challenges should be the focus of our future work.
 We thank Po-Yu Chen for his support on preparation of the test data.  The
 research efforts described in this paper are supported under the National Taiwan
 University Digital Archives Project (Project No.  NSC-98-2631-H-002-005), which
-is sponsored by National Science Council, Taiwan, 
+is sponsored by National Science Council, Taiwan. 
