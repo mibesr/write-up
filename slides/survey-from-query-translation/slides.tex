@@ -1,0 +1,378 @@
+\documentclass[bigger]{beamer}
+
+\mode<presentation>{
+  \usetheme{default}
+  \usefonttheme{serif}
+  \setbeamercovered{transparent}
+  \setbeamerfont{institute}{size=\footnotesize}
+  \setbeamerfont{tableofcontents}{size=\Large}
+}
+
+\usepackage[english]{babel}
+\usepackage{times}
+\usepackage{algorithmic}
+\usepackage{algorithm}
+
+%--------------------------------------------------
+% % Latin-1 only
+% \usepackage[latin1]{inputenc}
+% \usepackage[T1]{fontenc}
+%-------------------------------------------------- 
+
+% Chinese-support
+\usepackage[nocjkbg5]{ucs}
+\usepackage[utf8x]{inputenc}
+\usepackage[C00,T1]{fontenc}
+\newcommand\tradtext[1]{\bgroup\fontencoding{C00}\fontfamily{ming}\selectfont%
+\SetUnicodeOption{cjkbg5}#1\egroup}
+
+\title[]{Survey: From Query Translation to Cross-Language Query Expansion with Markov Chain Models}
+\author[]{Ruey-Cheng Chen} 
+\institute{Academia Sinica, Taiwan}
+\date[]{}
+\subject{Theoretical Computer Science}
+%--------------------------------------------------
+% \AtBeginSubsection[]
+% {
+%   \begin{frame}<beamer>
+%     \frametitle{Outline}
+%     \tableofcontents[currentsection,currentsubsection]
+%   \end{frame}
+% }
+%-------------------------------------------------- 
+%\beamerdefaultoverlayspecification{<+->}
+\newcommand<>\ul[2]{\textbf{#1}\begin{itemize}#2\end{itemize} \vskip 0.5em}
+\newcommand<>\ull[1]{\begin{itemize}#1\end{itemize}}
+\newcommand<>\ol[2]{\textbf{#1}\begin{enumerate}#2\end{enumerate}}
+\newcommand<>\dl[2]{\textbf{#1}\begin{description}#2\end{description}}
+\newcommand<>\f[2]{\begin{frame}{#1}#2\end{frame}}
+\newcommand<>\plain[2][]{\textbf{#1}\par#2\par}
+%--------------------------------------------------
+% \newcommand<>\mydef[2][]{\begin{definition}[#1]#2\end{definition}}
+%-------------------------------------------------- 
+\newcommand<>\tbl[3]{\textbf{#1}\vskip 0.5em\begin{center}\begin{tabular}{#2}#3\end{tabular}\end{center}}
+\newcommand<>\fig[3]{\textbf{#1}\vskip 0.5em\begin{center}\begin{figure}\includegraphics[#2]{#3}\end{figure}\end{center}}
+\newcommand<>\cols[1]{\begin{columns}#1\end{columns}}
+\newcommand<>\col[2]{\begin{column}{#1}#2\end{column}}
+
+\begin{document}
+
+\frame{ \titlepage }
+
+\f{References}{
+
+  \ul{Mandatory Reference}{ \item Guihong Cao, Jianfeng Gao, Jian-Yun Nie and
+  Jing Bai. 2007.  From query translation to cross-language query expansion
+  with Markov chain models. In CIKM 2007.  }
+
+  \plain[Pointers]{ 
+    \footnotesize{\url{http://www.miv.t.u-tokyo.ac.jp/danushka/}}
+    \par
+    \footnotesize{\url{http://ymatsuo.com/top\_eng.htm}}
+    \par
+    \footnotesize{\url{http://www.miv.t.u-tokyo.ac.jp/ishizuka/eng.html}}
+  }
+}
+
+\f{Outline}{ \tableofcontents }
+
+\section{Background}
+\f{Dictionary-Based CLIR}{
+  \ul{Current Status}{
+    \item Yields good results in past research
+    \item Challenges: coverage and tranlation ambiguity
+  }
+  \ul{Expansion by Semantically Similar Words}{
+    \item i.e., ``program'' (\tradtext{程式}) and ``algorithm'' (\tradtext{演算法})
+    \item Expansion steps are separated from retrieval steps
+    \item But, it is difficult to obtain optimal settings
+  }
+}
+
+\f{Solution: Markov Chain Models}{
+  \ul{MC Model as a Directed Graph}{
+    \item Terms as vertices
+    \item Term relations as edges
+    \ull{ \item Monolingual: co-occurrences \item Cross-lingual: dictionary translation }
+    \item ``Translation'' modeled as random walks
+  }
+  \ul{Advantages}{
+    \item Better integration of term relations
+    \item Extension of the effect of query expansion
+    \item Well-studied optimization for MC models
+  }
+}
+
+\f{Traditional CLIR}{
+  \plain{
+    \begin{eqnarray*}
+      \textrm{(Basic Document Ranking)} && \\
+      score(q,d) &=& \sum_{w \in q} P(w|\theta_q) \log\frac{P(w|\theta_d)}{P(w|\theta_q)} \\
+      &\approx& \sum_{w \in q} P(w|\theta_q) \log P(w|\theta_d) \\
+      \textrm{(with Query Translation)} && \\
+      score(q,d) &=& \sum_{c \in V} P(c|\theta_q) \log P(c|\theta_d) \\
+      &=& \sum_{c \in V} \sum_{e \in q} P(c,e|\theta_q) \log P(c|\theta_d) \\
+      &=& \sum_{c \in V} \sum_{e \in q} P(c|e) P(e|\theta_q) \log P(c|\theta_d) 
+    \end{eqnarray*}
+  }
+}
+
+\f{Estimation of $P(c|e)$}{
+  \ul{Using Dictionary-Based Translations}{
+    \item $P(c|e)$ is uniformly assigned across all the translations of $e$
+    \item $P(c|e) = 1$ if $c$ is the first translation of $e$ in the dictionary (and 0 otherwise)
+    \item Fallacy: covering ``literal translation'' only
+  }
+  \ul{Using Parallel Corpora}{
+    \item $P(c|e)$ is estimated by IBM Models on parallel corpora
+    \item Fallacy: quality, size, and availability
+  }
+  \ul{Pre- and Post-translation Expansion}{
+    \item Separated steps from the retrieval process
+    \item Primarily based on dictionary translation
+    \item Fallacy: parameter settings
+  }
+}
+
+\section{Query Translation as Random Walk}
+\f{Markov Chain Model}{
+  \ul{Weighted Directed Graph Representation}{
+    \item Nodes (denoted as $\nu$) represent terms
+    \item A edge from $\nu_i \xrightarrow{l} \nu_j$ represents a relation $l$ from $\nu_i$ to $\nu_j$
+    \item Transition probability $P(\nu_j|\nu_i, l)$
+    \item Relation type: \emph{translation}, \emph{co-occurrence}, and \emph{contain}
+    \ull{
+      \item \emph{Contain}: a short term is part of a longer term, e.g., ``program'' and ``program design''
+    }
+  }
+  \ul{Random Walk as a Two-Step Process}{
+    \item Transition from $\nu_i$ through an edge $l$ (with assumption $P(l|\nu_i) = P(l)$)
+    \item Selection of $\nu_j$ by $P(\nu_j|l, \nu_i)$
+    \item Thus, $P(\nu_j|\nu_i) = \sum_{l} P(\nu_j|l, \nu_i) P(l)$ with $\sum_{l} P(l) = 1$
+  }
+}
+
+\f{Random Walk}{
+  \ul{Query-Oriented MC Model}{
+    \item Form $\theta_q^0$ with initial query distribution
+    \item Transition: $\theta_q^i \rightarrow \theta_q^{i+1}$ for $0 \le i < k$
+    \ull{ 
+      \item $\nu$ retains $\gamma$ of its probability in itself
+      \item $\nu$ transferx $1 - \gamma$ of its probability to the related nodes
+    }
+    \item \emph{Active nodes}: nodes having non-zero probability in $\theta_q^k$
+  }
+  \ul{Advantage over Global MC}{
+    \item Fast
+    \item Less noise (by considering nodes related to the query)
+  }
+}
+
+\f{Formalism of Random Walk}{
+  \plain{
+    \begin{eqnarray*}
+      M_{ij} &=&  \left \{ \begin{array}{ll} 
+      (1 - \gamma) \sum_l P(\nu_j|l,\nu_i) P(l) & \mathit{i \ne j}\\ 
+      \gamma & \mathit{i = j} 
+      \end{array} \right .\\
+      M_{ij}^{(k)} &=& (\gamma \sum_{t = 0}^k (1 - \gamma) M^t)_{ij} \\
+      \theta_q^k &=&  \theta_q^0 M_{ij}^{(k)} \\
+      score(q,d) &=& \sum_{c \in V} P(c|\theta_q^k) \log P(c|\theta_d)
+    \end{eqnarray*}
+  }
+}
+
+\f{Parameter Estimation}{
+  \plain[Probability for Relations]{
+    \begin{eqnarray*}
+      P(\nu_j|\nu_i, trans) &=& \left \{ \begin{array}{ll}
+	\frac{1}{|\{\nu_k|\textrm{$\nu_k$ is a translation of $\nu_i$}\}|} & \textit{uniform} \\
+	P_{\mathrm{GIZA++}}(\nu_j|\nu_i) & \textit{GIZA++}
+      \end{array} \right . \\
+      P(\nu_j|\nu_i, contain) &=& \frac{1}{|\{\nu_k|\textrm{$\nu_k$ is part of $\nu_i$}\}|} \\
+      P(\nu_j|\nu_i, coc) &=& \frac{s(\nu_i,\nu_j)}{\sum_k s(\nu_i, \nu_k)}
+    \end{eqnarray*}
+  }
+  \ul{Probability Tuning}{
+    \item Search methods: gradient-descent, boosting, etc.
+    \item $\theta^{*} = \arg\max_\theta \mathrm{MAP}(\theta)$
+  }
+}
+
+\section{Experiments}
+\f{Experiment Setup}{
+  \ul{Benchmark}{
+    \item TREC 5 \& 6
+    \item TREC 9
+    \item NTCIR-3
+  }
+  \ul{Runs}{
+    \item Monolingual
+    \item UM (uniform model)
+    \item FM (first-one model)
+    \item GizaM (GIZA++ Model)
+    \item UM + MC
+    \item GizaM + MC
+  }
+}
+
+\f{Evaluation: TREC 5 \& 6}{
+  \fig{}{width=400pt}{fig/tbl2.eps}
+}
+
+\f{Evaluation: TREC 9}{
+  \fig{}{width=400pt}{fig/tbl3.eps}
+}
+
+\f{Evaluation: NTCIR-3}{
+  \fig{}{width=400pt}{fig/tbl4.eps}
+}
+
+\f{Evaluation: Relation for Short Queries}{
+  \fig{}{width=245pt}{fig/tbl5.eps}
+}
+
+\f{Evaluation: Relation for Long Queries}{
+  \fig{}{width=245pt}{fig/tbl6.eps}
+}
+
+%--------------------------------------------------
+% \f{Experiment Setup (cont'd)}{
+%   \begin{small}
+%     \tbl{Features with the Highest Linear Kernel SVM Weights}{l|l|l|l}{
+%       Feature & $\chi^2$ & SVM weight \\
+%       \hline
+%       1 & WebDice & N/A & 8.19 \\
+%       2 & X/Y & 33,459 & 7.53 \\
+%       3 & X, Y: & 4,089 & 6.00 \\
+%       4 & X or Y & 3,574 & 5.83 \\
+%       5 & X Y for & 1,089 & 4.49 \\
+%       6 & X, the Y & 1,784 & 2.99 \\
+%       7 & with X $\textrm{(}$Y & 1,819 & 2.85 \\
+%       8 & X = Y & 2,215 & 2.74 \\
+%       9 & X and Y are & 1,343 & 2.67 \\
+%       10 & X of Y & 2,472 & 2.56 \\
+%       \hline
+%       18 & WebOverlap & & 2.45 \\
+%       & \ldots & & \\
+%       66 & WebJaccard & & 0.618 \\
+%       & \ldots & & \\
+%       138 & WebPMI & & 0.0001 \\
+%     }
+%   \end{small}
+% }
+%-------------------------------------------------- 
+
+%--------------------------------------------------
+% \f{Evaluation: Semantic Similarity}{
+%   \fig{}{width=245pt}{fig/tbl4.eps}
+% }
+%-------------------------------------------------- 
+
+%--------------------------------------------------
+% \f{Evaluation: Taxonomy-Based Methods}{
+%   \tbl{Comparison with Taxonomy-Based Methods}{l|l}{
+%     Method & Correlation \\
+%     \hline
+%     Human replication & 0.9015 \\
+%     Resnik (1995) & 0.7450 \\
+%     Lin (1998) & 0.8224 \\
+%     Li et al. (2003) & 0.8914 \\
+%     Edge-counting & 0.6640 \\
+%     Information content & 0.7450 \\
+%     Jiang \& Conrath (1998) & 0.8484 \\
+%     Proposed & 0.8129 \\
+%   }
+% }
+%-------------------------------------------------- 
+
+%--------------------------------------------------
+% \f{Evaluation: Accuracy vs. Number of Snippets}{
+%   \fig{}{width=240pt}{fig/fig6.eps}
+% }
+%-------------------------------------------------- 
+
+%--------------------------------------------------
+% \f{Evaluation: Training Data}{
+%   \fig{Top correlation coefficient: 0.8345}{width=245pt}{fig/fig7.eps}
+% }
+%-------------------------------------------------- 
+
+%--------------------------------------------------
+% \section{Applications}
+% \subsection{Community Mining}
+% \f{Community Mining}{
+%   \ul{Procedures}{
+%     \item Obtain 5 clusters by using GAAC (Group-average agglomerative hierarchical clustering)
+%     \item Instances: 50 personal names from 5 communities on DMOZ (10 from each)
+%     \ull{ \item \emph{tennis players}, \emph{golfers}, \emph{actors}, \emph{politicians}, and \emph{scientists} }
+%     \item Metric: B-CUBED
+%   }
+%   \begin{small}
+%     \tbl{Results for Community Mining}{l|l|l|l}{
+%       Method & Precision & Recall & F-Measure \\
+%       \hline
+%       WebJaccard & 0.5926 & 0.712 & 0.6147 \\
+%       WebOverlap & 0.5976 & 0.680 & 0.5965 \\
+%       WebDice & 0.5895 & 0.716 & 0.6179 \\
+%       WebPMI & 0.2649 & 0.428 & 0.2916 \\
+%       Sahami & 0.6384 & 0.668 & 0.6426 \\
+%       Chen & 0.4763 & 0.624 & 0.4984 \\
+%       Proposed & 0.7958 & 0.804 & 0.7897 \\
+%     }
+%   \end{small}
+% }
+% 
+% \subsection{Entity Disambiguation}
+% \f{Entity Disambiguation}{
+%   \ul{Procedures}{
+%     \item Cluster the top 1,000 snippets for \emph{Jaguar} and \emph{Java}
+%     \item Similarity function: \begin{equation*}\mathrm{SIM}(S_a, S_b) =
+%     \frac{1}{|S_a||S_b|}\sum_{a \in S_a, b \in S_b}sim(a,b)\end{equation*} 
+%   } 
+%   \begin{scriptsize}
+%     \tbl{Results for Community Mining}{l||l|l|l|l|l|l|}{
+%       & Jaguar & & & Java & & \\
+%       \hline
+%       Method & Precision & Recall & F  & Precision & Recall & F \\
+%       \hline
+%       WebJaccard & 0.5613 & 0.5410 & 0.5288 & 0.5738 & 0.5564 & 0.5243 \\
+%       WebOverlap & 0.6463 & 0.6314 & 0.6201 & 0.6228 & 0.5895 & 0.5600 \\
+%       WebDice & 0.5613 & 0.5410 & 0.5288 & 0.5738 & 0.5564 & 0.5243 \\
+%       WebPMI & 0.5607 & 0.4780 & 0.5026 & 0.7747 & 0.5950 & 0.6468 \\
+%       Sahami & 0.6061 & 0.6337 & 0.6019 & 0.7510 & 0.4793 & 0.5761 \\
+%       Chen & 0.5312 & 0.6159 & 0.5452 & 0.7744 & 0.5895 & 0.6358 \\
+%       Proposed & 0.6892 & 0.7144 & 0.6720 & 0.8198 & 0.6446 & 0.6910 \\
+%     }
+%   \end{scriptsize}
+% }
+%-------------------------------------------------- 
+
+%--------------------------------------------------
+% \section{Conclusions \& Comments}
+% \f{Conclusions \& Comments}{
+%   \ul{Conclusions}{
+%   }
+%   \ul{Comments}{
+%   }
+% }
+%-------------------------------------------------- 
+
+\section<presentation>*{\appendixname}
+
+\begin{frame}%[allowframebreaks]
+  \frametitle{References}
+  \small
+  \bibliography{report}
+  \bibliographystyle{alpha}
+\end{frame}
+
+\frame{
+  \begin{center}
+    \Huge{Thanks for your attention!}
+    \par
+    Any Question?
+  \end{center}
+}
+
+\end{document}

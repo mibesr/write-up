@@ -1,0 +1,269 @@
+\documentclass[bigger]{beamer}
+
+\mode<presentation>{
+  \usetheme{default}
+  \usefonttheme{serif}
+  \setbeamercovered{transparent}
+  \setbeamerfont{institute}{size=\footnotesize}
+  \setbeamerfont{tableofcontents}{size=\Large}
+}
+
+\usepackage[english]{babel}
+\usepackage{times}
+\usepackage{algorithmic}
+\usepackage{algorithm}
+
+% Latin-1 only
+\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+%--------------------------------------------------
+% % Chinese-support
+% \usepackage[nocjkbg5]{ucs}
+% \usepackage[utf8x]{inputenc}
+% \usepackage[C00,T1]{fontenc}
+% \newcommand\tradtext[1]{\bgroup\fontencoding{C00}\fontfamily{ming}\selectfont%
+% \SetUnicodeOption{cjkbg5}#1\egroup}
+%-------------------------------------------------- 
+
+\title[]{Survey: The Discoverability of the Web}
+\author[]{Ruey-Cheng Chen} 
+\institute{Academia Sinica, Taiwan}
+\date[]{}
+\subject{Theoretical Computer Science}
+%--------------------------------------------------
+% \AtBeginSubsection[]
+% {
+%   \begin{frame}<beamer>
+%     \frametitle{Outline}
+%     \tableofcontents[currentsection,currentsubsection]
+%   \end{frame}
+% }
+%-------------------------------------------------- 
+%\beamerdefaultoverlayspecification{<+->}
+\newcommand<>\ul[2]{\textbf{#1}\begin{itemize}#2\end{itemize} \vskip 0.5em}
+\newcommand<>\ull[1]{\begin{itemize}#1\end{itemize}}
+\newcommand<>\ol[2]{\textbf{#1}\begin{enumerate}#2\end{enumerate}}
+\newcommand<>\dl[2]{\textbf{#1}\begin{description}#2\end{description}}
+\newcommand<>\f[2]{\begin{frame}{#1}#2\end{frame}}
+\newcommand<>\mydef[2][]{\textbf{#1}\par#2\par}
+%--------------------------------------------------
+% \newcommand<>\mydef[2][]{\begin{definition}[#1]#2\end{definition}}
+%-------------------------------------------------- 
+\newcommand<>\tbl[3]{\textbf{#1}\vskip 0.5em\begin{center}\begin{tabular}{#2}#3\end{tabular}\end{center}}
+\newcommand<>\fig[3]{\textbf{#1}\vskip 0.5em\begin{center}\begin{figure}\includegraphics[#2]{#3}\end{figure}\end{center}}
+\newcommand<>\cols[1]{\begin{columns}#1\end{columns}}
+\newcommand<>\col[2]{\begin{column}{#1}#2\end{column}}
+
+\begin{document}
+
+\frame{ \titlepage }
+
+\f{References}{
+
+  \ul{Mandatory Reference}{ \item Dasgupta, A., Ghosh, A., Kumar, R., Olston,
+  C., Pandey, S., and Tomkins, A. 2007. The discoverability of the web. In
+  Proceedings of the 16th international Conference on World Wide Web (Banff,
+  Alberta, Canada, May 08 - 12, 2007). WWW '07. ACM Press, New York, NY,
+  421-430. }
+
+  \ul{Pointers}{ 
+    \item \footnotesize{\url{ http://research.yahoo.com/~anirban }}
+    \item \footnotesize{\url{ http://research.yahoo.com/~arpita }}
+    \item \footnotesize{\url{ http://research.yahoo.com/~ravikumar }}
+    \item \footnotesize{\url{ http://research.yahoo.com/~olston }}
+    \item \footnotesize{\url{ http://research.yahoo.com/~atomkins }}
+  }
+}
+
+\f{Outline}{ \tableofcontents }
+
+\section{Introduction}
+
+\f{Introduction}{
+  \ul{Discovering New Pages}{
+    \item Discoverability as combinatorial cover problem (NP-Hard)
+    \item Minimization of the overhead of discovering new content
+  }
+  \fig{Sample Scenario}{width=200pt}{fig/fig1.eps}
+}
+
+\subsection{Problem Definition}
+\f{Problem Definition}{
+  \ul{Covering on a Bipartite Graph}{
+    \item A snapshot $G_t = (V_t, E_t)$ at any given time $t$
+    \item \emph{Old nodes} at time $t$: $X_t = \cup_{j=1}^{t-1}V_j$ 
+    \item \emph{New nodes} at time $t$: $Y_t = V_t \backslash X_t$
+    \item Let $H_t = (X_t,Y_t,Z_t)$ be a bipartite graph, where $Z_t$ is an edge set
+    \item For all $z=(x,y) \in Z_t$, there is a path from $x$ to $y$ of the
+    form $x \rightarrow y_1 \rightarrow \ldots \rightarrow y_k = y$ \alert{(Efficiently discoverable)}
+    \item In this case, each $y_i$ is \emph{covered} by $x$
+  }
+  \mydef[The Problem of Discoverability]{
+    Cover the new nodes in $Y_t$ using as few nodes from $X_t$ as possible.
+  }
+}
+
+\f{Problem Definition (cont'd)}{
+  \ul{Similar Problems}{
+    \item \emph{k-budgeted cover}: cover as many nodes in $Y_t$ using $k$ nodes from $X_t$
+
+    \item \emph{$\rho$-partial cover}: cover at least $\rho|Y_t|$ nodes in
+    $Y_t$ using as few nodes from $X_t$ as possible, given any $\rho \le 1$
+
+    \item Both problems are NP-Hard
+  }
+  \ul{Notations}{
+    \item $N(x)$: the set of new nodes efficiently discoverable from $x$
+    \ull{ \item i.e., $N(x)= \{y \mid (x,y) \in Z_t \}$ }
+    \item $N(S) = \cup_{x \in S}N(x)$ for a subset $S$ of $X_t$
+  }
+  \mydef[Key Metric: Overhead]{
+    If a set $O$ of old pages are crawled to discover $|N(O)|$ pages, we define the \emph{overhead} of $O$ as $\frac{|O|}{|N(O)|}$.
+  }
+}
+
+\subsection{\texttt{GREEDY} Algorithm}
+\f{An Algorithmic Upper Bound}{
+  \textbf{The \texttt{GREEDY} Algorithm}
+  \vskip 0.5em
+  \begin{algorithmic}[1]
+    \STATE $C_t \leftarrow \emptyset$
+    \WHILE{``not done''}
+      \STATE Find $x \in X_t \backslash C_t$ that maximize $|N(X) \backslash N(C_t)|$
+      \STATE $C_t \leftarrow C_t \cup \{x\}$
+    \ENDWHILE
+    \STATE \textbf{return} $C_t$
+  \end{algorithmic}
+  \vskip 1em
+
+  \ul{Predicate ``not done''}{
+    \item $|C_t| < k$ in $k$-budgeted cover problem
+    \item $|N(C_t)| < \rho|Y_t|$ in $\rho$-partial cover problem
+  }
+}
+
+\section{Data}
+\f{Data}{
+  \ul{Site Recrawl Dataset}{
+    \item A repeated recrawl of 200 websites over a period of manyweeks
+    \item Noise site and ``Orphan'' pages removed
+    \item 42 out of 77 sites selected after data cleaning
+    \item 640,389 pages at the first timestamp, and 223,435 new pages over the period
+  }
+  \ul{Chilean Web Dataset}{
+    \item 3 snapshots for the Chilean Web based on monthly complete crawls
+    \item 7.4M pages and 67.5M edges in the first snapshot
+    \item 7.43M pages and 70.66M edges in the first snapshot
+  }
+}
+
+\section{Measurements}
+\subsection{Cover Size}
+\f{Measurements: Cover Size}{
+  \fig{Cover Size vs. the Number of Pages Covered}{width=250pt}{fig/fig2-1.eps}
+}
+
+\f{Measurements: Cover Size (cont'd)}{
+  \fig{Cover Size vs. the Number of Pages Covered}{width=250pt}{fig/fig2-2.eps}
+}
+
+\f{Measurements: Cover Size (cont'd)}{
+  \fig{Overhead and the Number of Covered Pages}{width=250pt}{fig/fig3a.eps}
+}
+
+\f{Measurements: Cover Size (cont'd)}{
+  \fig{Fraction of New Pages Covered}{width=250pt}{fig/fig3b.eps}
+}
+
+\subsection{90\% Covers}
+\f{Measurements: 90\% Covers}{
+  \fig{90\% Covers Statistics}{width=250pt}{fig/fig3c.eps}
+}
+
+\f{Measurements: 90\% Covers (cont'd)}{
+  \fig{Histogram of 90\% Cover Sizes}{width=250pt}{fig/fig4.eps}
+}
+
+\subsection{Node Redundancy}
+\f{Measurements: Node Redundancy}{
+  \fig{Overlap Distribution}{width=250pt}{fig/fig5.eps}
+}
+
+\subsection{Overhead}
+\f{Measurements: New Page Discovery}{
+  \fig{Global Discovery of New Pages on Old Sites}{width=250pt}{fig/fig6.eps}
+}
+
+\f{Measurements: New Site Discovery}{
+  \fig{Chile Site-Level Discovery}{width=250pt}{fig/fig7.eps}
+}
+
+\section{History-Based Algorithms}
+\f{History-Based Algorithms}{
+  \ul{Using Statistics in $H_{t-i}$ for Discovery of New Content in $H_t$}{
+    \item \texttt{OD}: the number of pages discovered historically
+    \item \texttt{CLIQ}: past degree information and overlaps of pages discovered
+    \item \texttt{COV}: historical results of \texttt{GREEDY}
+  }
+  \ul{Notations}{
+    \item $S^*$: the optimal solution to the $k$-budgeted cover on $H_t$
+    \item $S$: the solution returned by an algorithm \texttt{ALG}
+    \item $\rho(\mathtt{ALG}) = N(S)/N(S^*)$ (coverage)
+    \item $N$: the total number of new nodes
+  }
+}
+
+\f{Algorithms}{
+  \mydef[\texttt{OD}: Outdegree-Based Algorithm]{
+
+    Suppose that for every old node $i$, we have an estimate $p_i = |N(i)|/N$.
+    A natural algorithm is as follows: pick $k$ old nodes with the largest
+    $p_i$'s and crawl these nodes.
+
+  }
+  \vskip1em
+
+  \mydef[\texttt{CLIQ}: Overlap-Based Algorithm]{
+
+    Let $p_i$ be as above, and for a pair of old nodes $(i,j)$, let $p_{ij}$ be
+    the fraction of new nodes that $i$ and $j$ both cover: $p_{ij} = |N(i) \cap
+    N(j)|/N$.  Partition nodes into equivalence classes $C_1, \ldots, C_l$, and
+    sort these classes in order of descending $N(i)$'s.  The output $S$ is the
+    set of $p_i$'s corresponding to the $k'$ largest $q_i$'s, where $k' =
+    \min(k,l)$ and $q_i = \max_{j \in C_i}p_j$.
+
+  }
+
+}
+
+\section{Analysis}
+\f{Results}{
+  \fig{Coverage as a Function Of Average Cover Size, Recrawl Frequency 1}{width=250pt}{fig/fig8.eps}
+}
+
+\f{Results (cont'd)}{
+  \fig{Coverage as a Function Of Average Cover Size, Recrawl Frequency 4}{width=250pt}{fig/fig9.eps}
+}
+
+\f{Results (cont'd)}{
+  \fig{Analysis of Covers}{width=\columnwidth}{fig/tbl2.eps}
+}
+
+\section<presentation>*{\appendixname}
+
+\begin{frame}%[allowframebreaks]
+  \frametitle{References}
+  \small
+  \bibliography{report}
+  \bibliographystyle{alpha}
+\end{frame}
+
+\frame{
+  \begin{center}
+    \Huge{Thanks for your attention!}
+    \par
+    Any Question?
+  \end{center}
+}
+
+\end{document}

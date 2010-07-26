@@ -1,0 +1,339 @@
+\documentclass[bigger]{beamer}
+
+\mode<presentation>{
+  \usetheme{default}
+  \usefonttheme{serif}
+  \setbeamercovered{transparent}
+  \setbeamerfont{institute}{size=\footnotesize}
+  \setbeamerfont{tableofcontents}{size=\Large}
+}
+
+\usepackage[english]{babel}
+\usepackage{times}
+\usepackage{algorithmic}
+\usepackage{algorithm}
+
+% Latin-1 only
+\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+%--------------------------------------------------
+% % Chinese-support
+% \usepackage[nocjkbg5]{ucs}
+% \usepackage[utf8x]{inputenc}
+% \usepackage[C00,T1]{fontenc}
+% \newcommand\tradtext[1]{\bgroup\fontencoding{C00}\fontfamily{ming}\selectfont%
+% \SetUnicodeOption{cjkbg5}#1\egroup}
+%-------------------------------------------------- 
+
+\title[]{Survey: Measuring Semantic Similarity Between Words Using Web Search Engines}
+\author[]{Ruey-Cheng Chen} 
+\institute{Academia Sinica, Taiwan}
+\date[]{}
+\subject{Theoretical Computer Science}
+%--------------------------------------------------
+% \AtBeginSubsection[]
+% {
+%   \begin{frame}<beamer>
+%     \frametitle{Outline}
+%     \tableofcontents[currentsection,currentsubsection]
+%   \end{frame}
+% }
+%-------------------------------------------------- 
+%\beamerdefaultoverlayspecification{<+->}
+\newcommand<>\ul[2]{\textbf{#1}\begin{itemize}#2\end{itemize} \vskip 0.5em}
+\newcommand<>\ull[1]{\begin{itemize}#1\end{itemize}}
+\newcommand<>\ol[2]{\textbf{#1}\begin{enumerate}#2\end{enumerate}}
+\newcommand<>\dl[2]{\textbf{#1}\begin{description}#2\end{description}}
+\newcommand<>\f[2]{\begin{frame}{#1}#2\end{frame}}
+\newcommand<>\plain[2][]{\textbf{#1}\par#2\par}
+%--------------------------------------------------
+% \newcommand<>\mydef[2][]{\begin{definition}[#1]#2\end{definition}}
+%-------------------------------------------------- 
+\newcommand<>\tbl[3]{\textbf{#1}\vskip 0.5em\begin{center}\begin{tabular}{#2}#3\end{tabular}\end{center}}
+\newcommand<>\fig[3]{\textbf{#1}\vskip 0.5em\begin{center}\begin{figure}\includegraphics[#2]{#3}\end{figure}\end{center}}
+\newcommand<>\cols[1]{\begin{columns}#1\end{columns}}
+\newcommand<>\col[2]{\begin{column}{#1}#2\end{column}}
+
+\begin{document}
+
+\frame{ \titlepage }
+
+\f{References}{
+
+  \ul{Mandatory Reference}{ \item Bollegala, D., Matsuo, Y., and Ishizuka, M.,
+  2007. Measuring semantic similarity between words using web search engines.
+  In Proceedings of the 16th international Conference on World Wide Web (Banff,
+  Alberta, Canada, May 08 - 12, 2007). WWW '07. ACM Press, New York, NY,
+  757-766. }
+
+  \plain[Pointers]{ 
+    \footnotesize{\url{http://www.miv.t.u-tokyo.ac.jp/danushka/}}
+    \par
+    \footnotesize{\url{http://ymatsuo.com/top\_eng.htm}}
+    \par
+    \footnotesize{\url{http://www.miv.t.u-tokyo.ac.jp/ishizuka/eng.html}}
+  }
+}
+
+\f{Outline}{ \tableofcontents }
+
+\section{Introduction}
+
+\f{Introduction}{
+  \ul{Challenges}{
+    \item Semantic similarity between words change over time and across domain
+    \item New words are constantly being created as well as new senses are assigned to existing words
+  }
+  \ul{Co-occurrence Information on the Web}{
+    \item Page counts: simple, but unreliable (when used alone)
+    \ull{ \item Positions of words in a page, senses of words, statistical significance }
+    \item Text snippets: only top snippets can be accessed efficiently 
+    \ull{ \item Ranking of search results }
+  }
+}
+
+\section{Proposed Method}
+\f{Proposed Method}{
+  \ul{Lexico-Syntactic Patterns}{
+    \item Examples: \emph{also known as}, \emph{is a}, \emph{part of}, \emph{is an example of}
+    \item ``The \textbf{Jaguar} \underline{is the largest} \textbf{cat} in Western Hemisphere\ldots''
+    \item Not every such pattern represents synonymous relation between words
+  }
+  \ul{Solution}{
+    \item Treat page-count-based measures and lexico-syntactic patterns as features
+    \item Use SVM to derive robust weights
+  }
+}
+
+\subsection{Page-Count-Based Measures}
+\f{Co-occurrence Measures}{
+  \plain{
+    The ``Web versions'' for four common co-occurrence statistics are defined as:
+    \begin{eqnarray*}
+      \mathrm{WebJaccard}(P,Q) &=&  \frac{H(P \cap Q)}{H(P) + H(Q) - H(P \cap Q)} \\
+      \mathrm{WebOverlap}(P,Q) &=&  \frac{H(P \cap Q)}{\min(H(P), H(Q))} \\
+      \mathrm{WebDice}(P,Q) &=&  \frac{2 \times H(P \cap Q)}{H(P) + H(Q)} \\
+      \mathrm{WebPMI}(P,Q) &=&  \log\frac{H(P \cap Q)/N}{H(P)/N + H(Q)/N}
+    \end{eqnarray*}
+    where $H(S)$ denotes the page counts for the query $S$ and $\mathrm{Web*}(P,Q) = 0$ when $H(P \cap Q) < c$
+  }
+}
+
+\subsection{Lexico-Syntactic Patterns}
+\f{Lexico-Syntactic Patterns}{
+  \ul{Extracting Patterns from Snippets}{
+    \item Get 5,000 synonymous and 5,000 non-synonymous word pairs from WordNet
+    \item Obtain top-ranked snippets for each pair of words ``X Y''
+    \item Extract $n$-grams for $n = 2,\ldots,5$ which contains exactly one X and one Y
+    \ull{ 
+      \item ``X and Y are two \ldots'' $\Rightarrow \{$ ``X and Y'', ``X and Y are'', \ldots $\}$
+    }
+  }
+  \plain[Algorithm: ExtractPatterns]{
+    \begin{small}
+      \begin{algorithmic}[1]
+	\REQUIRE $S$ is a set of word pairs and $N$ is an empty set
+	\FORALL{word pairs $(A,B) \in S$}
+	  \STATE $D \leftarrow \mathtt{GetSnippets}(``A B'')$
+	\ENDFOR
+	\FORALL{snippet $d \in D$}
+	  \STATE $N \leftarrow N + \mathtt{GetNgrams}(d,A,B)$
+	\ENDFOR
+	\STATE \textbf{return} $\mathtt{CountFreq}(N)$
+      \end{algorithmic}
+    \end{small}
+  }
+}
+
+\f{Feature Selection}{
+  \ul{Obtaining Feature Vectors}{
+    \item Rank patterns using the $\chi^2$ statistic
+    \begin{equation*}
+      \chi^2 = \frac{(P+N)(p_v(N-n_v)-n_v(P-p_v))^2}{PN(p_v+n_v)(P+N-p_v-n_v)}
+    \end{equation*}
+    where $P = \sum_vp_v$ and $N = \sum_vn_v$ ($p_v$ and $n_v$ denote frequency counts for synonymy and non-synonymy, respectively)
+    \item Output feature vectors
+  }
+
+  \plain[Algorithm: GetFeatureVectors]{
+    \begin{small}
+      \begin{algorithmic}[1]
+	\STATE \emph{(snipped\ldots)}
+	\STATE $SelPats \leftarrow \mathtt{SelectPats}(N, GoodPats)$
+	\STATE $PF \leftarrow \mathtt{Normalize}(SelPats)$
+	\STATE \textbf{return} $[PF, WebJaccard, WebOverlap, WebDice, WebPMI]$
+      \end{algorithmic}
+    \end{small}
+  }
+}
+
+\f{Computing the Semantic Similarity}{
+  \plain[Semantic Similarity]{
+    The semantic similarity between words $A'$ and $B'$ is defined as:
+    \begin{equation*} SemSim(A',B') = \Pr(F'|synonymous) \end{equation*}
+  }
+  \ul{Procedures}{
+    \item Train a two-class SVM classifier
+    \ull{
+      \item 5,000 positive and 5,000 negative examples from WordNet
+      \item 4 co-occurrence measures + top-ranked 200 patterns 
+    }
+    \item Get the feature vector for $(A', B')$ (the same way as in the training phase)
+    \item Send to the classifier
+    \item Use sigmoid functions to obtain the calibrated posterior probability
+    \ull{ \item The output of SVM is the distance to the decision hyper-plane }
+  }
+}
+
+\section{Experiments}
+\f{Experiment Setup}{
+  \ul{Benchmark}{
+    \item Miller-Charles dataset
+    \item 30 pairs rated from 0 to 4 by 38 human subjects
+  }
+  \vskip 0.5em
+  \tbl{Performance with Different Kernels}{l|l}{
+    Kernel Type & Correlation \\
+    \hline
+    Linear & \textbf{0.8345} \\
+    Polynomial (degree = 2) & 0.5872 \\
+    Polynomial (degree = 3) & 0.5387 \\
+    RBF & 0.6632 \\
+    Sigmoid & 0.5277 \\
+  }
+}
+
+\f{Experiment Setup (cont'd)}{
+  \begin{small}
+    \tbl{Features with the Highest Linear Kernel SVM Weights}{l|l|l|l}{
+      Feature & $\chi^2$ & SVM weight \\
+      \hline
+      1 & WebDice & N/A & 8.19 \\
+      2 & X/Y & 33,459 & 7.53 \\
+      3 & X, Y: & 4,089 & 6.00 \\
+      4 & X or Y & 3,574 & 5.83 \\
+      5 & X Y for & 1,089 & 4.49 \\
+      6 & X, the Y & 1,784 & 2.99 \\
+      7 & with X $\textrm{(}$Y & 1,819 & 2.85 \\
+      8 & X = Y & 2,215 & 2.74 \\
+      9 & X and Y are & 1,343 & 2.67 \\
+      10 & X of Y & 2,472 & 2.56 \\
+      \hline
+      18 & WebOverlap & & 2.45 \\
+      & \ldots & & \\
+      66 & WebJaccard & & 0.618 \\
+      & \ldots & & \\
+      138 & WebPMI & & 0.0001 \\
+    }
+  \end{small}
+}
+
+\f{Evaluation: Semantic Similarity}{
+  \fig{}{width=245pt}{fig/tbl4.eps}
+}
+
+\f{Evaluation: Taxonomy-Based Methods}{
+  \tbl{Comparison with Taxonomy-Based Methods}{l|l}{
+    Method & Correlation \\
+    \hline
+    Human replication & 0.9015 \\
+    Resnik (1995) & 0.7450 \\
+    Lin (1998) & 0.8224 \\
+    Li et al. (2003) & 0.8914 \\
+    Edge-counting & 0.6640 \\
+    Information content & 0.7450 \\
+    Jiang \& Conrath (1998) & 0.8484 \\
+    Proposed & 0.8129 \\
+  }
+}
+
+\f{Evaluation: Accuracy vs. Number of Snippets}{
+  \fig{}{width=240pt}{fig/fig6.eps}
+}
+
+\f{Evaluation: Training Data}{
+  \fig{Top correlation coefficient: 0.8345}{width=245pt}{fig/fig7.eps}
+}
+
+\section{Applications}
+\subsection{Community Mining}
+\f{Community Mining}{
+  \ul{Procedures}{
+    \item Obtain 5 clusters by using GAAC (Group-average agglomerative hierarchical clustering)
+    \item Instances: 50 personal names from 5 communities on DMOZ (10 from each)
+    \ull{ \item \emph{tennis players}, \emph{golfers}, \emph{actors}, \emph{politicians}, and \emph{scientists} }
+    \item Metric: B-CUBED
+  }
+  \begin{small}
+    \tbl{Results for Community Mining}{l|l|l|l}{
+      Method & Precision & Recall & F-Measure \\
+      \hline
+      WebJaccard & 0.5926 & 0.712 & 0.6147 \\
+      WebOverlap & 0.5976 & 0.680 & 0.5965 \\
+      WebDice & 0.5895 & 0.716 & 0.6179 \\
+      WebPMI & 0.2649 & 0.428 & 0.2916 \\
+      Sahami & 0.6384 & 0.668 & 0.6426 \\
+      Chen & 0.4763 & 0.624 & 0.4984 \\
+      Proposed & 0.7958 & 0.804 & 0.7897 \\
+    }
+  \end{small}
+}
+
+\subsection{Entity Disambiguation}
+\f{Entity Disambiguation}{
+  \ul{Procedures}{
+    \item Cluster the top 1,000 snippets for \emph{Jaguar} and \emph{Java}
+    \item Similarity function: \begin{equation*}\mathrm{SIM}(S_a, S_b) =
+    \frac{1}{|S_a||S_b|}\sum_{a \in S_a, b \in S_b}sim(a,b)\end{equation*} 
+  } 
+  \begin{scriptsize}
+    \tbl{Results for Community Mining}{l||l|l|l|l|l|l|}{
+      & Jaguar & & & Java & & \\
+      \hline
+      Method & Precision & Recall & F  & Precision & Recall & F \\
+      \hline
+      WebJaccard & 0.5613 & 0.5410 & 0.5288 & 0.5738 & 0.5564 & 0.5243 \\
+      WebOverlap & 0.6463 & 0.6314 & 0.6201 & 0.6228 & 0.5895 & 0.5600 \\
+      WebDice & 0.5613 & 0.5410 & 0.5288 & 0.5738 & 0.5564 & 0.5243 \\
+      WebPMI & 0.5607 & 0.4780 & 0.5026 & 0.7747 & 0.5950 & 0.6468 \\
+      Sahami & 0.6061 & 0.6337 & 0.6019 & 0.7510 & 0.4793 & 0.5761 \\
+      Chen & 0.5312 & 0.6159 & 0.5452 & 0.7744 & 0.5895 & 0.6358 \\
+      Proposed & 0.6892 & 0.7144 & 0.6720 & 0.8198 & 0.6446 & 0.6910 \\
+    }
+  \end{scriptsize}
+}
+
+\section{Conclusions \& Comments}
+\f{Conclusions \& Comments}{
+  \ul{Conclusions}{
+    \item A robust measure that use both page counts and snippets 
+    \item Promising results (e.g., outperforming all the baselines)
+    \item Highly scalable and efficient method
+    \item No taxonomy information involved
+  }
+  \ul{Comments}{
+    \item Patterns as features is a good idea
+    \ull{ \item But the selection of patterns is not rigorous }
+    \item Is the measure ``robust''?
+    \ull{ \item Results for ``X Y'' also includes pages containing either only X or only Y }
+  }
+}
+
+\section<presentation>*{\appendixname}
+
+\begin{frame}%[allowframebreaks]
+  \frametitle{References}
+  \small
+  \bibliography{report}
+  \bibliographystyle{alpha}
+\end{frame}
+
+\frame{
+  \begin{center}
+    \Huge{Thanks for your attention!}
+    \par
+    Any Question?
+  \end{center}
+}
+
+\end{document}
