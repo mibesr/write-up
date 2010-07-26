@@ -1,0 +1,39 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use Perl6::Say;
+
+my $N = 20;
+
+say <<"__PRE__";
+digraph storygraph {
+    size = "7,10";
+    page = "8.5,11";
+    center = "";
+    node [shape = circle, margin=".005,.0075", width=.1,height=.1,fontsize=9];
+__PRE__
+
+for my $i (1..$N) {
+    for my $j (1..$N) {
+	next if $i == $j;
+	my $dice = int 1 + rand(80);
+
+	if ($dice <= 10) {
+	    my $weight = sprintf "%0.2f", rand 1;
+	    say qq(   $i -> $j [arrowsize = .4, label = "$weight", fontsize = 5, penwidth=0.5, weight = $weight];);
+	}
+
+	if ($dice <= 5) {
+	    my $weight = sprintf "%0.2f", rand 1;
+	    say qq(   $i -> $j [style = dashed, arrowsize = .4, label = "$weight", fontsize = 5, weight = $weight];);
+	}
+
+	if ($dice <= 2) {
+	    my $weight = sprintf "%0.2f", rand 1;
+	    say qq(   $i -> $j [style = bold, arrowsize = .4, label = "$weight", fontsize = 5, weight = $weight];);
+	}
+    }
+}
+
+say "}";
