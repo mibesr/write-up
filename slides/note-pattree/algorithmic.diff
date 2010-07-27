@@ -1,0 +1,10 @@
+44a45
+> \newcommand{\algorithmicreturn}{\textbf{return}}
+113a115
+>   \newcommand{\PROC}[2]{\item[\textbf{\texttt{##1}}(##2)]}
+114a117,118
+>   \newcommand{\CALL}[2]{\textbf{\texttt{##1}}(##2)}
+>   \newcommand{\RETURN}{\ALC@it\algorithmicreturn\ }
+121a126,127
+>   \newcommand{\IFTHEN}[2]{\ALC@it\algorithmicif\ ##1\ \algorithmicthen\ ##2}
+>   \newcommand{\IFTHENELSE}[3]{\ALC@it\algorithmicif\ ##1\ \algorithmicthen\ ##2\ \ALC@it\algorithmicelse\ ##3}

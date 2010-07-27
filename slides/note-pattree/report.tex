@@ -1,0 +1,75 @@
+\documentclass{article}
+
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+\begin{document}
+
+\section{Algorithm}
+
+\begin{algorithm}
+  \begin{algorithmic}[1]
+    \PROC{Search}{$T$, $x$}
+    \REQUIRE{$T$ is a PAT Tree, $x$ is the element to be searched for}
+    \IFTHEN{$T = \emptyset$}{\textbf{return} \texttt{Nil}}
+    \STATE $p \leftarrow T.root$
+    \STATE $n \leftarrow T.root.left$
+    \WHILE{$n.bit > p.bit$}
+      \STATE $p \leftarrow n$
+      \STATE $b \leftarrow$ \CALL{TestBit}{$x$, $n.bit$}
+      \IFTHENELSE{$b = 0$}{$n \leftarrow n.left$}{$n \leftarrow n.right$}
+    \ENDWHILE
+    \RETURN $n$
+  \end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+  \begin{algorithmic}[1]
+    \PROC{Insert}{$T$, $x$}
+    \REQUIRE{$T$ is a PAT Tree, $x$ is the element to be inserted}
+    \IF{$T = \emptyset$}
+      \STATE \CALL{InsertAtRoot}{$T$, $x$}
+    \ELSE
+      \STATE $n \leftarrow$ \CALL{Search}{$T$, $x$}
+      \IF{$x = n.key$}
+	\STATE $n.freq \leftarrow n.freq + 1$
+      \ELSE
+	\STATE $d \leftarrow$ \CALL{FirstDiffBit}{$x$, $n.key$}
+	\STATE $p \leftarrow T.root$
+	\STATE $n \leftarrow T.root.left$
+	\WHILE{$n.bit > p.bit$ and $n.bit > d$}
+	  \STATE $n.count \leftarrow n.count + 1$
+	  \STATE $p \leftarrow n$
+	  \STATE $b \leftarrow$ \CALL{TestBit}{$x$, $n.bit$}
+	  \IFTHENELSE{$b = 0$}{$n \leftarrow n.left$}{$n \leftarrow n.right$}
+	\ENDWHILE
+	\STATE \CALL{InsertAt}{$p$, $n$, $d$, $x$}
+      \ENDIF
+    \ENDIF
+  \end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+  \begin{algorithmic}[1]
+    \PROC{InsertAt}{$p$, $n$, $d$, $x$}
+    \STATE $y \leftarrow$ \CALL{NewNode}{}
+    \STATE $y.key \leftarrow x$
+    \STATE $y.freq \leftarrow 1$
+    \STATE $y.count \leftarrow 0$
+    \STATE $y.bit \leftarrow d$
+    \IF{\CALL{TestBit}{$x$, $d$} = 0}
+      \STATE $y.left \leftarrow y$
+      \STATE $y.right \leftarrow n$
+    \ELSE
+      \STATE $y.left \leftarrow n$
+      \STATE $y.right \leftarrow y$
+    \ENDIF
+    \IFTHENELSE{$y.left.bit > y.bit$}{$y.count \leftarrow y.count + y.left.count$}%
+    {$y.count \leftarrow y.count + y.left.freq$}
+    \IFTHENELSE{$y.right.bit > y.bit$}{$y.count \leftarrow y.count + y.right.count$}%
+    {$y.count \leftarrow y.count + y.right.freq$}
+    \IFTHENELSE{$n = p.left$}{$p.left \leftarrow y$}{$p.right \leftarrow y$}
+  \end{algorithmic}
+\end{algorithm}
+
+\end{document}

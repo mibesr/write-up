@@ -1,0 +1,255 @@
+\documentclass{beamer}
+
+\mode<presentation>{
+  \usetheme{default}
+  \usefonttheme{serif}
+  \setbeamercovered{transparent}
+  \setbeamerfont{institute}{size=\footnotesize}
+  \setbeamerfont{tableofcontents}{size=\Large}
+  \setbeamertemplate{footline}[page number]
+}
+
+\usepackage[english]{babel}
+\usepackage{times}
+\usepackage{algorithmic}
+\usepackage{algorithm}
+\usepackage{epsfig}
+\usepackage{pgf}
+
+% Latin-1 only
+\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+%--------------------------------------------------
+% % Chinese-support
+% \usepackage[nocjkbg5]{ucs}
+% \usepackage[utf8x]{inputenc}
+% \usepackage[C00,T1]{fontenc}
+% \newcommand\tradtext[1]{\bgroup\fontencoding{C00}\fontfamily{ming}\selectfont%
+% \SetUnicodeOption{cjkbg5}#1\egroup}
+%-------------------------------------------------- 
+
+
+\title[]{Web Retrieval and Mining (Fall 2008)}
+\subtitle[]{Retrieval Models: Implementation Notes}
+\author[]{Ruey-Cheng Chen} 
+\institute{National Taiwan University, Taiwan}
+\date[]{}
+\subject{Theoretical Computer Science}
+%--------------------------------------------------
+% \AtBeginSection[]
+% {
+%   \begin{frame}<beamer>
+%     \frametitle{Outline}
+% %--------------------------------------------------
+% %     \tableofcontents[currentsection,currentsubsection]
+% %-------------------------------------------------- 
+%     \tableofcontents[currentsection]
+%   \end{frame}
+% }
+%-------------------------------------------------- 
+%\beamerdefaultoverlayspecification{<+->}
+\newcommand<>\ul[2]{\textbf{#1}\begin{itemize}#2\end{itemize} \vskip 0.5em}
+\newcommand<>\ull[1]{\begin{itemize}#1\end{itemize}}
+\newcommand<>\ol[2]{\textbf{#1}\begin{enumerate}#2\end{enumerate}}
+\newcommand<>\oll[1]{\begin{enumerate}#1\end{enumerate}}
+\newcommand<>\dl[2]{\textbf{#1}\begin{description}#2\end{description}}
+\newcommand<>\f[2]{\begin{frame}{#1}#2\end{frame}}
+\newcommand<>\mydef[2][]{\textbf{#1}\par#2\par}
+%--------------------------------------------------
+% \newcommand<>\mydef[2][]{\begin{definition}[#1]#2\end{definition}}
+%-------------------------------------------------- 
+\newcommand<>\tbl[3]{\textbf{#1}\vskip 0.5em\begin{center}\begin{tabular}{#2}#3\end{tabular}\end{center}}
+\newcommand<>\fig[3]{\textbf{#1}\vskip 0.5em\begin{center}\begin{figure}\includegraphics[#2]{#3}\end{figure}\end{center}}
+\newcommand<>\cols[1]{\begin{columns}#1\end{columns}}
+\newcommand<>\col[2]{\begin{column}{#1}#2\end{column}}
+
+\begin{document}
+
+\frame{ \titlepage }
+
+%--------------------------------------------------
+% \f{References}{
+% 
+%   \ul{Mandatory Reference}{ 
+%     \item A Companion to Digital Humanities, ed. Susan Schreibman, Ray Siemens,
+%     John Unsworth. Oxford: Blackwell, 2004.
+%   }
+% 
+%   \ul{Pointers}{ 
+%     \item \footnotesize{\url{ http://www.digitalhumanities.org/companion/ }}
+%   }
+% }
+%-------------------------------------------------- 
+
+%--------------------------------------------------
+% \f{Outline}{ \tableofcontents }
+%-------------------------------------------------- 
+
+\f{Binary-Independence Model}{
+  \begin{eqnarray*}
+    \hat{d} &=& \arg\max_d RSV_{q,d} \\
+    RSV^{(1)}_{q,d} &\approx& \sum\nolimits_{t \in q \cap d} \log \frac{N}{df_t} \\
+    RSV^{(k)}_{q,d} &\approx& \sum\nolimits_{t \in q \cap d} \log \frac{(|V_t| + 0.5) N }{(|V| - |V_t| + 1) df_t} 
+    \qquad \forall 1 < k \le K\\
+  \end{eqnarray*}
+  \par
+  \ul{Notation}{
+    \item $N$: Number of documents.
+    \item $df_t$: Number of documents in which term $t$ appears.
+    \item $V$: Relevant documents (e.g., top-$n$ documents).
+    \item $V_t$: Relevant documents in which term $t$ appears.
+  }
+}
+
+\f{Binary-Independence Model (Cont'd)}{
+  \ul{Implementation}{
+    \item Create a unigram model $U_i$ for each document $d_i$.
+    \item Create a document frequency vector ($t \rightarrow$ $df_t$).
+    \item Create the inverted indice ($t \rightarrow$ list of document IDs).
+  }
+  \par
+  \ul{Computation}{
+    \item Index time \ull{
+      \item $N$ and $df_t$: Consult the document frequency vector.
+    }
+    \item Runtime \ull{
+      \item Populate all $t \in q \cap d$: Consult the inverted indice.
+      \item $|V|$: Runtime parameter.
+      \item $|V_t|$: The size of the intersection between $V$ and $t$'s document posting.  
+    }
+  }
+}
+
+\f{Vector-Space Model with Feedback}{
+  \begin{eqnarray*}
+    \hat{d} &=& \arg\max_d \frac{\vec q \cdot \vec d}{|\vec q||\vec d|}\\
+    w_{t,d} &=& \left \{ \begin{array}{ll} 0, & \textrm{$t$ absent in $d$} \\
+    (0.5 + 0.5 \times \frac{f_{t,d}}{\max_{s \in d} f_{s,d}}) \times (1 + \log \frac{N}{df_t}), & \textrm{otherwise}
+    \end{array} \right. \\
+    \vec q^{(1)} &=& \vec q \\
+    \vec q^{(k)} &\approx& \alpha \vec q + \frac{\beta}{|V|} \sum_{d' \in V} \vec{d'} - \gamma \vec{d_{all}} \qquad \forall 1 < k \le K\\
+  \end{eqnarray*}
+  \par
+  \ul{Notation}{
+    \item $N$: Number of documents.
+    \item $df_t$: Number of documents in which term $t$ appears.
+    \item $\max_{s \in d} f_{s,d}$: The maximum term frequency in document $d$.
+    \item $V$: Relevant documents (e.g., top-$n$ documents).
+  }
+}
+
+\f{Vector-Space Model (Cont'd)}{
+  \ul{Implementation}{
+    \item Create a unigram model $U_i$ for each document $d_i$.
+    \item Create a document frequency vector ($t \rightarrow$ $df_t$).
+    \item Create the inverted indice ($t \rightarrow$ list of document IDs).
+  }
+  \par
+  \ul{Computation}{
+    \item Index time \ull{
+      \item $f_{t,d}$ and $\max_s f_{s,d}$: Consult corresponding unigram model.
+      \item $N$ and $df_t$: Consult the document frequency vector.
+      \item $|\vec d|$: Can be precomputed.
+    }
+    \item Runtime \ull{
+      \item Populate all $t \in q \cap d$: Consult the inverted indice.
+      \item $|V|, \alpha, \beta, \gamma$: Runtime parameters.
+      \item $\vec{q} \cdot \vec{d} = \sum_{t \in q \cap d} w_{t,q} \times w_{t,d}$.
+    }
+  }
+}
+
+\f{Okapi Model}{
+  \begin{eqnarray*}
+    \hat{d} &=& \arg\max_d RSV_{q,d} \\
+    RSV_{q,d} &=& \sum_{t \in q \cap d} (\log \frac{N}{df_t}) \cdot \frac{(k_1 + 1) f_{t,d}}{k_1((1-b) + b (L_d/L_{avg})) + f_{t,d}} \cdot \frac{(k_3 + 1) f_{t,q}}{k_3 + f_{t,q}} \\
+  \end{eqnarray*}
+  \par
+  \ul{Notation}{
+    \item $N$: Number of documents.
+    \item $df_t$: Number of documents in which term $t$ appears.
+    \item $L_d$: Number of term occurrences in document $d$.
+    \item $L_{avg} = \frac{1}{N} \sum_d L_d$.
+  }
+}
+
+\f{Okapi Model (Cont'd)}{
+  \ul{Implementation}{
+    \item Create a unigram model $U_i$ for each document $d_i$.
+    \item Create a document frequency vector ($t \rightarrow$ $df_t$).
+    \item Create the inverted indice ($t \rightarrow$ list of document IDs).
+  }
+  \par
+  \ul{Computation}{
+    \item Index time \ull{
+      \item $f_{t,d}$: Consult corresponding unigram model.
+      \item $N$ and $df_t$: Consult the document frequency vector.
+      \item $L_d$: Easy.  Simply summing up all the frequency counts in unigram model.
+      \item $L_{avg}$: Easy.
+    }
+    \item Runtime \ull{
+      \item Populate all $t \in q \cap d$: Consult the inverted indice.
+      \item $k_1, k_3, b$: Runtime parameters.
+    }
+  }
+}
+
+\f{Language Models}{
+  \begin{eqnarray*}
+    \hat{d} &=& \arg\max_d p(q|d) = \arg\max_d p(t_1, t_2, \ldots, t_n|d)\\
+    &\approx& \arg\max_d \prod_i p(t_i|d) \qquad \textrm{(Unigram model)}\\
+  \end{eqnarray*}
+  \par
+  \ul{Smoothing Methods}{
+    \item Laplace: $p(t|d) = \frac{f_{t,d} + 1}{|d| + |T|}$.
+    \item Good-Turing: $p(t|d) = \frac{(f_{t,d} + 1) \mathcal{N}(f_{t,d} + 1)}{|d| \mathcal{N}(f_{t,d})}$.
+    \item Dirichlet prior: $p(t|d) = \frac{f_{t,d} + \mu p(t|REF)}{|d| + \mu}$.
+    \item Jenelik-Mercer: $p(t|d) = (1-\lambda) \frac{f_{t,d}}{|d|} + \lambda p(t|REF)$.
+    \item Additive discount: $p(t|d) = \frac{\max(f_{t,d} - \delta, 0) + \delta |d|_{uniq} p(t|REF)}{|d|}$.
+  }
+}
+
+\f{Language Models (Cont'd)}{
+  \ul{Implementation}{
+    \item Create a unigram model $U_i$ for each document $d_i$.
+    \item Merge all unigram models into one reference model $U_{REF}$.
+    \item Create a document frequency vector ($t \rightarrow$ $df_t$).
+    \item Create the inverted indice ($t \rightarrow$ list of document IDs).
+  }
+  \par
+  \ul{Computation}{
+    \item Index time \ull{
+      \item $f_{t,d}$: Consult corresponding unigram model.
+      \item $|T|$ (number of terms): Consult vocabulary.
+      \item $|d|$: Add up all frequency counts in document $d$.
+      \item $|d|_{uniq}$: The number of postings in the unigram model.
+      \item \alert{$p(t|REF) = \frac{f_{t,REF}}{\sum_{s \in REF} f_{s,REF}}$}: Consult the reference model $U_{REF}$.
+      \item $\mathcal{N}(k)$: Populate all the frequency counts in the reference model, and apply the first part of bucket sort.
+    }
+    \item Runtime \ull{
+      \item Populate all $t \in q \cap d$: Consult the inverted indice.
+      \item $\lambda, \mu, \delta$: Runtime parameters.
+    }
+  }
+}
+
+\section<presentation>*{\appendixname}
+
+%--------------------------------------------------
+% \begin{frame}%[allowframebreaks]
+%   \frametitle{References}
+%   \small
+%   \bibliography{report}
+%   \bibliographystyle{alpha}
+% \end{frame}
+%-------------------------------------------------- 
+
+\frame{
+  \begin{center}
+    \Huge{Thanks for your attention!}
+    \par
+    Any Question?
+  \end{center}
+}
+
+\end{document}
