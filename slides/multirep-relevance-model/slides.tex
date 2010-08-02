@@ -1,4 +1,4 @@
-\documentclass[bigger]{beamer}
+\documentclass{beamer}
 
 \mode<presentation>{
   \usetheme{default}
@@ -33,7 +33,7 @@
 %-------------------------------------------------- 
 
 \title[]{Multiple-Representation Relevance Model}
-\author[]{Ruey-Cheng Chen}
+\author[]{Ruey-Cheng Chen <cobain@turing.csie.ntu.edu.tw>}
 \institute{National Taiwan University, Taiwan}
 \date[]{\today}
 \subject{Information Retrieval}
@@ -82,21 +82,33 @@
 \f{Outline}{ \tableofcontents }
 
 \section{Introduction}
-\f{Introduction}{}
+\f{Document Representation}{
+  \ul{In conventional thinking...}{
+    \item A document is represented as only a collection of term
+    \item Every document possesses only \textbf{one} such representation
+    \item This leads to simple, effective retrieval models
+  }
 
-\section{Algorithms on the Click Graph}
+  \ul{What if we also have these data associated with documents?}{
+    \item Annotations
+    \item Metadata
+    \item Tags
+  }
+}
 
-\section{Random Walk Model}
-\subsection{Computation}
-\subsection{Forward vs. Backward Walks}
-\subsection{Clustering Effect}
-\subsection{Walk Parameters}
-\subsection{Alternative Transition Model}
+\section{Model}
+\subsection{The Generative Framework}
+\subsection{Inference}
+\subsection{Hyperparameters and the Index Structure}
 
-\section{Experiments}
+\section{Experimental Results}
+\subsection{Query Refinement Using the Secondary Representation}
+\subsection{Retrieving Query-Relevant Facets}
 
-\section{Conclusions}
-\f{Conclusions}{
+\section{Related Work}
+
+\section{Discussion and Concluding Remarks}
+\f{Discussion}{
 }
 %--------------------------------------------------
 % \section{Background}
