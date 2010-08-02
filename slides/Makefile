@@ -29,7 +29,22 @@
 #
 fileinfo	:= LaTeX Makefile
 author		:= Chris Monson
-version		:= 2.1.43
+version		:= 2.2.0-rc5
+#
+# Note that the user-global version is imported *after* the source directory,
+# so that you can use stuff like ?= to get proper override behavior.
+.PHONY: Makefile GNUmakefile Makefile.ini $(HOME)/.latex-makefile/Makefile.ini
+-include Makefile.ini
+-include $(HOME)/.latex-makefile/Makefile.ini
+#
+# This can be pdflatex or latex - you can change this by adding the following line to your Makefile.ini:
+# BUILD_STRATEGY := latex
+BUILD_STRATEGY		?= pdflatex
+#
+# Sets LC_ALL=C, by default, so that the locale-aware tools, like sort, be
+# # immune to changes to the locale in the user environment.
+export LC_ALL		?= C
+#
 #
 # If you specify sources here, all other files with the same suffix
 # will be treated as if they were _include_ files.
@@ -67,18 +82,6 @@ version		:= 2.1.43
 # Alternatively (recommended), you can add those lines to a Makefile.ini file
 # and it will get picked up automatically without your having to edit this
 # Makefile.
--include Makefile.ini
-
-# TODO:
-# 	* Sometimes we get
-# 		"mv: cannot stat '*.dvi.1st.make': No such file or directory"
-# 		 on the second build (if nothing triggered a .d rebuild, but
-# 		 the .dvi rule fired anyway).  To reproduce in the
-# 		 dissertation directory:
-#
-#		 make clean
-# 		 make byumsphd-example
-# 		 make byumsphd-example
 #
 # KNOWN ISSUES:
 #	* The following occurs:
@@ -101,6 +104,113 @@ version		:= 2.1.43
 #		graceful solution to this issue.
 #
 # CHANGES:
+# Chris Monson (2010-07-28):
+# 	* Bumped version to 2.2.0-rc5 (rc4 is broken)
+# 	* Bail out when we find the use of the import.sty package
+# 	* Issue 90: Add -z to dvips invocation
+# 	* Issue 67: Add xelatex support (thanks to Nikolai Prokoschenko for the patch!)
+# 	* Issue 85: Add warning about make 3.80
+# Chris Monson (2010-06-20):
+# 	* Bumped version to 2.2.0-rc3
+# 	* Attempt to fix bug with ! error detection (issue 88)
+# 	* Added svg->pdf direct support (issue 89)
+# Chris Monson (2010-04-28):
+# 	* Bumped version to 2.2.0-rc2
+# 	* Fixed %._show target
+# Chris Monson (2010-04-08):
+# 	* Bumped version to 2.2.0-rc1
+# 	* Added back in the rst_style_file stuff that got broken when switching
+# 		rst -> tex to use the script mechanism
+# Chris Monson (2010-03-23):
+#	* Bumped version to 2.2.0-beta8
+#	* Work on issue 76: bad backtick escape for some sed versions, failure
+#		to clear out the hold buffer when outputting MISSING comment.
+#		- Backed out 2>&1 to &> (doesn't work in sh)
+#		- Backed out using . to source variables
+# Chris Monson (2010-03-22):
+# 	* Bumped version to 2.2.0-beta7
+# 	* Issue 72: Fix latex/bibtex invocation order for annotated bib styles
+# 	* Fixed informational output to reflect which LaTeX run we're on
+# 	* Fixed graphic detection to include graphics that are already there in
+# 		.d files
+# 	* Tightened up the .d file output to only make .d depend on graphic
+# 		*source* files.  This means that building foo.d no longer
+# 		builds all of the graphics files on which foo.tex depends.
+# 		Had to use .SECONDEXPANSION trickery to make it work.
+# 	* Changed get-graphics to only accept a stem.
+# 	* Fixed build-once logic for scripted .tex to work better
+# 	* Made get-inputs sed script more maintainable.
+# 	* Moved Makefile.ini import up higher.
+# 	* Changed bare stems to not recursively invoke make
+# 	* Updated diff output to be more silent everywhere
+# 	* Added a MISSING comment to the .d file if stuff isn't found - forces
+# 		removal of .1st.make file, which often forces it to try again.
+# 	* Fixed broken graphics-target function
+# 	* Added sleep to .d file generation when stuff is missing - if it
+# 		builds too fast, make doesn't realize it needs to be reloaded,
+# 		and thus never discovers some deeper dependencies (especially
+# 		evident when graphics are included from scripted include
+# 		files).
+# Chris Monson (2010-03-17):
+# 	* Bumped version to 2.2.0-beta6
+# 	* Fixed bareword builds to actually work (requires static patterns)
+# 	* Fixed colorization to work with new paragraph stuff
+# Chris Monson (2010-03-17):
+# 	* Bumped version to 2.2.0-beta5
+# 	* Fixed graphic detection to be much more focused - splits log file
+# 		into paragraphs before doing pattern matching.
+# 	* Fixed make foo to work properly (recursively calls make foo.pdf)
+# 	* Fixed gpi -> pdf generation to not waste time building .eps *after*
+# 		the pdf already exists.
+# 	* Changed log copies to include MAKE_RESTARTS as part of the name.
+# 	* Fixed missing include file detection (also makes use of the paragraph
+# 		stuff) to detect missing scripted include files.
+# Chris Monson (2010-03-16):
+# 	* Bumped version to 2.2.0-beta4
+# 	* issue 70: .pdf not moved out of the way properly on first
+# 		compilation, resulting in early error detection failure.
+# 	* issue 74: fixed broken error on missing .aux files: the
+# 		implementation was masking real errors.
+# Chris Monson (2010-03-15):
+# 	* Bumped version to 2.2.0-beta3
+# 	* issue 71: Made the tput dependency optional
+# 	* issue 73: Made .tex targets not pull in .d files (building them from
+# 		scripts should not require a .d)
+# 	* issue 74: Output a much saner error when a .aux file is not produced
+# 		(e.g., when you are typing "make" without arguments in a
+# 		directory with included .tex files that are not named with
+# 		._include_.)
+# Chris Monson (2010-03-11):
+# 	* Bumped version to 2.2.0-beta2
+# 	* Fixed clean-graphics to get rid of intermediate .eps files that may
+# 		be hanging around
+# 	* Added an automatic setting to use eps terminals in pdflatex mode for
+# 		gnuplot if it doesn't understand pdf.
+# 	* issue 66: Removed grayscale generation via magic suffix.  Grayscale
+# 		generation is now only available via GRAY=1
+# 	* issue 68: Added explicit handling of LC_ALL for locale-aware tools
+# 		like "sort"
+# Chris Monson (2010-03-10):
+# 	* Bumped version to 2.2.0-beta1
+# 	* Fixed success message to handle output message in different places
+# 	* Added name of produced file to success message
+# Chris Monson (2010-03-10):
+# 	* Bumped version to 2.2.0-alpha3
+# 	* Added meaningful error message for wrong hyperref options
+# 	* Added meaningful error message for incorrect graphics extensions
+# Chris Monson (2010-03-09):
+# 	* Bumped version to 2.2.0-alpha2
+# 	* Updated graphics handling (gnuplot and fig generate pdf natively)
+# 	* Changed xmgrace to output monochrome natively
+# Chris Monson (2010-03-09):
+# 	* Bumped version to 2.2.0-alpha1 - major change!
+# 	* Support pdflatex natively and by default (issue 6 - a long time coming)
+# 	* Add ability to have a single $HOME/.latex-makefile/Makefile.ini for
+# 		all invocations
+# 	* Reworked graphic inclusion detection so that extensions need not be
+# 		specified for either build strategy (e.g.,
+# 		\includegraphics{test1.eps} -> \includegrahpics{test1})
+# 	* Changed log format to include filenames and line numbers
 # Chris Monson (2010-02-04):
 # 	* Bumped version to 2.1.43
 # 	* All of the following are for issue 63 (thanks to mojoh81):
@@ -486,10 +596,14 @@ TOUCH		?= touch
 UNIQ		?= uniq
 WHICH		?= which
 XARGS		?= xargs
+SLEEP		?= sleep
 # == LaTeX (tetex-provided) ==
 BIBTEX		?= bibtex
 DVIPS		?= dvips
 LATEX		?= latex
+PDFLATEX	?= pdflatex
+XELATEX		?= xelatex
+EPSTOPDF	?= epstopdf
 MAKEINDEX	?= makeindex
 KPSEWHICH	?= kpsewhich
 GS		?= gs
@@ -523,10 +637,26 @@ VIEW_GRAPHICS	?= display
 PS_EMBED_OPTIONS	?= -dPDFSETTINGS=/printer -dEmbedAllFonts=true -dSubsetFonts=true -dMaxSubsetPct=100
 PS_COMPATIBILITY	?= 1.4
 
+# Defaults for GPI
+DEFAULT_GPI_EPS_FONTSIZE	?= 22
+DEFAULT_GPI_PDF_FONTSIZE	?= 12
+
+# Style file for ReST
+RST_STYLE_FILE			?= $(wildcard _rststyle_._include_.tex)
+
 # This ensures that even when echo is a shell builtin, we still use the binary
 # (the builtin doesn't always understand -n)
 FIXED_ECHO	:= $(if $(findstring -n,$(shell $(ECHO) -n)),$(shell which echo),$(ECHO))
 ECHO		:= $(if $(FIXED_ECHO),$(FIXED_ECHO),$(ECHO))
+
+define determine-gnuplot-output-extension
+$(if $(shell $(WHICH) $(GNUPLOT)),
+     $(if $(findstring unknown or ambiguous, $(shell $(GNUPLOT) -e "set terminal pdf" 2>&1)),
+	  eps, pdf),
+     none)
+endef
+
+GNUPLOT_OUTPUT_EXTENSION	?= $(strip $(call determine-gnuplot-output-extension))
 
 # Directory into which we place "binaries" if it exists.
 # Note that this can be changed on the commandline or in Makefile.ini:
@@ -543,6 +673,7 @@ ECHO		:= $(if $(FIXED_ECHO),$(FIXED_ECHO),$(ECHO))
 #
 BINARY_TARGET_DIR	?= _out_
 
+RESTARTS		:= $(if $(MAKE_RESTARTS),$(MAKE_RESTARTS),0)
 # SH NOTES
 #
 # On some systems, /bin/sh, which is the default shell, is not linked to
@@ -663,12 +794,8 @@ escape-dots		= $(subst .,\\.,$1)
 # $(call test-exists,file)
 test-exists		= [ -e '$1' ]
 
-# don't call this directly - it is here to avoid calling wildcard more than
-# once in move-if-exists.
-move-files-helper	= $(if $1,$(MV) $1 $2,$(sh_true))
-
 # $(call move-files,source,destination)
-move-if-exists		= $(call move-files-helper,$(wildcard $1),$2)
+move-if-exists		= $(call test-exists,$1) && $(MV) '$1' '$2'
 
 # Copy file1 to file2 only if file2 doesn't exist or they are different
 # $(call copy-if-different,sfile,dfile)
@@ -753,23 +880,24 @@ endif
 
 # Terminal color definitions
 
-ifdef NO_COLOR
-tput		=
-else
-tput		= $(shell $(TPUT) $1)
-endif
+REAL_TPUT 	:= $(if $(NO_COLOR),,$(shell $(WHICH) $(TPUT)))
 
-black	:= $(call tput,setaf 0)
-red	:= $(call tput,setaf 1)
-green	:= $(call tput,setaf 2)
-yellow	:= $(call tput,setaf 3)
-blue	:= $(call tput,setaf 4)
-magenta	:= $(call tput,setaf 5)
-cyan	:= $(call tput,setaf 6)
-white	:= $(call tput,setaf 7)
-bold	:= $(call tput,bold)
-uline	:= $(call tput,smul)
-reset	:= $(call tput,sgr0)
+# $(call get-term-code,codeinfo)
+# e.g.,
+# $(call get-term-code,setaf 0)
+get-term-code = $(if $(REAL_TPUT),$(shell $(REAL_TPUT) $1),)
+
+black	:= $(call get-term-code,setaf 0)
+red	:= $(call get-term-code,setaf 1)
+green	:= $(call get-term-code,setaf 2)
+yellow	:= $(call get-term-code,setaf 3)
+blue	:= $(call get-term-code,setaf 4)
+magenta	:= $(call get-term-code,setaf 5)
+cyan	:= $(call get-term-code,setaf 6)
+white	:= $(call get-term-code,setaf 7)
+bold	:= $(call get-term-code,bold)
+uline	:= $(call get-term-code,smul)
+reset	:= $(call get-term-code,sgr0)
 
 #
 # User-settable definitions
@@ -780,7 +908,7 @@ LATEX_COLOR_INFO	?= green
 LATEX_COLOR_UNDERFULL	?= magenta
 LATEX_COLOR_OVERFULL	?= red bold
 LATEX_COLOR_PAGES	?= bold
-LATEX_COLOR_BUILD	?= blue
+LATEX_COLOR_BUILD	?= cyan
 LATEX_COLOR_GRAPHIC	?= yellow
 LATEX_COLOR_DEP		?= green
 LATEX_COLOR_SUCCESS	?= green bold
@@ -829,6 +957,30 @@ endif
 GNUPLOT_SED	:= global-gpi.sed gnuplot.sed
 GNUPLOT_GLOBAL	:= global._include_.gpi gnuplot.global
 
+ifeq "$(strip $(BUILD_STRATEGY))" "latex"
+default_graphic_extension	?= eps
+latex_build_program		?= $(LATEX)
+build_target_extension		?= dvi
+hyperref_driver_pattern		?= hdvips
+hyperref_driver_error		?= Using dvips: specify ps2pdf in the hyperref options.
+endif
+
+ifeq "$(strip $(BUILD_STRATEGY))" "pdflatex"
+default_graphic_extension	?= pdf
+latex_build_program		?= $(PDFLATEX)
+build_target_extension		?= pdf
+hyperref_driver_pattern		?= hpdf.*
+hyperref_driver_error		?= Using pdflatex: specify pdftex in the hyperref options (or leave it blank).
+endif
+
+ifeq "$(strip $(BUILD_STRATEGY))" "xelatex"
+default_graphic_extension	?= pdf
+latex_build_program		?= $(XELATEX)
+build_target_extension		?= pdf
+hyperref_driver_pattern		?= hdvipdf.*
+hyperref_driver_error		?= Using pdflatex: specify pdftex in the hyperref options (or leave it blank).
+endif
+
 # Files of interest
 all_files.tex		?= $(wildcard *.tex)
 all_files.tex.sh	?= $(wildcard *.tex.sh)
@@ -876,7 +1028,7 @@ filter-default		= \
 		$(addsuffix .$1,$(nodefault_patterns)),$(all_files.$1))
 
 # Top level sources that can be built even when they are not by default
-files.tex	:= $(filter-out %._gray_.tex,$(call filter-buildable,tex))
+files.tex	:= $(call filter-buildable,tex)
 files.tex.sh	:= $(call filter-buildable,tex.sh)
 files.tex.pl	:= $(call filter-buildable,tex.pl)
 files.tex.py	:= $(call filter-buildable,tex.py)
@@ -896,10 +1048,9 @@ files.eps.gz	:= $(call filter-buildable,eps.gz)
 # perfectly valid and causes no problems even if they're going to become eps
 # files in the end.
 .SECONDARY:	$(patsubst %.fig,%.pstex,$(files.fig))
-.SECONDARY:	$(patsubst %.fig,%._gray_.pstex,$(files.fig))
 
 # Top level sources that are built by default targets
-default_files.tex	:= $(filter-out %._gray_.tex,$(call filter-default,tex))
+default_files.tex	:= $(call filter-default,tex)
 default_files.tex.sh	:= $(call filter-default,tex.sh)
 default_files.tex.pl	:= $(call filter-default,tex.pl)
 default_files.tex.py	:= $(call filter-default,tex.py)
@@ -920,15 +1071,14 @@ concat-files	= $(foreach s,$1,$($(if $2,$2_,)files.$s))
 # Useful file groupings
 all_files_source	:= $(call concat-files,tex,all)
 all_files_scripts	:= $(call concat-files,tex.sh tex.pl tex.py rst,all)
-all_files_graphics	:= $(call concat-files,fig gpi eps.gz xvg svg png jpg dot,all)
+
+.PHONY: $(all_files_scripts)
 
 default_files_source	:= $(call concat-files,tex,default)
 default_files_scripts	:= $(call concat-files,tex.sh tex.pl tex.py rst,default)
-default_files_graphics	:= $(call concat-files,fig gpi eps.gz xvg svg png jpg dot,default)
 
 files_source	:= $(call concat-files,tex)
 files_scripts	:= $(call concat-files,tex.sh tex.pl tex.py rst)
-files_graphics	:= $(call concat-files,fig gpi eps.gz xvg svg png jpg dot)
 
 # Utility function for obtaining stems
 # $(call get-stems,suffix,[prefix])
@@ -984,41 +1134,49 @@ stems.eps.gz		:= $(call get-stems,eps.gz)
 # $(call concat-stems,suffixes,[prefix])
 concat-stems	= $(sort $(foreach s,$1,$($(if $2,$2_,)stems.$s)))
 
+# The most likely to be source but not finished product go first
+graphic_source_extensions	:= fig \
+				   gpi \
+				   xvg \
+				   svg \
+				   dot \
+				   eps.gz
+
+ifeq "$(strip $(BUILD_STRATEGY))" "latex"
+graphic_source_extensions	+= png jpg
+graphic_target_extensions	:= eps ps
+endif
+
+ifeq "$(strip $(BUILD_STRATEGY))" "pdflatex"
+graphic_source_extensions	+= eps
+graphic_target_extensions	:= pdf png jpg mps tif
+endif
+
+ifeq "$(strip $(BUILD_STRATEGY))" "xelatex"
+graphic_source_extensions	+= eps
+graphic_target_extensions	:= pdf png jpg mps tif
+endif
+
 all_stems_source	:= $(call concat-stems,tex,all)
 all_stems_script	:= $(call concat-stems,tex.sh tex.pl tex.py rst,all)
-all_stems_graphic	:= $(call concat-stems,fig gpi eps.gz xvg svg png jpg dot,all)
-all_stems_gray_graphic	:= $(addsuffix ._gray_,\
-	$(all_stems_graphic) $(all_stems.eps) \
-	)
-all_stems_gg		:= $(sort \
-	$(all_stems_graphic) $(all_stems_gray_graphic))
+all_stems_graphic	:= $(call concat-stems,$(graphic_source_extensions),all)
 all_stems_ss		:= $(sort $(all_stems_source) $(all_stems_script))
-all_stems_gray		:= $(addsuffix ._gray_,$(all_stems_ss))
-all_stems_sg		:= $(sort $(all_stems_script) $(all_stems_gray))
-all_stems_ssg		:= $(sort $(all_stems_ss) $(all_stems_gray))
+all_stems_sg		:= $(sort $(all_stems_script))
+all_stems_ssg		:= $(sort $(all_stems_ss))
 
 default_stems_source	:= $(call concat-stems,tex,default)
 default_stems_script	:= $(call concat-stems,tex.sh tex.pl tex.py rst,default)
-default_stems_graphic	:= $(call concat-stems,fig gpi eps.gz xvg svg png jpg dot,default)
-default_stems_gray_graphic	:= $(addsuffix ._gray_,$(default_stems_graphic))
-default_stems_gg	:= $(sort \
-	$(default_stems_graphic) $(default_stems_gray_graphic))
-default_stems_ss	:= $(sort \
-	$(default_stems_source) $(default_stems_script))
-default_stems_gray	:= $(addsuffix ._gray_,$(default_stems_ss))
-default_stems_sg	:= $(sort $(default_stems_script) $(default_stems_gray))
-default_stems_ssg	:= $(sort $(default_stems_ss) $(default_stems_gray))
+default_stems_ss	:= $(sort $(default_stems_source) $(default_stems_script))
+default_stems_sg	:= $(sort $(default_stems_script))
+default_stems_ssg	:= $(sort $(default_stems_ss))
 
 stems_source		:= $(call concat-stems,tex)
 stems_script		:= $(call concat-stems,tex.sh tex.pl tex.py rst)
-stems_graphic		:= $(call concat-stems,fig gpi eps.gz xvg svg png jpg dot)
-stems_gray_graphic	:= $(addsuffix ._gray_,\
-	$(stems_graphic) $(all_stems.eps))
-stems_gg		:= $(sort $(stems_graphic) $(stems_gray_graphic))
+stems_graphic		:= $(call concat-stems,$(graphic_source_extensions))
+stems_gg		:= $(sort $(stems_graphic))
 stems_ss		:= $(sort $(stems_source) $(stems_script))
-stems_gray		:= $(addsuffix ._gray_,$(stems_ss))
-stems_sg		:= $(sort $(stems_script) $(stems_gray))
-stems_ssg		:= $(sort $(stems_ss) $(stems_gray))
+stems_sg		:= $(sort $(stems_script))
+stems_ssg		:= $(sort $(stems_ss))
 
 # Calculate names that can generate the need for an include file.  We can't
 # really do this with patterns because it's too easy to screw up, so we create
@@ -1033,13 +1191,13 @@ allowed_source_suffixes	:= \
 	aux \
 	aux.make \
 	d \
-	tex \
 	auxbbl.make \
 	_graphics \
 	_show
 allowed_source_patterns		:= $(addprefix %.,$(allowed_source_suffixes))
 
 allowed_graphic_suffixes	:= \
+	pdf \
 	eps \
 	gpihead.make \
 	gpi.d
@@ -1072,7 +1230,6 @@ allowed_batch_graphic_targets	:= \
 	all-graphics \
 	all-pstex \
 	all-dot2tex \
-	all-gray-pstex \
 	show-graphics
 
 # Now we figure out which stuff is available as a make target for THIS RUN.
@@ -1095,8 +1252,8 @@ specified_batch_graphic_targets	:= $(strip \
 	$(filter $(allowed_batch_graphic_targets),$(real_goals)) \
 	)
 
-specified_gpi_targets	:= $(patsubst %.gpi,%.eps,\
-	$(filter $(patsubst %.eps,%.gpi,$(specified_graphic_targets)),\
+specified_gpi_targets	:= $(patsubst %.gpi,%.$(default_graphic_extension),\
+	$(filter $(patsubst %.$(default_graphic_extension),%.gpi,$(specified_graphic_targets)),\
 		$(all_files.gpi)) \
 	)
 
@@ -1134,20 +1291,24 @@ all_ps_targets		:= $(addsuffix .ps,$(stems_ssg))
 all_dvi_targets		:= $(addsuffix .dvi,$(stems_ssg))
 all_tex_targets		:= $(addsuffix .tex,$(stems_sg))
 all_d_targets		:= $(addsuffix .d,$(stems_ssg))
-all_graphics_targets	:= $(addsuffix .eps,$(stems_gg))
+all_graphics_targets	:= $(addsuffix .$(default_graphic_extension),$(stems_gg))
+intermediate_graphics_targets	:= $(if $(filter pdf,$(default_graphic_extension)),$(addsuffix .eps,$(stems_gg)),)
 all_pstex_targets	:= $(addsuffix .pstex_t,$(stems.fig))
-all_gray_pstex_targets	:= $(addsuffix ._gray_.pstex_t,$(stems.fig))
 all_dot2tex_targets	:= $(addsuffix .dot_t,$(stems.dot))
 
-all_known_graphics	:= $(sort $(all_graphics_targets) $(wildcard *.eps))
+all_known_graphics	:= $(sort $(all_graphics_targets) $(wildcard *.$(default_graphic_extension)))
 
 default_pdf_targets	:= $(addsuffix .pdf,$(default_stems_ss))
+
+ifeq "$(strip $(BUILD_STRATEGY))" "latex"
 default_ps_targets	:= $(addsuffix .ps,$(default_stems_ss))
 default_dvi_targets	:= $(addsuffix .dvi,$(default_stems_ss))
+pre_pdf_extensions	:= dvi ps
+endif
 
 # Extensions generated by LaTeX invocation that can be removed when complete
 rm_ext		:= \
-	log *.log aux dvi ps pdf blg bbl out nav snm toc lof lot lol pfg \
+	log *.log aux $(pre_pdf_extensions) pdf blg bbl out nav snm toc lof lot lol pfg \
 	fls vrb idx ind ilg glg glo gls lox nls nlo nlg brf mtc maf brf
 backup_patterns	:= *~ *.bak *.backup body.tmp head.tmp
 
@@ -1191,17 +1352,71 @@ gpi_global	:= $(strip \
 define get-inputs
 $(SED) \
 -e '/^INPUT/!d' \
--e 's!^INPUT \(\./\)\{0,1\}!TARGETS=!' \
+-e 's!^INPUT \(\./\)\{0,1\}!!' \
 -e 's/[[:space:]]/\\ /g' \
--e 's/^TARGETS=/$2: /' \
--e 's/\(.*\)\.aux$$/\1.tex/p' \
--e '/\.tex$$/p' \
--e '/\.cls$$/p' \
--e '/\.sty$$/p' \
--e '/\.pstex_t$$/p' \
--e '/\.dot_t$$/p' \
+-e 's/\(.*\)\.aux$$/\1.tex/' \
+-e '/\.tex$$/b addtargets' \
+-e '/\.cls$$/b addtargets' \
+-e '/\.sty$$/b addtargets' \
+-e '/\.pstex_t$$/b addtargets' \
+-e '/\.dot_t$$/b addtargets' \
 -e 'd' \
+-e ':addtargets' \
+-e 's/^/$2: /' \
 $1 | $(SORT) | $(UNIQ)
+endef
+
+# $(call get-missing-inputs,<log file>,<target files>)
+define get-missing-inputs
+$(SED) \
+-e '$$ b para' \
+-e '/^$$/b para' \
+-e 'H' \
+-e 'd' \
+-e ':para' \
+-e 'x' \
+-e '/^$$/d' \
+-e 's/^\n*//' \
+-e '/^! LaTeX Error: File /{' \
+-e '  s/^/::DOUBLE_PARAGRAPH::/' \
+-e '  h' \
+-e '  d' \
+-e '}' \
+-e 's/^::DOUBLE_PARAGRAPH:://' \
+-e '/Default extension: /!d' \
+-e 's/[[:space:]]\{1,\}/ /g' \
+-e 's/\n\{1,\}/ /g' \
+-e 's/^.*File `//' \
+-e 's/'"'"' not found\..*//' \
+-e '/\.tex/!s/$$/.tex/' \
+-e 's/[[:space:]]/\\ /g' \
+-e 'h' \
+-e 's/.*/# MISSING input "&" - (presence of comment affects build)/' \
+-e 'p' \
+-e 's/.*//' \
+-e 'x' \
+-e 's/^/$2: /' \
+$1 | $(SORT) | $(UNIQ)
+endef
+
+# Get source file for specified graphics stem.
+#
+# $(call graphics-source,<stem>)
+define graphics-source
+$(strip $(firstword \
+	$(wildcard \
+		$(addprefix $1.,\
+			$(graphic_source_extensions))) \
+	$1 \
+))
+endef
+
+# Get the target file for the specified graphics file/stem
+#
+# $(call graphics-target,<stem>)
+define graphics-target
+$(strip $(if 	$(filter $(addprefix %.,$(graphic_target_extensions)),$1), $1,
+	$(firstword $(patsubst $(addprefix %.,$(graphic_source_extensions) $(graphic_target_extensions)), %, $1).$(default_graphic_extension) $1.$(default_graphic_extension))))
 endef
 
 # Outputs all of the graphical dependencies to stdout.  The first argument is
@@ -1215,25 +1430,64 @@ endef
 # with spaces, so this could in many ways be moot unless you're using something
 # like grffile.
 #
-# $(call get-graphics,<parsed file>,<target files>)
+# For pdflatex, we really need the missing file to be specified without an
+# extension, otherwise compilation barfs on the first missing file.  Truly
+# annoying, but there you have it.
+#
+# It turns out that the graphics errors, although they have lines with empty
+# space, are only made of two paragraphs.  So, we just use some sed magic to
+# get everything into paragraphs, detect when it's a paragraph that interests
+# us, and double it up.  Then we get the filename only if we're missing
+# extensions (a sign that it's graphicx complaining).
+#
+# $(call get-graphics,<target file stem>)
+#.log,$(addprefix $*.,d $(build_target_extension) _graphics)
 define get-graphics
 $(SED) \
--e '/^File:/!d' \
--e 'N' \
--e 's/\n//g' \
--e '/Graphic file/!d' \
--e 's/^File: //' \
--e 's/ Graphic.*$$//' \
--e '/^\(.*\)\(\.[^.]*\)$$/{' \
--e   's//TARGETS=\1\2/' \
--e   's/[[:space:]]/\\\\\\&/g' \
--e   's/^TARGETS=/$2: /' \
--e   'p' \
--e   's/[^:]*: \(.*\)\(\.[^.]*\)$$/-include \1.gpi.d/' \
--e   'p' \
--e   'd' \
+-e '$$ b para' \
+-e '/^$$/b para' \
+-e 'H' \
+-e 'd' \
+-e ':para' \
+-e 'x' \
+-e '/^$$/d' \
+-e 's/^\n*//' \
+-e '/^! LaTeX Error: File `/{' \
+-e '  s/^/::DOUBLE_PARAGRAPH::/' \
+-e '  h' \
+-e '  d' \
 -e '}' \
-$1 | $(SORT) | $(UNIQ)
+-e 's/^::DOUBLE_PARAGRAPH:://' \
+-e '/could not locate the file with any of these extensions:/{' \
+-e '  s/\n\{1,\}/ /g' \
+-e '  s/[[:space:]]\{1,\}/ /g' \
+-e '  s/^.*File `//' \
+-e '  s/'"'"' not found\..*//' \
+-e '  h' \
+-e '  s/.*/# MISSING stem "&" - (presence of comment affects build)/' \
+-e '  p' \
+-e '  g' \
+-e '  b addtargets' \
+-e '}' \
+-e '/.*File: \(.*\) Graphic file (type [^)]*).*/{' \
+-e '  s//\1/' \
+-e '  b addtargets' \
+-e '}' \
+-e 'd' \
+-e ':addtargets' \
+-e 's/[[:space:]]/\\\\\\&/g' \
+-e 'h' \
+-e 's/.*/-include &.gpi.d/' \
+-e 'p' \
+-e 'g' \
+-e 's/.*/$(addprefix $1,.d): $$$$(call graphics-source,&)/' \
+-e 'p' \
+-e 's/.*//' \
+-e 'x' \
+-e 's/.*/$(addprefix $1.,$(build_target_extension) _graphics): $$$$(call graphics-target,&)/' \
+-e 'p' \
+-e 'd' \
+$*.log
 endef
 
 # Checks for build failure due to pstex inclusion, and gives instructions.
@@ -1249,15 +1503,38 @@ if $(EGREP) -q '^! LaTeX Error: File .*\.pstex.* not found' $1; then \
 fi
 endef
 
+# Checks for the use of import.sty and bails - we don't support subdirectories
+#
+# $(call die-on-import-sty,<log file>)
+define die-on-import-sty
+if $(EGREP) -s '/import.sty\)' '$1'; then \
+	$(ECHO) "$(C_ERROR)import.sty is not supported - included files must"; \
+	$(ECHO) "$(C_ERROR)be in the same directory as the primary document$(C_RESET)"; \
+	exit 1; \
+fi
+endef
+
 # Checks for build failure due to dot2tex, and gives instructions.
 #
 # $(call die-on-dot2tex,<parsed file>)
 define die-on-dot2tex
-if $(EGREP) -q '^! LaTeX Error: File .*\.dot_t.* not found' $1; then \
+if $(EGREP) -q ' LaTeX Error: File .*\.dot_t.* not found' $1; then \
 	$(ECHO) "$(C_ERROR)Missing dot_t file(s)$(C_RESET)"; \
 	$(ECHO) "$(C_ERROR)Please run$(C_RESET)"; \
 	$(ECHO) "$(C_ERROR)  make all-dot2tex$(C_RESET)"; \
 	$(ECHO) "$(C_ERROR)before proceeding.$(C_RESET)"; \
+	exit 1; \
+fi
+endef
+
+# Checks for the existence of a .aux file, and dies with an error message if it
+# isn't there.  Note that we pass the file stem in, not the full filename,
+# e.g., to check for foo.aux, we call it thus: $(call die-on-no-aux,foo)
+#
+# $(call die-on-no-aux,<aux stem>)
+define die-on-no-aux
+if [ ! -e '$1.aux' ]; then \
+	$(call colorize-latex-errors,$1.log); \
 	exit 1; \
 fi
 endef
@@ -1293,6 +1570,9 @@ endef
 # This produces a list of space-delimited .bib filenames, which is what the
 # make dep file expects to see.
 #
+# Note that we give kpsewhich a bogus argument so that a failure of sed to
+# produce output will not cause an error.
+#
 # $(call get-bibs,<aux file>,<targets>)
 define get-bibs
 $(SED) \
@@ -1302,15 +1582,15 @@ $(SED) \
 -e 's/[[:space:]]/\\&/g' \
 -e 's/,/.bib /g' \
 -e 's/ \{1,\}$$//' \
-$1 | $(XARGS) $(KPSEWHICH) | \
+$1 | $(XARGS) $(KPSEWHICH) '#######' | \
 $(SED) \
 -e 's/^/$2: /' | \
 \$(SORT) | $(UNIQ)
 endef
 
-# Makes a an aux file that only has stuff relevant to the dvi in it
-# $(call make-auxdvi-file,<flattened-aux>,<new-aux>)
-define make-auxdvi-file
+# Makes a an aux file that only has stuff relevant to the target in it
+# $(call make-auxtarget-file,<flattened-aux>,<new-aux>)
+define make-auxtarget-file
 $(SED) \
 -e '/^\\newlabel/!d' \
 $1 > $2
@@ -1329,8 +1609,8 @@ endef
 define make-gpi-d
 $(ECHO) '# vim: ft=make' > $2; \
 $(ECHO) 'ifndef INCLUDED_$(call cleanse-filename,$2)' >> $2; \
-$(ECHO) 'INCLUDED_$(call cleanse-filename,$2) = 1' >> $2; \
-$(call get-gpi-deps,$1,$(addprefix $(2:%.gpi.d=%).,eps gpi.d)) >> $2; \
+$(ECHO) 'INCLUDED_$(call cleanse-filename,$2) := 1' >> $2; \
+$(call get-gpi-deps,$1,$(addprefix $(2:%.gpi.d=%).,$(GNUPLOT_OUTPUT_EXTENSION) gpi.d)) >> $2; \
 $(ECHO) 'endif' >> $2;
 endef
 
@@ -1377,16 +1657,58 @@ endef
 # $(call colorize-latex-errors,<log file>)
 define colorize-latex-errors
 $(SED) \
--e '/^! LaTeX Error: File .*eps'"'"' not found\.$$/d' \
--e '/^! LaTeX Error: Cannot determine size/d' \
--e '/^! /,/^$$/{' \
--e '  H' \
--e '  /^$$/{' \
--e '    x' \
--e '    s/^.*$$/$(C_ERROR)&$(C_RESET)/' \
+-e '$$ b para' \
+-e '/^$$/b para' \
+-e 'H' \
+-e 'd' \
+-e ':para' \
+-e 'x' \
+-e '/^$$/d' \
+-e 's/^\n*//' \
+-e '/^! LaTeX Error: File /{' \
+-e '  s/^/::DOUBLE_PARAGRAPH::/' \
+-e '  h' \
+-e '  d' \
+-e '}' \
+-e 's/^::DOUBLE_PARAGRAPH:://' \
+-e '/could not locate the file with any of these extensions:/d' \
+-e '/Missing .begin.document/{' \
+-e '  h' \
+-e '  s/.*/Are you trying to build an include file?/' \
+-e '  x' \
+-e '  G' \
+-e '}' \
+-e '/ LaTeX Error: Cannot determine size/d' \
+-e 's/.* LaTeX Error .*/$(C_ERROR)&$(C_RESET)/p' \
+-e 's/Error: pdflatex (file .*/$(C_ERROR)& - try specifying it without an extension$(C_RESET)/p' \
+-e '/.*\*hyperref using.*driver \(.*\)\*.*/{' \
+-e '  s//\1/' \
+-e '  /^$(hyperref_driver_pattern)$$/!{' \
+-e '    s/.*//' \
+-e '    p' \
+-e '    s/.*/$(C_ERROR)--- Using incorrect driver for hyperref! ---$(C_RESET)/' \
+-e '    p' \
+-e '    s/.*/$(C_ERROR)$(hyperref_driver_error)$(C_RESET)/' \
 -e '    p' \
 -e '  }' \
+-e '  d' \
 -e '}' \
+-e '/ LaTeX Error: Unknown graphics extension/{' \
+-e '  s/^/     /' \
+-e '  h' \
+-e '  s/.*/--- Graphics extension error:/' \
+-e '  G' \
+-e '  h' \
+-e '  s/.*/--- If you specified the extension explicitly in your .tex file, try removing it./' \
+-e '  H' \
+-e '  g' \
+-e '  s/.*/$(C_ERROR)&$(C_RESET)/' \
+-e '  p' \
+-e '  s/.*//' \
+-e '  h' \
+-e '  b' \
+-e '}' \
+-e 's/.*\(\n\{2,\}![[:space:]][^[:space:]]*[[:space:]]Error .*\)/$(C_ERROR)\1$(C_RESET)/p' \
 -e 'd' \
 $1
 endef
@@ -1403,11 +1725,45 @@ $(SED) \
 $1
 endef
 
+# Colorize epstopdf errors
+#
+# $(call colorize-epstopdf-errors,<log file>)
+define colorize-epstopdf-errors
+$(SED) \
+-e '/^Error:/,/^Execution stack:/{' \
+-e '  /^Execution stack:/d' \
+-e '  s/.*/$(C_ERROR)&$(C_RESET)/' \
+-e '  p' \
+-e '}' \
+-e 'd' \
+$1
+endef
+
 # Colorize GNUplot errors
 #
 # $(call colorize-gnuplot-errors,<log file>)
 define colorize-gnuplot-errors
 $(SED) \
+-e '/, line [0-9]*:/!{' \
+-e '  H' \
+-e '  x' \
+-e '  s/.*\n\(.*\n.*\)$$/\1/' \
+-e '  x' \
+-e '}' \
+-e '/, line [0-9]*:/{' \
+-e '  H' \
+-e '  /unknown.*terminal type/{' \
+-e '    s/.*/--- Try changing the GNUPLOT_OUTPUT_EXTENSION variable to 'eps'./' \
+-e '	H' \
+-e '  }' \
+-e '  /gpihead/{' \
+-e '    s/.*/--- This could be a Makefile bug - contact the maintainer./' \
+-e '    H' \
+-e '  }' \
+-e '  g' \
+-e '  s/.*/$(C_ERROR)&$(C_RESET)/' \
+-e '  p' \
+-e '}' \
 -e '/^gnuplot>/,/^$$/{' \
 -e '  s/^gnuplot.*/$(C_ERROR)&/' \
 -e '  s/^$$/$(C_RESET)/' \
@@ -1508,14 +1864,15 @@ color_tex	:= \
 	-e '/^$$/{' \
 	-e '  x' \
 	-e '  s/^\n//' \
-	-e '  /Output written/{' \
-	-e '    s/.*(\([^)]\{1,\}\)).*/Success!  Wrote \1/' \
+	-e '  /Output written on /{' \
+	-e '    s/.*Output written on \([^(]*\) (\([^)]\{1,\}\)).*/Success!  Wrote \2 to \1/' \
 	-e '    s/[[:digit:]]\{1,\}/$(C_PAGES)&$(C_RESET)/g' \
 	-e '    s/Success!/$(C_SUCCESS)&$(C_RESET)/g' \
+	-e '    s/to \(.*\)$$/to $(C_SUCCESS)\1$(C_RESET)/' \
 	-e '    b end' \
 	-e '  }' \
-	-e '  /! *LaTeX Error:.*/{' \
-	-e '    s/.*\(! *LaTeX Error:.*\)/$(C_ERROR)\1$(C_RESET)/' \
+	-e '  / *LaTeX Error:.*/{' \
+	-e '    s/.*\( *LaTeX Error:.*\)/$(C_ERROR)\1$(C_RESET)/' \
 	-e '    b end' \
 	-e '  }' \
 	-e '  /.*Warning:.*/{' \
@@ -1562,8 +1919,8 @@ enlarge_beamer	= $(PSNUP) -l -1 -W128mm -H96mm -pletter
 # $(call test-run-again,<source stem>)
 test-run-again	= $(EGREP) -q '^(.*Rerun .*|No file $1\.[^.]+\.)$$' $1.log
 
-# This tests whether the dvi target should be run at all, from viewing the log
-# file.
+# This tests whether the build target commands should be run at all, from
+# viewing the log file.
 # $(call test-log-for-need-to-run,<source stem>)
 define test-log-for-need-to-run
 $(SED) \
@@ -1575,7 +1932,7 @@ endef
 # LaTeX invocations
 #
 # $(call latex,<tex file>,[<extra LaTeX args>])
-run-latex	= $(LATEX) --interaction=batchmode $(if $2,$2,) $1 > /dev/null
+run-latex	= $(latex_build_program) --interaction=batchmode $(if $2,$2,) $1 > /dev/null
 
 # $(call latex-color-log,<LaTeX stem>)
 latex-color-log	= $(color_tex) $1.log
@@ -1597,14 +1954,14 @@ endef
 #
 # $(call run-script,<interpreter>,<input>,<output>)
 define run-script
-cur=$(if $(MAKE_RESTARTS),$(MAKE_RESTARTS),0); \
-[ ! -e '$2.cookie' ] && $(ECHO) $$cur > $2.cookie; \
-last=`$(CAT) $2.cookie`; \
-run=`$(EXPR) $$cur '<=' $$last`; \
-if [ x"$$run" = x"1" ]; then \
-	$(call echo-build,$2,$3); \
+[ ! -e '$2.cookie' ] && $(ECHO) "restarts=$(RESTARTS)" > $2.cookie && $(ECHO) "level=$(MAKELEVEL)" >> $2.cookie; \
+restarts=`$(SED) -n -e 's/^restarts=//p' $2.cookie`; \
+level=`$(SED) -n -e 's/^level=//p' $2.cookie`; \
+if $(EXPR) $(MAKELEVEL) '<=' $$level '&' $(RESTARTS) '<=' $$restarts >/dev/null; then \
+	$(call echo-build,$2,$3,$(RESTARTS)-$(MAKELEVEL)); \
 	$1 '$2' '$3'; \
-	$(ECHO) $$cur > $2.cookie; \
+	$(ECHO) "restarts=$(RESTARTS)" > '$2.cookie'; \
+	$(ECHO) "level=$(MAKELEVEL)" >> '$2.cookie'; \
 fi
 endef
 
@@ -1614,10 +1971,19 @@ endef
 run-bibtex	= $(BIBTEX) $1 | $(color_bib)
 
 
-# $(call convert-gpi,<gpi file>,<eps file>,[gray])
+# $(call convert-eps-to-pdf,<eps file>,<pdf file>,[gray])
+# Note that we don't use the --filter flag because it has trouble with bounding boxes that way.
+define convert-eps-to-pdf
+$(if $3,$(CAT) '$1' | $(call kill-ps-color) > '$1.cookie',$(CP) '$1' '$1.cookie'); \
+$(EPSTOPDF) '$1.cookie' --outfile='$2' > $1.log; \
+$(call colorize-epstopdf-errors,$1.log);
+endef
+
+# $(call convert-gpi,<gpi file>,<output file>,[gray])
+#
 define convert-gpi
-$(ECHO) 'set terminal postscript enhanced eps' \
-$(call get-default,$(strip \
+$(ECHO) 'set terminal $(if $(filter %.pdf,$2),pdf enhanced,postscript enhanced eps)' \
+$(if $(filter %.pdf,$2),fsize ,)$(call get-default,$(strip \
 $(firstword \
 	$(shell \
 		$(SED) \
@@ -1626,7 +1992,7 @@ $(firstword \
 			$1 $(strip $(gpi_global)) \
 	) \
 ) \
-),22) \
+),$(if $(filter %.pdf,$2),$(DEFAULT_GPI_PDF_FONTSIZE),$(DEFAULT_GPI_EPS_FONTSIZE))) \
 $(strip $(if $3,monochrome,$(if \
 $(shell $(EGREP) '^\#\#[[:space:]]*GRAY[[:space:]]*$$' $< $(gpi_global)),\
 ,color))) > $1head.make; \
@@ -1675,8 +2041,8 @@ $(CONVERT) $(if $3,-type Grayscale,) '$1' eps2:'$2'
 endef
 
 # Creation of .eps files from .fig files
-# $(call convert-fig,<fig file>,<eps file>,[gray])
-convert-fig	= $(FIG2DEV) -L eps $(if $3,-N,) $1 $2
+# $(call convert-fig,<fig file>,<output file>,[gray])
+convert-fig	= $(FIG2DEV) -L $(if $(filter %.pdf,$2),pdf,eps) $(if $3,-N,) $1 $2
 
 # Creation of .pstex files from .fig files
 # $(call convert-fig-pstex,<fig file>,<pstex file>)
@@ -1690,26 +2056,15 @@ convert-fig-pstex-t	= $(FIG2DEV) -L pstex_t -p $3 $1 $2 > /dev/null 2>&1
 # #(call convert-dot-tex,<dot file>,<dot_t file>)
 convert-dot-tex		= $(DOT2TEX) '$1' > '$2'
 
-# Creation of .tex files from .rst files
-# TODO: Fix paper size so that it can be specified in the file itself
-# $(call convert-rst,<rst file>,<tex file>)
-rst_style_file=$(wildcard _rststyle_._include_.tex)
-define convert-rst
-$(RST2LATEX) \
-	--documentoptions=letterpaper \
-	$(if $(rst_style_file),--stylesheet=$(rst_style_file),) \
-	$1 $2
-endef
-
 # Converts svg files into .eps files
 #
 # $(call convert-svg,<svg file>,<eps file>,[gray])
-convert-svg	= $(INKSCAPE) --export-eps='$2' '$1'
+convert-svg	= $(INKSCAPE) --without-gui $(if $(filter %.pdf,$2)--export-pdf=,--export-eps)='$2' '$1'
 
 # Converts xvg files into .eps files
 #
 # $(call convert-xvg,<xvg file>,<eps file>,[gray])
-convert-xvg	= $(XMGRACE) '$1' -printfile - -hardcopy -hdevice EPS $(if $3,| $(call kill-ps-color)) > '$2'
+convert-xvg	= $(XMGRACE) '$1' -printfile - -hardcopy -hdevice $(if $3,-mono,) EPS > '$2'
 
 # Converts .eps.gz files into .eps files
 #
@@ -1846,7 +2201,7 @@ endef
 # Convert DVI to Postscript
 # $(call make-ps,<dvi file>,<ps file>,<log file>,[<paper size>])
 make-ps		= \
-	$(DVIPS) -o '$2' $(if $(filter-out BEAMER,$4),-t$(firstword $4),) '$1' \
+	$(DVIPS) -z -o '$2' $(if $(filter-out BEAMER,$4),-t$(firstword $4),) '$1' \
 		$(if $(filter BEAMER,$4),| $(enlarge_beamer)) > $3 2>&1
 
 # Convert Postscript to PDF
@@ -1855,7 +2210,7 @@ make-pdf	= \
 	$(call ps2pdf,$1,$2,$(filter 1,$(shell $(CAT) '$4'))) > '$3' 2>&1
 
 # Display information about what is being done
-# $(call echo-build,<output file>,[<run number>])
+# $(call echo-build,<input file>,<output file>,[<run number>])
 echo-build	= $(ECHO) "$(C_BUILD)= $1 --> $2$(if $3, ($3),) =$(C_RESET)"
 echo-graphic	= $(ECHO) "$(C_GRAPHIC)= $1 --> $2 =$(C_RESET)"
 echo-dep	= $(ECHO) "$(C_DEP)= $1 --> $2 =$(C_RESET)"
@@ -1874,11 +2229,13 @@ all: $(default_pdf_targets) ;
 .PHONY: all-pdf
 all-pdf: $(default_pdf_targets) ;
 
+ifeq "$(strip $(BUILD_STRATEGY))" "latex"
 .PHONY: all-ps
 all-ps: $(default_ps_targets) ;
 
 .PHONY: all-dvi
 all-dvi: $(default_dvi_targets) ;
+endif
 
 #
 # VIEWING TARGET
@@ -1895,6 +2252,11 @@ show: all
 source_includes	:= $(addsuffix .d,$(source_stems_to_include))
 graphic_includes := $(addsuffix .gpi.d,$(graphic_stems_to_include))
 
+# Check the version of the makefile
+ifneq "" "$(filter 3.79 3.80,$(MAKE_VERSION))"
+$(warning $(C_WARNING)Your version of make is too old.  Please upgrade.$(C_RESET))
+endif
+
 # Include only the dependencies used
 ifneq "" "$(source_includes)"
 include $(source_includes)$(call include-message,$(source_includes))
@@ -1907,13 +2269,24 @@ endif
 # MAIN TARGETS
 #
 
-%: %.pdf ;
+# Note that we don't just say %: %.pdf here - this can tend to mess up our
+# includes, which detect what kind of file we are asking for.  For example,
+# asking to build foo.pdf is much different than asking to build foo when
+# foo.gpi exists, because we look through all of the goals for *.pdf that
+# matches *.gpi, then use that to determine which include files we need to
+# build.
+#
+# Thus, we invoke make recursively with better arugments instead, restarting
+# all of the appropriate machinery.
+.PHONY: $(default_stems_ss)
+$(default_stems_ss): %: %.pdf ;
 
 # This builds and displays the wanted file.
 .PHONY: $(addsuffix ._show,$(stems_ssg))
-%._show: %.pdf
+$(addsuffix ._show,$(stems_ssg)): %._show: %.pdf
 	$(QUIET)$(VIEW_PDF) $< &
 
+ifeq "$(strip $(BUILD_STRATEGY))" "latex"
 .SECONDARY: $(all_pdf_targets)
 %.pdf: %.ps %.embed.make
 	$(QUIET)$(call echo-build,$<,$@)
@@ -1946,14 +2319,16 @@ endif
 	    $(call remove-temporary-files,'$@.temp'); \
 	    $(sh_false); \
 	fi
+endif
 
-# Build the final dvi file.  This is a very tricky rule because of the way that
-# latex runs multiple times, needs graphics after the first run (or maybe
-# already has them), and relies on bibliographies or indices that may not exist.
+# Build the final target (dvi or pdf) file.  This is a very tricky rule because
+# of the way that latex runs multiple times, needs graphics after the first run
+# (or maybe already has them), and relies on bibliographies or indices that may
+# not exist.
 #
 #	Check the log for fatal errors.  If they exist, colorize and bail.
 #
-#	Create the .auxdvi.cookie file.  (Needed for next time if not present)
+#	Create the .auxtarget.cookie file.  (Needed for next time if not present)
 #
 #	If any of the following are true, we must rebuild at least one time:
 #
@@ -1967,11 +2342,11 @@ endif
 #
 #	* the .aux file changed in a way that necessitates attention
 #
-#		Note that if the .auxdvi.make file doesn't exist, this means
+#		Note that if the .auxtarget.make file doesn't exist, this means
 #		that we are doing a clean build, so it doesn't figure into the
 #		test for running again.
 #
-#		compare against .auxdvi.make
+#		compare against .auxtarget.make
 #
 #		move if different, remove if not
 #
@@ -1981,21 +2356,23 @@ endif
 #	out when we find one of the conditions to be true.
 #
 #	If we do NOT need to run latex here, then we move the $@.1st.make file
-#	over to $@ because the .dvi file has already been built by the first
+#	over to $@ because the target file has already been built by the first
 #	dependency run and is valid.
 #
 #	If we do, we delete that cookie file and do the normal multiple-runs
 #	routine.
 #
+ifeq "$(strip $(BUILD_STRATEGY))" "latex"
 .SECONDARY: $(all_dvi_targets)
-%.dvi: %.bbl %.aux
+endif
+%.$(build_target_extension): %.bbl %.aux %.$(build_target_extension).1st.make
 	$(QUIET)\
 	fatal=`$(call colorize-latex-errors,$*.log)`; \
 	if [ x"$$fatal" != x"" ]; then \
 		$(ECHO) "$$fatal"; \
 		exit 1; \
 	fi; \
-	$(call make-auxdvi-file,$*.aux.make,$*.auxdvi.cookie); \
+	$(call make-auxtarget-file,$*.aux.make,$*.auxtarget.cookie); \
 	run=0; \
 	for i in 1; do \
 		if $(call test-exists,$*.bbl.cookie); then \
@@ -2007,7 +2384,7 @@ endif
 		    	break; \
 		fi; \
 		if $(call \
-		test-exists-and-different,$*.auxdvi.cookie,$*.auxdvi.make);\
+		test-exists-and-different,$*.auxtarget.cookie,$*.auxtarget.make);\
 		then \
 			run=1; \
 			break; \
@@ -2018,16 +2395,16 @@ endif
 		fi; \
 	done; \
 	$(call remove-temporary-files,$*.bbl.cookie $*.run.cookie); \
-	$(MV) $*.auxdvi.cookie $*.auxdvi.make; \
+	$(MV) $*.auxtarget.cookie $*.auxtarget.make; \
 	if [ x"$$run" = x"1" ]; then \
 		$(call remove-files,$@.1st.make); \
 		for i in 2 3 4 5; do \
 			$(if $(findstring 3.79,$(MAKE_VERSION)),\
-				$(call echo-build,$*.tex,$@,$$$$i),\
-				$(call echo-build,$*.tex,$@,$$i)\
+				$(call echo-build,$*.tex,$@,$(RESTARTS)-$$$$i),\
+				$(call echo-build,$*.tex,$@,$(RESTARTS)-$$i)\
 			); \
 			$(call run-latex,$*); \
-			$(CP) '$*.log' '$*.'$$i'.log'; \
+			$(CP) '$*.log' '$*.'$(RESTARTS)-$$i'.log'; \
 			$(call test-run-again,$*) || break; \
 		done; \
 	else \
@@ -2047,15 +2424,26 @@ endif
 #
 # Note that we do NOT touch the .bbl file if there is no need to
 # create/recreate it.  We would like to leave existing files alone if they
-# don't need to be changed, thus possibly avoiding a rebuild trigger on the
-# .dvi side.
+# don't need to be changed, thus possibly avoiding a rebuild trigger.
 %.bbl: %.auxbbl.make
 	$(QUIET)\
 	$(if $(filter %.bib,$^),\
 		$(call echo-build,$(filter %.bib,$?) $*.aux,$@); \
 		$(call run-bibtex,$*); \
 		$(TOUCH) $@.cookie; \
-	)
+	) \
+	if $(EGREP) -q 'bibstyle.(apacann|chcagoa|[^}]*annot)' '$*.aux'; then \
+		$(call echo-build,** annotated extra latex **,output ignored,$(RESTARTS)-1); \
+		$(call run-latex,$*); \
+		$(CP) '$*.log' '$*.$(RESTARTS)-annotated.log'; \
+		$(if $(filter %.bib,$^),\
+			$(call echo-build,** annotated extra bibtex ** $(filter %.bib,$?) $*.aux,$@); \
+			$(call run-bibtex,$*); \
+			$(TOUCH) $@.cookie; \
+		) \
+		$(call echo-build,** annotated extra latex **,output ignored,$(RESTARTS)-2); \
+		$(call run-latex,$*); \
+	fi
 
 # Create the index file - note that we do *not* depend on %.tex here, since
 # that unnecessarily restricts the kinds of indices that we can build to those
@@ -2080,11 +2468,8 @@ endif
 
 # SCRIPTED LaTeX TARGETS
 #
-# Keep the generated .tex files around for debugging if needed, but mark the
+# Keep the generated .tex files around for debugging if needed.
 .SECONDARY: $(all_tex_targets)
-# Ensure that builds are attempted every time.  Scripts don't always change,
-# but their output often does.
-.PHONY: $(all_files_scripts)
 
 %.tex::	%.tex.sh
 	$(QUIET)$(call run-script,$(SHELL),$<,$@)
@@ -2095,31 +2480,11 @@ endif
 %.tex::	%.tex.pl
 	$(QUIET)$(call run-script,$(PERL),$<,$@)
 
-%.tex::	%.rst $(rst_style_file)
-	$(QUIET)$(call echo-build,$<,$@)
-	$(QUIET)$(call convert-rst,$<,$@)
-
-#
-# GRAYSCALE LaTeX TARGETS
-#
-
-# Parse %.d to get all of the include files, then run sed to generate new files
-# for all of them that depend on _gray.
-%._gray_.tex: %.d %.tex
-	$(QUIET)$(call echo-build,$^,$@)
+%.tex::	%.rst $(RST_STYLE_FILE)
 	$(QUIET)\
-	texstems=`$(SED) \
-		 -e 's/[^:]*:[[:space:]]*\(.*\)\.tex[[:space:]]*$$/\\1/p' \
-		 -e 'd' \
-		 $<`; \
-	for f in $$texstems; do \
-		$(SED) \
-		-e 's/\.eps/._gray_&/' \
-		-e 's/\.pstex/._gray_&/' \
-		-e 's/\.pstex_t/._gray_&/' \
-		-e 's/_include_/&._gray_/g' \
-		$$f.tex > $$f._gray_.tex; \
-	done;
+	$(call run-script,$(RST2LATEX)\
+		--documentoptions=letterpaper\
+		$(if $(RST_STYLE_FILE),--stylesheet=$(RST_STYLE_FILE),),$<,$@)
 
 #
 # GRAPHICS TARGETS
@@ -2127,9 +2492,10 @@ endif
 .PHONY: all-graphics
 all-graphics:	$(all_graphics_targets);
 
-.PHONY: all-pstex all-gray-pstex
+ifeq "$(strip $(BUILD_STRATEGY))" "latex"
+.PHONY: all-pstex
 all-pstex:	$(all_pstex_targets);
-all-gray-pstex:	$(all_gray_pstex_targets);
+endif
 
 .PHONY: all-dot2tex
 all-dot2tex:	$(all_dot2tex_targets);
@@ -2142,51 +2508,45 @@ $(gray_eps_file):
 	$(QUIET)$(call echo-build,$^,$@)
 	$(QUIET)$(call create-gray-eps-file,$@)
 
-%._gray_.eps:	%.gpi $(gpi_sed)
+ifeq "$(strip $(BUILD_STRATEGY))" "pdflatex"
+%.pdf: %.eps $(if $(GRAY),$(gray_eps_file))
 	$(QUIET)$(call echo-graphic,$^,$@)
-	$(QUIET)$(call convert-gpi,$<,$@,1)
+	$(QUIET)$(call convert-eps-to-pdf,$<,$@,$(GRAY))
 
-%._gray_.eps:	%.fig
+ifeq "$(strip $(GNUPLOT_OUTPUT_EXTENSION))" "pdf"
+%.pdf:	%.gpi %.gpi.d $(gpi_sed)
 	$(QUIET)$(call echo-graphic,$^,$@)
-	$(QUIET)$(call convert-fig,$<,$@,1)
+	$(QUIET)$(call convert-gpi,$<,$@,$(GRAY))
+endif
 
-%._gray_.eps: %.dot $(gray_eps_file)
+%.pdf:	%.fig
 	$(QUIET)$(call echo-graphic,$^,$@)
-	$(QUIET)$(call convert-dot,$<,$@,$<.log,1)
+	$(QUIET)$(call convert-fig,$<,$@,$(GRAY))
 
-%._gray_.eps: %.xvg $(gray_eps_file)
+%.pdf:	%.svg
 	$(QUIET)$(call echo-graphic,$^,$@)
-	$(QUIET)$(call convert-xvg,$<,$@,1)
+	$(QUIET)$(call convert-svg,$<,$@,$(GRAY))
+endif
 
-%._gray_.eps: %.svg $(gray_eps_file)
+ifeq "$(strip $(BUILD_STRATEGY))" "xelatex"
+%.pdf: %.eps $(if $(GRAY),$(gray_eps_file))
 	$(QUIET)$(call echo-graphic,$^,$@)
-	$(QUIET)$(call convert-svg,$<,$@,1)
+	$(QUIET)$(call convert-eps-to-pdf,$<,$@,$(GRAY))
 
-%._gray_.eps: %.jpg $(gray_jpg_file)
+ifeq "$(strip $(GNUPLOT_OUTPUT_EXTENSION))" "pdf"
+%.pdf:	%.gpi %.gpi.d $(gpi_sed)
 	$(QUIET)$(call echo-graphic,$^,$@)
-	$(QUIET)$(call convert-jpg,$<,$@,1)
+	$(QUIET)$(call convert-gpi,$<,$@,$(GRAY))
+endif
 
-%._gray_.eps: %.png $(gray_eps_file)
+%.pdf:	%.fig
 	$(QUIET)$(call echo-graphic,$^,$@)
-	$(QUIET)$(call convert-png,$<,$@,1)
+	$(QUIET)$(call convert-fig,$<,$@,$(GRAY))
 
-%._gray_.eps: %.eps.gz $(gray_eps_file)
-	$(QUIET)$(call echo-graphic,$^,$@)
-	$(QUIET)$(call convert-epsgz,$<,$@,1)
+endif
 
-%._gray_.eps: %.eps $(gray_eps_file)
-	$(QUIET)$(call echo-graphic,$^,$@)
-	$(QUIET)$(call convert-eps,$<,$@,1)
 
-%._gray_.pstex: %.fig
-	$(QUIET)$(call echo-graphic,$^,$@)
-	$(QUIET)$(call convert-fig-pstex,$<,$@,1)
-
-%._gray_.pstex_t: %.fig %._gray_.pstex
-	$(QUIET)$(call echo-graphic,$^,$@)
-	$(QUIET)$(call convert-fig-pstex-t,$<,$@,$*._gray_.pstex,1)
-
-%.eps:	%.gpi $(gpi_sed)
+%.eps:	%.gpi %.gpi.d $(gpi_sed)
 	$(QUIET)$(call echo-graphic,$^,$@)
 	$(QUIET)$(call convert-gpi,$<,$@,$(GRAY))
 
@@ -2235,9 +2595,9 @@ $(gray_eps_file):
 #
 
 # Generate all of the information needed to get dependencies
-# As a side effect, this creates a .dvi file.  We need to be sure to remove it
-# if there are errors.  Errors can take several forms and all of them are found
-# within the log file:
+# As a side effect, this creates a .dvi or .pdf file (depending on the build
+# strategy).  We need to be sure to remove it if there are errors.  Errors can
+# take several forms and all of them are found within the log file:
 #	* There was a LaTeX error
 #	* A needed file was not found
 #	* Cross references need adjustment
@@ -2247,12 +2607,12 @@ $(gray_eps_file):
 #	%.aux
 #	%.d
 #	%.aux.make
-#	%.dvi.1st.make (the .dvi file, moved)
+#	%.(pdf|dvi).1st.make (the .pdf or .dvi output file, moved)
 #
 #	Steps:
 #
 #	Run latex
-#	Move .dvi somewhere else (make no judgements about success)
+#	Move .pdf or .dvi somewhere else (make no judgements about success)
 #	Flatten the .aux file into another file
 #	Add source dependencies
 #	Add graphic dependencies
@@ -2261,24 +2621,36 @@ $(gray_eps_file):
 #	Create cookies for various suffixes that may represent files that
 #	need to be read by LaTeX in order for it to function properly.
 #
-%.d %.aux %.aux.make %.fls: %.tex
-	$(QUIET)$(call echo-build,$<,$*.d $*.dvi,1)
+#	Note that if some of the dependencies are discovered because they turn
+#	up missing in the log file, we really need the .d file to be reloaded.
+#	Adding a sleep command helps with this.  Otherwise make is extremely
+#	nondeterministic, sometimes working, sometimes not.
+#
+#	Usually we can force this by simply removing the generated pdf file and
+#	not creating a .1st.make file..
+#
+%.$(build_target_extension).1st.make %.d %.aux %.aux.make %.fls: %.tex
+	$(QUIET)$(call echo-build,$<,$*.d $*.$(build_target_extension).1st.make,$(RESTARTS)-1)
 	$(QUIET)\
 	$(call run-latex,$<,--recorder) || $(sh_true); \
-	$(CP) '$*.log' '$*.1.log'; \
-	$(call die-on-pstexs,$*.log); \
+	$(CP) '$*.log' '$*.$(RESTARTS)-1.log'; \
+	$(call die-on-import-sty,$*.log); \
 	$(call die-on-dot2tex,$*.log); \
+	$(call die-on-no-aux,$*); \
 	$(call flatten-aux,$*.aux,$*.aux.make); \
 	$(ECHO) "# vim: ft=make" > $*.d; \
 	$(ECHO) ".PHONY: $*._graphics" >> $*.d; \
-	$(call get-inputs,$*.fls,$(addprefix $*.,aux aux.make d dvi)) >> $*.d; \
-	$(call get-graphics,$*.log,$(addprefix $*.,d dvi _graphics)) >> $*.d; \
+	$(call get-inputs,$*.fls,$(addprefix $*.,aux aux.make d $(build_target_extension))) >> $*.d; \
+	$(call get-missing-inputs,$*.log,$(addprefix $*.,aux aux.make d $(build_target_extension))) >> $*.d; \
+	$(ECHO) ".SECONDEXPANSION:" >> $*.d; \
+	$(call get-graphics,$*) >> $*.d; \
 	$(call get-log-index,$*,$(addprefix $*.,d aux aux.make)) >> $*.d; \
 	$(call get-bibs,$*.aux.make,$(addprefix $*.,bbl aux aux.make)) >> $*.d; \
-	$(call move-if-exists,$*.dvi,$*.dvi.1st.make); \
+	$(EGREP) -q "# MISSING" $*.d && $(SLEEP) 1 && $(RM) $*.pdf; \
+	$(call move-if-exists,$*.$(build_target_extension),$*.$(build_target_extension).1st.make); \
 	for s in toc out lot lof lol nav; do \
 		if [ -e "$*.$$s" ]; then \
-			if ! $(DIFF) -q $*.$$s $*.$$s.make 2>/dev/null; then \
+			if ! $(DIFF) -q $*.$$s $*.$$s.make >/dev/null 2>&1; then \
 				$(TOUCH) $*.run.cookie; \
 			fi; \
 			$(CP) $*.$$s $*.$$s.make; \
@@ -2297,10 +2669,6 @@ $(gray_eps_file):
 # also reside in the directory, so if a data file changes, it's nice to know
 # about it.  This also handles loaded .gpi files, whose filename should have
 # _include_. in it.
-%._gray_.gpi.d: %.gpi
-	$(QUIET)$(call echo-build,$<,$@)
-	$(QUIET)$(call make-gpi-d,$<,$@)
-
 %.gpi.d: %.gpi
 	$(QUIET)$(call echo-build,$<,$@)
 	$(QUIET)$(call make-gpi-d,$<,$@)
@@ -2403,7 +2771,7 @@ _check_gpi_files:
 .PHONY: _all_stems
 _all_stems:
 	$(QUIET)$(ECHO) "== All Stems =="
-	$(QUIET)$(call echo-list,$(sort $(all_stems)))
+	$(QUIET)$(call echo-list,$(sort $(default_stems_ss)))
 
 .PHONY: _includes
 _includes:
@@ -2445,11 +2813,6 @@ _graphic_outputs:
 	$(QUIET)$(ECHO) "== Graphic Outputs =="
 	$(QUIET)$(call echo-list,$(sort $(all_graphics_targets)))
 
-.PHONY: _graphic_sources
-_graphic_sources:
-	$(QUIET)$(ECHO) "== Graphic Sources =="
-	$(QUIET)$(call echo-list,$(sort $(files_graphics)))
-
 .PHONY: _env
 _env:
 ifdef .VARIABLES
@@ -2488,7 +2851,7 @@ clean-tex: clean-deps
 # even want to keep pstex functionality, so my motivation is not terribly high
 # for doing it right.
 clean-graphics:
-	$(QUIET)$(call clean-files,$(all_graphics_targets) *.gpi.d *.pstex *.pstex_t *.dot_t)
+	$(QUIET)$(call clean-files,$(all_graphics_targets) $(intermediate_graphics_targets) *.gpi.d *.pstex *.pstex_t *.dot_t)
 
 .PHONY: clean-backups
 clean-backups:
@@ -2542,10 +2905,6 @@ define help_text
 #        It is useful when creating a document for printing.  The default is
 #        to allow colors.  Note that it only changes graphics that need to be
 #        rebuilt!  It is usually a good idea to do a 'make clean' first.
-#
-#        There is another facility for creating grayscale documents that is
-#        better when you can use it (it has some small limitations not shared
-#        by this approach).  See the section on %._gray_ targets below.
 #
 #    VERBOSE:
 #        This turns off all @ prefixes for commands invoked by make.  Thus,
@@ -2677,10 +3036,10 @@ define help_text
 #    all-graphics:
 #        Make all of the graphics in this directory.
 #
-#    all-pstex:
+#    all-pstex (only for BUILD_STRATEGY=latex):
 #        Build all fig files into pstex and pstex_t files.  Gray DOES NOT WORK.
 #
-#    all-gray-pstex:
+#    all-gray-pstex (only for BUILD_STRATEGY=latex):
 #    	 Build all fig files into grayscale pstex and pstex_t files.
 #
 #    all-dot2tex:
@@ -2779,9 +3138,6 @@ define help_text
 #        weren't specified.  This target may be used alone or in conjunction
 #        with other targets.
 #
-#    _graphic_sources:
-#        A list of all files that can create .eps files
-#
 #    _graphic_outputs:
 #        A list of all generated .eps files
 #
@@ -2792,26 +3148,31 @@ define help_text
 # FILE TARGETS:
 #
 #    %, %.pdf:
-#        Build a PDF file from the corresponding %.tex file.  This is
-#        done using dvips and ps2pdf.  Some may object to this idea,
-#        saying that pdflatex is a better approach, but I disagree for
-#        two major reasons:
+#        Build a PDF file from the corresponding %.tex file.
 #
-#        * Postscript can be a very nice thing to have directly from the LaTeX
-#          file, especially when printing.
+#        If BUILD_STRATEGY=pdflatex, then this builds the pdf directly.
+#        Otherwise, it uses this old-school but effective approach:
 #
-#        * One word: psfrag.  If you don't know this wonderful package, get to
-#          know it.  It is a workhorse for making graphs pretty.
+#            latex -> dvips -> ps2pdf
+#
+#        The BUILD_STRATEGY can be overridden in Makefile.ini in the same
+#        directory.  The default is pdflatex.
+#
+#        Reasons for using latex -> dvips include the "psfrag" package, and the
+#        generation of postscript instead of PDF.  Arguments for using pdflatex
+#        include "new and shiny" and "better supported."  I can't argue with
+#        either of those, and supporting them both didn't turn out to be that
+#        difficult, so there you have it.  Choices.
 #
 #    %._show:
 #        A phony target that builds the pdf file and then displays it using the
 #        environment-overridable value of VIEW_PDF ($(VIEW_PDF)).
 #
 #    %._graphics:
-#        A phony target that generates all graphics on which %.dvi
+#        A phony target that generates all graphics on which %.pdf (or %.dvi)
 #        depends.
 #
-#    %.ps:
+#    %.ps (only for BUILD_STRATEGY=latex):
 #        Build a Postscript file from the corresponding %.tex file.
 #        This is done using dvips.  Paper size is automatically
 #        extracted from the declaration
@@ -2823,7 +3184,7 @@ define help_text
 #        If using beamer (an excellent presentation class), the paper
 #        size is ignored.  More on this later.
 #
-#    %.dvi:
+#    %.dvi (only for BUILD_STRATEGY=latex):
 #        Build the DVI file from the corresponding %.tex file.
 #
 #    %.ind:
@@ -2850,45 +3211,15 @@ define help_text
 #       The behavior of this makefile with each type is described in
 #       its own section below.
 #
-#    %.pstex{,_t}:
+#    %.pstex{,_t} (only for BUILD_STRATEGY=latex):
 #       Build a .pstex_t file from a .fig file.
-#
-#    All targets have a corresponding %._gray_.suffix form, which creates
-#    everything in monochrome.  This is useful for creating both color and
-#    grayscale versions of the same document, and they can coexist happily in
-#    the same directory.  Examples:
-#
-#       make test._gray_._graphics 	# Build all grayscale graphics
-#       make test._gray_		# Build a grayscale document
-#
-#    The use of a ._gray_ target creates ._gray_.tex files (not forgetting the
-#    included files!) with appropriate dependencies on ._gray_.eps graphics.
-#    This approach is in many ways superior to specifying GRAY=1 on the command
-#    line, but has some limitations.  Because a new .tex file must be created,
-#    this means that the original .tex file must be parsed and all references
-#    to graphics and include files must be transformed.  This can be a brittle
-#    operation in a macro-based language like LaTeX, since it is very easy to
-#    define macros that call \include or \input indirectly.
-#
-#    Here the naming strategy for include files comes into play.  They all have
-#    ._include_. in their name, and are therefore fairly easy to search out.
-#    That sequence is unlikely to appear in text, so it is fairly safe to
-#    replace it.  Anything ending in .eps is also replaced to end with
-#    ._gray_.eps, and is subject to the same issues.
-#
-#    In short, if your file contains _include_ when not referencing a file, or
-#    it says .eps when not referencing a graphic, this approach is probably not
-#    for you.  I imagine that these cases are fairly rare, however, so it
-#    should work most of the time.  When a doubt arises, you can be sure that
-#    GRAY=1 will do the right thing, provided you precede it with a 'make
-#    clean'.
 #
 # FEATURES:
 #
 #    Optional Binary Directory:
 #        If you create the _out_ directory in the same place as the makefile,
-#        it will automatically be used as a dumping ground for .dvi, .ps, and
-#        .pdf output files.
+#        it will automatically be used as a dumping ground for .pdf (or .dvi,
+#        .ps, and .pdf) output files.
 #
 #        Alternatively, you can set the BINARY_TARGET_DIR variable, either as a
 #        make argument or in Makefile.ini, to point to your directory of
@@ -3010,7 +3341,8 @@ define help_text
 #        specified there will not trigger a rebuild when changed.
 #
 #    Beamer:
-#        A special TeX source comment is recognized by this makefile:
+#        A special TeX source comment is recognized by this makefile (only when
+#        BUILD_STRATEGY=latex, since this invokes psnup):
 #
 #        %%[[:space:]]*BEAMER[[:space:]]*LARGE
 #
@@ -3078,13 +3410,11 @@ define help_text
 #            No special handling is done with XFig, except when a global
 #            grayscale method is used, e.g.
 #
-#                make document._gray_
-#                or
 #                make GRAY=1 document
 #
 #            In these cases the .eps files is created using the -N switch to
-#            fig2dev to turn off color output.  (Only works with eps, not
-#            pstex output!)
+#            fig2dev to turn off color output.  (Only works with eps, not pstex
+#            output)
 #
 #    GraphVis Graphics:
 #            Color settings are simply ignored here.  The 'dot' program is used
@@ -3095,11 +3425,11 @@ define help_text
 #            arguments, but you can change the DOT2TEX definition to include
 #            options as needed (in your Makefile.ini).
 #
-#            Note that, like pstex, the makefile cannot use latex's own output
-#            to discover all missing dot_t (output) files, since anytime TeX
-#            includes TeX, it has to bail when it can't find the include file.
-#            It can therefore only stop on the first missing file it discovers,
-#            and we can't get a large list of them out easily.
+#            Note that, as with pstex, the makefile cannot use latex's own
+#            output to discover all missing dot_t (output) files, since anytime
+#            TeX includes TeX, it has to bail when it can't find the include
+#            file.  It can therefore only stop on the first missing file it
+#            discovers, and we can't get a large list of them out easily.
 #
 #            So, the makefile errors out if it's missing an included dot_t
 #            file, then prompts the user to run this command manually:
