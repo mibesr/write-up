@@ -1,0 +1,154 @@
+\documentclass[bigger]{beamer}
+
+\mode<presentation>{
+  \usetheme{default}
+  \usefonttheme{serif}
+  \setbeamercovered{transparent}
+  \setbeamerfont{institute}{size=\normalsize}
+  \setbeamerfont{section in toc}{size=\large}
+  \setbeamerfont{subsection in toc}{size=\normalsize}
+}
+
+\usepackage[english]{babel}
+\usepackage{times}
+\usepackage{algorithmic}
+\usepackage{algorithm}
+\usepackage{epsfig}
+\usepackage{pgf}
+\usepackage[absolute,overlay]{textpos}
+%--------------------------------------------------
+% \usepackage{mathtime}
+%-------------------------------------------------- 
+
+% Latin-1 only
+\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+%--------------------------------------------------
+% % Chinese-support
+% \usepackage[nocjkbg5]{ucs}
+% \usepackage[utf8x]{inputenc}
+% \usepackage[C00,T1]{fontenc}
+% \newcommand\tradtext[1]{\bgroup\fontencoding{C00}\fontfamily{ming}\selectfont%
+% \SetUnicodeOption{cjkbg5}#1\egroup}
+%-------------------------------------------------- 
+
+\title[]{Multiple-Representation Relevance Model}
+\author[]{Ruey-Cheng Chen}
+\institute{National Taiwan University, Taiwan}
+\date[]{\today}
+\subject{Information Retrieval}
+%--------------------------------------------------
+% \AtBeginSubsection[]
+% {
+%   \begin{frame}<beamer>
+%     \frametitle{Outline}
+%     \tableofcontents[currentsection,currentsubsection]
+%   \end{frame}
+% }
+%-------------------------------------------------- 
+%\beamerdefaultoverlayspecification{<+->}
+\newcommand<>\ul[2]{\textbf{#1}\begin{itemize}#2\end{itemize} \vskip 0.5em}
+\newcommand<>\ull[1]{\begin{itemize}#1\end{itemize}}
+\newcommand<>\ol[2]{\textbf{#1}\begin{enumerate}#2\end{enumerate}}
+\newcommand<>\oll[1]{\begin{enumerate}#1\end{enumerate}}
+\newcommand<>\dl[2]{\textbf{#1}\begin{description}#2\end{description}}
+\newcommand<>\f[2]{\begin{frame}{#1}#2\end{frame}}
+\newcommand<>\mydef[2][]{\textbf{#1}\par#2\par}
+\newcommand<>\tbl[3]{\textbf{#1}\vskip 0.5em\begin{center}\begin{tabular}{#2}#3\end{tabular}\end{center}}
+\newcommand<>\fig[3]{\textbf{#1}\vskip 0.5em\begin{center}\begin{figure}\includegraphics[#2]{#3}\end{figure}\end{center}}
+\newcommand<>\cols[1]{\begin{columns}#1\end{columns}}
+\newcommand<>\col[2]{\begin{column}{#1}#2\end{column}}
+
+\begin{document}
+
+\frame{ \titlepage }
+
+%--------------------------------------------------
+% \f{References}{
+%   \ul{Mandatory References}{ 
+%     \item Craswell, N. and Szummer, M. 2007. Random walks on the click graph.
+%     In \emph{Proceedings of the 30th Annual international ACM SIGIR Conference
+%     on Research and Development in information Retrieval} (Amsterdam, The
+%     Netherlands, July 23 - 27, 2007). SIGIR '07. ACM, New York, NY, 239-246.
+%   }
+% 
+%   \ul{Authors}{ 
+%     \item Nick Craswell: \footnotesize{\url{ http://research.microsoft.com/~nickcr/ }}
+%     \item Martin Szummer: \footnotesize{\url{ http://research.microsoft.com/~szummer/ }}
+%   }
+% }
+%-------------------------------------------------- 
+
+\f{Outline}{ \tableofcontents }
+
+\section{Introduction}
+\f{Introduction}{}
+
+\section{Algorithms on the Click Graph}
+
+\section{Random Walk Model}
+\subsection{Computation}
+\subsection{Forward vs. Backward Walks}
+\subsection{Clustering Effect}
+\subsection{Walk Parameters}
+\subsection{Alternative Transition Model}
+
+\section{Experiments}
+
+\section{Conclusions}
+\f{Conclusions}{
+}
+%--------------------------------------------------
+% \section{Background}
+% \subsection{Graph-Theoretical Concepts}
+% \f{Graph}{
+%   \ul{Basic Concepts}{
+%     \item An undirected graph $G = (V, E)$ is a collection of nodes $V$ and edges $E$.
+%     \item Two nodes $i, j \in V$ are \emph{neighbors} if $(i, j) \in E$.
+%     \item Neighborhood of a node $i$: $\{j \mid (i, j) \in E\}$.
+%     \item A node is not a neighbor of itself, i.e., $(i, i) \notin E$.
+%     \item A clique of $G$ is either a single node or a complete subgraph of $G$.
+%   }
+%   \begin{figure}
+%     \centering
+%     \includegraphics[width=100pt]{clique}
+%   \end{figure}
+% }
+% 
+% \subsection{Random Fields}
+% \f{Random Fields}{
+%   \mydef[Random Fields]{
+%     Let $F = \{X_1, \ldots, X_m\}$ be a set of random variables defined on the
+%     sample space $\Omega$, in which each $X_i$ takes a value $x_i \in
+%     \mathcal{L}$.  A probability measure $p$ is a \emph{random field} if
+%     $p(\omega) > 0$ for all $\omega \in \Omega$.
+%   }
+%   \vskip1em
+%   \ul{Random Fields on $G$}{
+%     \item Assign each random variable $X_i$ to a node of $G$.
+%     \item Values of random variables are usually spatially correlated.
+%   }
+%   \begin{figure}
+%     \centering
+%     \includegraphics[width=100pt]{rf}
+%   \end{figure}
+% }
+%-------------------------------------------------- 
+\section<presentation>*{\appendixname}
+
+\begin{frame}%[allowframebreaks]
+  \frametitle{References}
+  \small
+  \bibliography{report}
+  \bibliographystyle{alpha}
+\end{frame}
+
+\frame{
+  \begin{center}
+    \Huge{Thanks for your attention!}
+    \par
+    Any Question?
+  \end{center}
+}
+
+\end{document}
