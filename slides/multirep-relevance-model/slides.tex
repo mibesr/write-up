@@ -1,9 +1,11 @@
 \documentclass{beamer}
 
 \mode<presentation>{
-  \usetheme{default}
+  \usetheme{Madrid}
   \usefonttheme{serif}
-  \setbeamercovered{transparent}
+%--------------------------------------------------
+%   \setbeamercovered{transparent}
+%-------------------------------------------------- 
   \setbeamerfont{institute}{size=\normalsize}
   \setbeamerfont{section in toc}{size=\large}
   \setbeamerfont{subsection in toc}{size=\normalsize}
@@ -16,6 +18,10 @@
 \usepackage{epsfig}
 \usepackage{pgf}
 \usepackage[absolute,overlay]{textpos}
+
+\usepackage{pst-all} % PSTricks
+\usepackage{com.braju.graphicalmodels} % The package that really does the hard work
+
 %--------------------------------------------------
 % \usepackage{mathtime}
 %-------------------------------------------------- 
@@ -84,25 +90,317 @@
 \section{Introduction}
 \f{Document Representation}{
   \ul{In conventional thinking...}{
-    \item A document is represented as only a collection of term
-    \item Every document possesses only \textbf{one} such representation
-    \item This leads to simple, effective retrieval models
+    \item We assume a document is represented as a collection of term
+    \item A more subtle assumption: Every document possesses \textbf{only one} such representation
+    \item This leads to simple, effective retrieval models, such as: \ull{
+      \item Vector-space model
+      \item Binary-independence retrieval model
+      \item Language modeling approach
+    }
   }
 
-  \ul{What if we also have these data associated with documents?}{
-    \item Annotations
-    \item Metadata
-    \item Tags
+  \ul{The downside}{
+    \item Terms are supposed to be homogeneous (or drawn from a mixture of homogeneous data sources)
+    \item There is no room for modeling user-contributed tags, annotations, and metadata
+  }
+}
+
+\f{Multi-Layer Document Representation}{
+  \ul{Information sources relevant to a document}{
+    \item Metadata: Precise, detailed descriptions 
+    \item Tags: Short, less precise, conceptual descriptions
+    \item Fulltext: Long and loose text; diverse vocabulary
+  }
+
+  \ul{We need additional layers in a retrieval model because...}{
+    \item Incorporation of vocabularies enables high usability
+    \item Retrieval can then be operated in different granularity levels
+    \item Retrieval can be operated on a mixture of \textbf{heterogeneous} sources
+    \item Possible applications include...
+    \ull{
+      \item Cross-language query modeling 
+      \item Cross-vocabulary query modeling
+      \item Named-entities ranking
+    }
+  }
+}
+
+\f{Challenge: Building the Model}{
+  \ul{A language model that work with two document representation}{
+    \item \emph{Terms} are denoted as $T$
+    \item The \emph{secondary document representation} is denoted as $S$
+    \item We built a model to enable interaction between the two layers, such as 
+    retrieving elements in one side from that in the other
+  }
+
+  \mydef[Formulation]{
+    We want to estimate the probability $\Pr(s|t)$, given that a document $d_i$
+    is indexed in two different representations $T_i$ and $S_i$, where $T_i
+    \subset T$ and $S_i \subset S$.  A concrete application of this is to let
+    the user form a query $\mathbf{q} \subset T$ and estimate the probability
+    $\Pr(s|\mathbf{q})$ accordingly.
+  }
+}
+
+\f{Roadmap}{
+  \ul{Where do we go from here?}{
+    \item We proposed a generalization over Lavrenko and Croft's work by
+    adapting it to cases where two document representations are appropriate
+    \item We took a Bayesian generative approach 
+    \item The result can be easily implemented in index level
+    \item Two applications are introduced to evaluate our work 
+    \ull{ \item Refining query model by using secondary representation \item Retrieving query-dependent facets }
+    \item The model achieved satisfactory result in both experiments
   }
 }
 
 \section{Model}
 \subsection{The Generative Framework}
+
+\f{The Generative Framework}{
+  \begin{figure}
+    \centering
+    \includegraphics[width=8cm]{model}
+  \end{figure}
+
+  \ul{Tips for reading the plate notations}{
+
+    \only<1>{ \item Circles are variables; observed variables are shaded.
+    \item Dotted circles denotes hyperparameters.  \item Arrows denote
+    dependencies. }
+
+    \only<2>{ \item Consider the collection is composed of $N$ documents.
+    \item Each document $d_j$ is associated with two sets of terms $T_j$ and
+    $S_j$. \item We refer $T_j$ as the primary representation and $S_j$ as the
+    secondary. }
+    
+    \only<3>{ \item Each document $d_j$ possesses two multinomials $\tau^{(j)}$
+    and $\phi^{(j)}$ from which elements in $T_j$ and $S_j$ are drawn,
+    respectively.  \item Now we have two document models $p(w|\tau^{(j)})$ and
+    $p(w|\phi^{(j)})$. }
+
+    \only<4>{ 
+      \item The multinomils work on two different sets of vocabularies.
+      \item Two Dirichlets $\{\alpha_i; i \in [1, |T|]\}$ and $\{\beta_k; k \in [1, |S|]\}$ are assumed. 
+      \item They govern the generation of the document multinomials.
+    }
+  }
+}
+
+\f{The Generative Framework}{
+  \begin{figure}
+    \centering
+    \includegraphics[width=8cm]{model}
+  \end{figure}
+
+  \mydef[Obtaining the predictive distribution]{
+
+    \only<1>{The query $\mathbf{q}$ is a set of observed terms drawn
+    from an unknown document model $x$ in the collection.  Specifically, the
+    query terms are encoded in the same vocabulary as in that form the primary
+    representation of document $x$.}
+    
+    \only<2>{By making this assumption, we are able to match the query
+    against all the document models and to estimate the query likelihood
+    $\Pr(\mathbf{q}|d_j)$.  This leads us to the probabilistic generative methods,
+    such as language modeling.}
+    
+    \only<3>{Recall that the unknown document $x$ is connected
+    to another unknown variable $y$.  The variable $y$ represents the most probable
+    term generated from the secondary multinomial distribution $\phi^{(x)}$.}
+
+  }
+}
+
+\f{Summary of the Framework}{
+  \mydef[]{
+    The entire generative process can be summarized as follows:
+    \begin{enumerate} 
+      \item For each document $d_j$, \begin{enumerate}
+	\item $\tau^{(j)} \sim \textrm{Dirichlet}(\alpha_i; i \in [1, |T|])$
+	\item $\phi^{(j)} \sim \textrm{Dirichlet}(\beta_k; i \in [1, |S|])$
+	\item For $i \in \{ 1, \ldots, |T_j| \}$, $t_i \sim \textrm{Mult}(\tau^{(j)})$ 
+	\item For $k \in \{ 1, \ldots, |S_j| \}$, $s_k \sim \textrm{Mult}(\phi^{(j)})$ 
+      \end{enumerate}
+      \item For some unknown document $d_x$, \begin{enumerate}
+	\item For $i \in \{ 1, \ldots, |\mathbf{q}|\}$, $q_i \sim \textrm{Mult}(\tau^{(x)})$
+      \end{enumerate}
+    \end{enumerate}
+  }
+}
+
 \subsection{Inference}
+
+\f{Term Likelihood in the Second Representation}{
+  \mydef[Formulation]{
+    We want to explicitly estimate the likelihood of one term $s$ in the
+    secondary term domain being ``\emph{triggered}'' by another set of terms
+    from the primary term domain.  This task can be framed as a optimization
+    problem: \begin{equation} y^* = \arg\max_{y \in S} \Pr(y|\mathbf{q},
+    \mathbf{t}, \mathbf{d}, \mathbf{s}) \label{eq:forward} \end{equation} where
+    $\mathbf{t}$ and $\mathbf{s}$ represent all the observed terms in the
+    primary/secondary representations in the collection, respectively;
+    $\mathbf{q}$ represents the input query and $\mathbf{d}$ denotes all the
+    observed documents.  
+  }
+}
+
+\f{Inference (For Impatient Readers)}{
+  \begin{eqnarray}
+    \Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) 
+    &=& \sum_{x \in [1, N]} \Pr(y|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \Pr(x|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
+    &\propto& \sum_{x \in [1, N]} \left\{ \int \Pr(y|x, \phi^{(x)}) \Pr(\phi^{(x)}|d_x, \mathbf{s_x}) \mathrm{d}\phi^{(x)} \right. \nonumber\\
+    && \left. \int \Pr(\mathbf{q}| x, \tau^{(x)}) \Pr(\tau^{(x)}|d_x, \mathbf{t_x})\mathrm{d}\tau^{(x)} \Pr(x) \right\} \nonumber\\
+    &=& \alert{\sum_{x \in [1, N]} \frac{\beta_y + c_{y,x}}{\sum_k \beta_k + c_{k,x}} \frac{\mathcal{B}(\{\alpha_i + c_{i,x} + c_{i,q} \})}{\mathcal{B}(\{\alpha_i + c_{i,x} \})} \Pr(x)} \label{eq:forward-solution}
+  \end{eqnarray}
+  Recall that $\mathcal{B}(\cdot)$ is the multinomial beta
+  function defined by \[\mathcal{B}(a_1, \ldots, a_n) = \frac{\prod_i
+  \Gamma(a_i)}{\Gamma(\sum_i a_i)}. \]
+}
+
+\f{Inference: Step by Step}{
+  \mydef[Inducing the first term in the summation]{
+    \begin{eqnarray}
+      \Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) &=& \sum_{x \in
+      [1, N]} \alert{\Pr(y|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})}
+      \Pr(x|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
+      && \nonumber\\
+      \Pr(y|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})
+      &=& \int \Pr(y, \phi^{(x)}|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \mathrm{d}\phi^{(x)} \nonumber\\
+      &=& \int \Pr(y|\phi^{(x)}, x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) 
+      \Pr(\phi^{(x)}|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \mathrm{d}\phi^{(x)} \nonumber\\
+      &=& \int \Pr(y|\phi^{(x)}, x) \Pr(\phi^{(x)}|d_x, \mathbf{s}_x) \mathrm{d}\phi^{(x)} \label{eq:first}
+    \end{eqnarray}
+  }
+}
+
+\f{Inference: Step by Step}{
+  \mydef[Inducing the second term in the summation]{
+    \begin{eqnarray}
+      \Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) &=& \sum_{x \in
+      [1, N]} \Pr(y|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})
+      \alert{\Pr(x|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})} \nonumber\\
+      && \nonumber\\
+      \Pr(x|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})
+      &=& \frac{\Pr(\mathbf{q}|x, \mathbf{t}, \mathbf{d}, \mathbf{s}) \Pr(x|\mathbf{t}, \mathbf{d}, \mathbf{s})}
+      {\Pr(\mathbf{q}|\mathbf{t}, \mathbf{d}, \mathbf{s})} \nonumber\\
+      &\propto& \Pr(\mathbf{q}|x, \mathbf{t}, \mathbf{d}, \mathbf{s}) \Pr(x|\mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
+      &=& \left( \int \Pr(\mathbf{q}, \tau^{(x)}|x, \mathbf{t}, \mathbf{d}, \mathbf{s}) \mathrm{d}\tau^{(x)} \right) 
+      \Pr(x|\mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
+      &=& \left( \int \Pr(\mathbf{q}|\tau^{(x)}, x, \mathbf{t}, \mathbf{d}, \mathbf{s}) 
+      \Pr(\tau^{(x)}|x, \mathbf{t}, \mathbf{d}, \mathbf{s}) \mathrm{d}\tau^{(x)} \right) 
+      \Pr(x|\mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
+      &=& \int \Pr(\mathbf{q}|\tau^{(x)}, x) \Pr(\tau^{(x)}|d_x, \mathbf{t}_x) \mathrm{d}\tau^{(x)} \Pr(x) \label{eq:second}
+    \end{eqnarray}
+  }
+}
+
+\f{Inference: Step by Step}{
+  \ul{Conjugate priors}{
+    \item In Bayesian theory, the prior $\Pr(\theta)$ and posterior $\Pr(\theta|x)$
+    are called conjugate distributions, if the posterior are in the same family as the prior
+    \item Usually, it can be viewed as updating the prior belief on
+    $\theta$ after observing a sequence of outcome $x$.
+    \item For example, Dirichlets are conjugate to multinomials 
+    \item $\Pr(\phi^{(x)}|x, y, d_x, \mathbf{s}_x) \sim \mathrm{Dirichlet}(\{\beta_k + c_{k,x}; \forall k\})$
+    \item $\Pr(\tau^{(x)}|x, \mathbf{q}, d_x, \mathbf{t}_x) \sim \mathrm{Dirichlet}(\{\alpha_i + c_{i,x} + c_{i,q}; \forall i\})$
+  }
+}
+
 \subsection{Hyperparameters and the Index Structure}
 
 \section{Experimental Results}
 \subsection{Query Refinement Using the Secondary Representation}
+
+\f{Query Refinement Using the Secondary Representation}{
+  \ul{Idea}{
+    \item Make an initial retrieval run
+    \item Use the retrieved result to populate the refined model
+    \item Re-submit the model as a new query
+  }
+  \par
+  \ul{Why employing two-stage retrieval?}{
+    \item $\Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})$ can be seen as a refined query model
+    \item This technique was proposed in Lavrenko's work
+    \item The new model is refined in the secondary representation
+    \item The benefit of such a two-stage setup: \ull{
+      \item The first run is done in general language (good for recall)
+      \item The second run is done in specific language (good for precision)
+    }
+  }
+}
+
+\f{Query Refinement Using the Secondary Representation}{
+  \ul{Facilatating the second-run retrieval}{
+    \item The refined model is a probability distribution
+    \item For each $s_k$, we calculated its \emph{expectation} $E(s_k|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})$
+    \item The expectation can be seen as the number of occurrence for $s_k$
+    \item The resulting language model is: \[
+      x^{*} &=& \arg\max_x \prod_k \Pr(s_k|x)^{E(s_k|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})}
+    \]
+    \item This simple technique reduces to KL-divergence retrieval framework
+  }
+}
+
+\f{Evaluation}{
+  \ul{Setup}{
+    \item Chinese-to-Chinese monolingual document retrieval
+    \item The data is available as part of NTCIR-4 Test Collection CLIR Task
+    \item 381,681 newswire articles and 59 test topics were involved
+    \item We used only title queries in the experiment 
+    \item Primary representation: CJK-character bigrams + English word unigrams
+    \item Secondary representation: High-discriminative CJK-character bigrams \ull{
+      \item I.e., top-500,000 CJK-character bigrams ranked by tf-idf scores
+      \item The minimum support for each bigram was 5
+      \item The number (500,000) was determined through experimentation
+    }
+  }
+}
+
+\f{Evaluation}{
+  \ul{Baseline methods}{
+    \item We used the Lemur toolkit to build up strong baselines
+    \item Participating runs include tf-idf, okapi, and indri (a language-model variant)
+    \item Query refinement/expansion for each run: \ull{
+      \item tf-idf: pseudo relevance-feedback
+      \item okapi: pseudo relevance-feedback
+      \item indri: adapted relevance model
+    }
+    \item The number of feedback documents: 20
+    \item The number of feedback terms: 100
+    \item Our refined model was truncated (preserving only top-100's)
+    \item Performance was measured in terms of mean average-precision and precision-at-5
+  }
+}
+
+\f{Evaluation Result}{
+  \begin{table}[ht!]
+    \scriptsize
+    \centering
+    \begin{tabular}{lllll}
+      Method & MAP (+\%) & P@5 (+\%) & MAP (+\%) & P@5 (+\%) \\
+      \hline
+      {\tt tfidf} & 0.181 & 0.264 & 0.213 & 0.335 \\
+      {\tt tfidf} + PRF & 0.217 (+19.9\%) & 0.295 (+11.7\%) & 0.264 (+23.9\%) & 0.383 (+14.3\%) \\
+      {\tt okapi} & 0.185 & 0.278 & 0.223 & 0.356 \\
+      {\tt okapi} + PRF & 0.224$^{**}$ (+21.1\%) & 0.315 (+13.3\%) & 0.270$^{**}$ (+21.1\%) & 0.400 (+12.4\%) \\
+      \hline
+      {\tt indri} & 0.174 & 0.258 & 0.216 & 0.346 \\
+      {\tt indri} + Relevance & 0.180 (+3.4\%) & 0.271 (+5.3\%) & 0.222 (+2.8\%) & 0.342 (-1.2\%) \\
+      {\tt lm} & 0.170 & 0.251 & 0.209 & 0.322 \\
+      {\tt lm} + Refinement & 0.207$^*$ (+21.8\%) & 0.302 (+20.3\%) & 0.261$^*$ (+24.9\%) & 0.369 (+14.6\%) \\
+      \\
+    \end{tabular}
+
+    \caption{The result for the query refinement task.  Retrieval methods listed in the
+    upper-half are tfidf-based, while those in the lower-half are
+    language-model-based.  The overall top-performer is indicated with two
+    asterisks in the superscript, while the best run in the language-modeling
+    side is indicated with one asterisk.}
+    \label{t:query-modeling}
+  \end{table}
+}
+
 \subsection{Retrieving Query-Relevant Facets}
 
 \section{Related Work}
