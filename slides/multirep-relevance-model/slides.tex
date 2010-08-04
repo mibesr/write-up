@@ -324,10 +324,43 @@
     are called conjugate distributions, if the posterior are in the same family as the prior
     \item Usually, it can be viewed as updating the prior belief on
     $\theta$ after observing a sequence of outcome $x$.
-    \item For example, Dirichlets are conjugate to multinomials 
-    \item $\Pr(\phi^{(x)}|x, y, d_x, \mathbf{s}_x) \sim \mathrm{Dirichlet}(\{\beta_k + c_{k,x}; \forall k\})$
-    \item $\Pr(\tau^{(x)}|x, \mathbf{q}, d_x, \mathbf{t}_x) \sim \mathrm{Dirichlet}(\{\alpha_i + c_{i,x} + c_{i,q}; \forall i\})$
+    \item Conjugate prior is an algebraically ``syntactic sugar'' to simplify inference
+    \item Fast fact: Dirichlets are conjugate to multinomials \ull{
+      \item $\Pr(\phi^{(x)}|x, y, d_x, \mathbf{s}_x) \sim \mathrm{Dirichlet}(\{\beta_k + c_{k,x}; \forall k\})$
+      \item $\Pr(\tau^{(x)}|x, \mathbf{q}, d_x, \mathbf{t}_x) \sim \mathrm{Dirichlet}(\{\alpha_i + c_{i,x} + c_{i,q}; \forall i\})$
+    }
   }
+  \par
+  \ul{Care for going into details?}{
+    \item Detailed derivation is too terrifying/boring to be presented here
+    \item Check out Gelman et al. for good reference on Bayesian statistics
+  }
+}
+
+\f{Inference: Revisited}{
+  \mydef[Integrating out the prior]{
+    \begin{eqnarray}
+    \int \Pr(y|x, \phi^{(x)}) \Pr(\phi^{(x)}|d_x, \mathbf{s_x}) \mathrm{d}\phi^{(x)} 
+    &=& \frac{\beta_y + c_{y,x}}{\sum_k \beta_k + c_{k,x}} \\
+    \int \Pr(\mathbf{q}| x, \tau^{(x)}) \Pr(\tau^{(x)}|d_x, \mathbf{t_x})\mathrm{d}\tau^{(x)} 
+    &=& \frac{\mathcal{B}(\{\alpha_i + c_{i,x} + c_{i,q} \})}{\mathcal{B}(\{\alpha_i + c_{i,x} \})} 
+    \end{eqnarray}
+  }
+  \par
+  \mydef[Voila!]{
+    \begin{eqnarray}
+      \Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) 
+      &=& \sum_{x \in [1, N]} \Pr(y|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \Pr(x|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
+      &\propto& \alert{\sum_{x \in [1, N]} \frac{\beta_y + c_{y,x}}{\sum_k \beta_k + c_{k,x}} \frac{\mathcal{B}(\{\alpha_i + c_{i,x} + c_{i,q} \})}{\mathcal{B}(\{\alpha_i + c_{i,x} \})} \Pr(x)} \label{eq:forward-solution}
+    \end{eqnarray}
+  }
+}
+
+%--------------------------------------------------
+%     \item For example, Dirichlets are conjugate to multinomials 
+%     \item $\Pr(\phi^{(x)}|x, y, d_x, \mathbf{s}_x) \sim \mathrm{Dirichlet}(\{\beta_k + c_{k,x}; \forall k\})$
+%     \item $\Pr(\tau^{(x)}|x, \mathbf{q}, d_x, \mathbf{t}_x) \sim \mathrm{Dirichlet}(\{\alpha_i + c_{i,x} + c_{i,q}; \forall i\})$
+%-------------------------------------------------- 
 }
 
 \subsection{Hyperparameters and the Index Structure}
@@ -366,11 +399,11 @@ term domain) from the collection by viewing the entire collection as one languag
     with Dirichlet smoothing scheme
     
     \item In this case, the model scores becomes:
-    \begin{eqnarray*}
+    \begin{eqnarray}
       \Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) &\propto& 
-      \sum_{x \in [1, N]} \frac{\beta_y + c_{y,x}}{\sum_k \beta_k + c_{k,x}}
-      {\rm L}_{\rm LM}(\mathbf{q}|x) \nonumber\\
-    \end{eqnarray*} 
+      \alert{\sum_{x \in [1, N]} \frac{\beta_y + c_{y,x}}{\sum_k \beta_k + c_{k,x}}
+      {\rm L}_{\rm LM}(\mathbf{q}|x)}
+    \end{eqnarray} 
   }
 }
 
