@@ -144,13 +144,36 @@
 
 \f{Roadmap}{
   \ul{Where do we go from here?}{
-    \item We proposed a generalization over Lavrenko and Croft's work by
+    \item We proposed a generalization over Lavrenko and Croft's work \cite{lavrenko2001relevance} by
     adapting it to cases where two document representations are appropriate
     \item We took a Bayesian generative approach 
     \item The result can be easily implemented in index level
     \item Two applications are introduced to evaluate our work 
     \ull{ \item Refining query model by using secondary representation \item Retrieving query-dependent facets }
     \item The model achieved satisfactory result in both experiments
+  }
+}
+
+\section{Related Work}
+
+\f{Related Work}{
+  \ul{Query modeling}{
+    \item Our method was inspired by the recent advances on language modeling
+    applications \cite{lavrenko2001relevance,zhai2001language,zaragorza2003bayesian}
+    \item Our approach differs from the previous work in the presence of a secondary document representation
+  }
+  \par
+  \ul{Facet ranking}{
+    \item Our work is among the earliest attempt for facet ranking
+    \item Similar attempts were made in the area of expert finding \ull{
+      \item Amitay et al. \cite{amitay2008finding} formulated the problem of expert
+      finding as a two-layered retrieval task by using \emph{inverse entity-frequency} 
+      \item Balog et al. \cite{balog2009language} followed up and
+      proposed a language modeling approach with the similar rationale to
+      exploit person-term and person-document links
+    }
+    \item Our approach departs from these work in the 
+    way document relevance is modeled and that prior belief is supported
   }
 }
 
@@ -309,6 +332,49 @@
 
 \subsection{Hyperparameters and the Index Structure}
 
+\f{Hyperparameters}{
+  \ul{Prior distributions}{
+    \item Prior represents our belief on the distribution of the model parameters
+    \item General form: $(\beta_1, \beta_2, \ldots, \beta_{|S|})$
+  }
+  \par
+
+  \ul{Uniform prior}{ \item $(c, c, \ldots, c)$ \item We let $\beta_k = c$ for
+  each $k \in [1, |S|]$ and $c$ denote some constant }
+
+  \ul{Smoothed-Dirichlet}{
+    \item $(\mu \Pr(s_1|C), \mu \Pr(s_2|C), \ldots, \mu \Pr(s_{|S|}|C))$ 
+    \item $\Pr(s_k|C)$ denotes the probability of generating term $s_k$ (in the secondary
+term domain) from the collection by viewing the entire collection as one language model
+    \item $\mu$ represents some constant.
+    \item Widely-used as a smoothing method in the language modeling applications for information retrieval \cite{zhai2004study}
+  }
+}
+
+\f{Index Structure}{
+  \ul{Integration with the language model}{
+    \item One interesting feature of our model is the seamless integration
+    with the language-model-based retrieval method
+    \item It comes from
+    the fact we could further simplify Equations~\eqref{eq:forward-solution} by
+    assigning $\alpha$ as a smoothed-Dirichlet prior and $\Pr(x)$ as a uniform
+    prior
+    \item When $\alpha_i = \mu \Pr(t_i|C)$, it can be shown that: \[
+    \frac{\mathcal{B}(\{\alpha_i + c_{i,x} + c_{i,q} \})}{\mathcal{B}(\{\alpha_i +
+    c_{i,x} \})} \propto {\rm L}_{\rm LM}(\mathbf{q}|d), \] where ${\rm L}_{\rm
+    LM}(\mathbf{q}|d)$ denotes the query likelihood score in the language model
+    with Dirichlet smoothing scheme
+    
+    \item In this case, the model scores becomes:
+    \begin{eqnarray*}
+      \Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) &\propto& 
+      \sum_{x \in [1, N]} \frac{\beta_y + c_{y,x}}{\sum_k \beta_k + c_{k,x}}
+      {\rm L}_{\rm LM}(\mathbf{q}|x) \nonumber\\
+    \end{eqnarray*} 
+  }
+}
+
+
 \section{Experimental Results}
 \subsection{Query Refinement Using the Secondary Representation}
 
@@ -338,14 +404,14 @@
     \item The resulting language model is: \[
       x^{*} &=& \arg\max_x \prod_k \Pr(s_k|x)^{E(s_k|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})}
     \]
-    \item This simple technique reduces to KL-divergence retrieval framework
+    \item This simple technique reduces to KL-divergence retrieval framework \cite{zhai2001language}
   }
 }
 
 \f{Evaluation}{
   \ul{Setup}{
-    \item Chinese-to-Chinese monolingual document retrieval
-    \item The data is available as part of NTCIR-4 Test Collection CLIR Task
+    \item Task: Chinese-to-Chinese monolingual document retrieval
+    \item The benchmark is available as part of NTCIR-4 Test Collection CLIR Task
     \item 381,681 newswire articles and 59 test topics were involved
     \item We used only title queries in the experiment 
     \item Primary representation: CJK-character bigrams + English word unigrams
@@ -403,11 +469,95 @@
 
 \subsection{Retrieving Query-Relevant Facets}
 
-\section{Related Work}
+\f{Retrieving Query-Relevant Facets}{
+  \ul{Faceted search as a two-phase extension of the ordinary retrieval}{
+    \item See \cite{hearst2002finding,yee2003faceted,roy2008minimum} for detail about faceted search
+    \item One populates a set of documents by submitting the query
+    \item One discovers facets by exploiting the associations between facets and documents 
+    \item How do we present the facets?
+  }
+  \par
+  \ul{Count-based presentation schemes}{
+    \item Facets are sorted in descending order of the number of counts
+    \item It is easy to implement (one more pass through the forward index)
+    \item It treats all the facet count as equally importatnt \ull{
+      \item e.g., A facet count in document #1 is as good as in document #100
+    }
+    \item Critics #1: It disregards the notion of relevance
+    \item Critics #2: Users can be mislead when consulting the results to guide the subsequence exploratory search
+  }
+}
+
+\f{Retrieval Query-Relevant Facets}{
+  \ul{Idea}{
+    \item Encode facets in the secondary representations of the corresponding associated documents
+    \item Run the proposed model
+  }
+  \par
+  \ul{Why using the secondary representation?}{
+    \item This task is relevant to (but not equivalent to) expert finding 
+    \item Use $\Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})$ to sort the facets
+    \item Consider this method as a relevance-weighted version of the count-based approach
+    \item It is efficient: fast as ad-hoc retrieval (with a little overhead forwarding scores)
+  }
+}
+
+\f{Evaluation}{
+  \ul{Setup}{
+    \item Task: Retrieving relevant facets on Tan-Hsin Corpus
+    \item The test data comprises 15,314 historical documents, each with person name facets
+    \item 105 query topics are collected from the query logs 
+    \item 28 topics were randomly selected and used in the experiment
+    \item Relevance judgment was manually made for all the top 100 facets returned by the baseline retreiver
+  }
+  \par
+  \ul{Methods}{
+    \item \texttt{baseline}: The count-based scheme
+    \item \texttt{uniform-prior}: The proposed method, using uniform prior for $\beta$
+    \item \texttt{smoothed-prior}: The proposed method, using Dirichlet-smoothed prior for $\beta$
+  }
+}
+
+\f{Evaluation Result}{
+  \begin{table}[ht!]
+    \centering
+    \begin{tabular}{llll}
+      Method & & MAP & P@10 \\
+      \hline
+      {\tt baseline} & & 0.2996 & 0.3857 \\
+      {\tt uniform-prior} & $\beta = 0$ & 0.5775 & 0.6179\\
+      & $\beta = 1$ & 0.5899$^*$ & 0.6464$^*$ \\
+      & $\beta = 10$ & 0.5877 & 0.6464$^*$ \\
+      {\tt smoothed-prior} & $\mu = 0.01$ & 0.5781 & 0.6179 \\
+      & $\mu = 1$ & 0.5782 & 0.6214 \\
+      & $\mu = 100$ & 0.4956 & 0.5429 \\
+      \\
+    \end{tabular}
+    \caption{The performance results for all the test runs.  The top-performer is indicated by an asterisk in the superscript.}
+    \label{t:performance}
+  \end{table}
+}
 
 \section{Discussion and Concluding Remarks}
-\f{Discussion}{
+\f{Discussion and Concluding Remarks}{
+  \ul{Our proposed framework...}{
+    \item Enables the use of a secondary document representation in language modeling
+    \item Offers interoperability between two different term domains
+    \item Exploits the index structure to achieve high efficiency
+  }
+
+  \ul{Evaluation results}{
+    \item Two applications were introduced in this work
+    \item In the first task, the model beaten the relevance model baseline by 17.6\% (rigid) and 22.7\% (relax) in 
+    MAP \ull{ 
+      \item It achieved comparable performance as {\tt tfidf} with pseudo-relevance feedback
+      \item The model alone improved the MAP of the regular language modeling run by 21.8\% (rigid) and 24.9\% (relax)
+    }
+    \item In the second application, the baseline performance was improved by
+    roughly 100\% in MAP.  
+  }
 }
+
 %--------------------------------------------------
 % \section{Background}
 % \subsection{Graph-Theoretical Concepts}
@@ -446,7 +596,7 @@
 %-------------------------------------------------- 
 \section<presentation>*{\appendixname}
 
-\begin{frame}%[allowframebreaks]
+\begin{frame}[allowframebreaks]
   \frametitle{References}
   \small
   \bibliography{report}

@@ -10,3 +10,4 @@
 *.snm
 *.temp
 *.toc
+.*.swp
