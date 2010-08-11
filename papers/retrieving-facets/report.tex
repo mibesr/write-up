@@ -436,28 +436,25 @@ associated with each document as a secondary representation and utilize
 Equation~\ref{eq:forward-solution} to rank the facets.  
 
 %--------------------------------------------------
-% The test corpus that we chose is the Tan-Hsin Archive \zhtw{(淡新檔案)}, which
-% is currently the most sizable and complete collection of historical documents
-% in Taiwan dating back from 1776 to 1895.  
+% The test corpus that we chose was
+% XXXXXXXX\footnote{Removed due to double-blind review}, which is currently the
+% most sizable and complete collection of historical documents in XXXXXXXX.  
 %-------------------------------------------------- 
 
 The very nature of this task makes our proposed model feasible.  One major
 difficulty that we faced, however, was the lack of standard benchmark on the
 facet ranking task.  As a result, we went for a custom benchmark based on one
-text collection in our own applications.  The test corpus that we chose was
-XXXXXXXX\footnote{Removed due to double-blind review}, which is currently the
-most sizable and complete collection of historical documents in XXXXXXXX.  We
-took a subset of 15,314 documents from the collection to form the test set.
-Each document in the collection was associated with a set of human-annotated
-facets.  By considering topic coverage and ease of evaluation, we tested model
-performance only on person names as the designated facet set.
-
-%--------------------------------------------------
-% The number of unique person names in the dataset is 10,918, and the total
-% number of occurrences of these facets is 37,489.  Thus, the average number of
-% person names associated with a document is 2.45.  All these information were
-% already made available in the metadata of the documents.  
-%-------------------------------------------------- 
+text collection in our own applications.  The test corpus that we chose is the
+Tan-Hsin Archive, which is currently the most sizable and
+complete collection of historical documents in Taiwan dating back from 1776 to
+1895.  We took a subset of 15,314 documents from the collection to form the
+test set.  Each document in the collection was associated with a set of
+human-annotated facets.  By considering topic coverage and ease of evaluation,
+we tested model performance only on person names as the designated facet set.
+The number of unique person names in the dataset is 10,918, and the total
+number of occurrences of these facets is 37,489.  Thus, the average number of
+person names associated with a document is 2.45.  All these information were
+already made available in the metadata of the documents.  
 
 To prepare the query topics, we first fetched all the query log entries from
 the database server.  We put together a set of 105 query topics, each of which
@@ -606,14 +603,14 @@ challenges should be the focus of our future work.
 
 \section*{Acknowledgments}
 
-We thank XXXXXXXX\footnote{Removed due to double-blind review} for his
-support on preparation of the test data.  The research efforts described in
-this paper were supported under the XXXXXXXX (Project No. XXXXXXXX), which is
-sponsored by XXXXXXXX.
-
 %--------------------------------------------------
-% We thank Po-Yu Chen for his support on preparation of the test data.  The
-% research efforts described in this paper are supported under the National Taiwan
-% University Digital Archives Project (Project No.  NSC-98-2631-H-002-005), which
-% is sponsored by National Science Council, Taiwan. 
+% We thank XXXXXXXX\footnote{Removed due to double-blind review} for his
+% support on preparation of the test data.  The research efforts described in
+% this paper were supported under the XXXXXXXX (Project No. XXXXXXXX), which is
+% sponsored by XXXXXXXX.
 %-------------------------------------------------- 
+
+We thank Po-Yu Chen for his support on preparation of the test data.  The
+research efforts described in this paper are supported under the National Taiwan
+University Digital Archives Project (Project No.  NSC-98-2631-H-002-005), which
+is sponsored by National Science Council, Taiwan. 
