@@ -1,16 +1,17 @@
-\begin{abstract} In this work, we extended Lavrenko's relevance model and
-adapted it to the cases where an additional layer of document representation is
-beneficial to the application.  With this adaption, we are able to aggregate
-heterogeneous data sources and operate the model in different granularity
-level.  We demonstrated this idea with two real-world applications.  In the first task, we
-showed the feasibility of using a carefully-selected vocabulary as the query
-expansion source in a language model to enhance retrieval effectiveness.  The
-proposed query refinement model outperformed the relevance model counterpart in
-terms of MAP by 17.6\% under rigid relevance judgment.  Also in the second
-task, we established a ranking scheme that could be used in a faceted search
-session to sort the facets based on their corresponding relevance to the query.
-The result showed that our approach improved the performance over the baseline
-method by roughly 100\% in terms of MAP.  \end{abstract}
+\begin{abstract} In this work, we extended Lavrenko's relevance model
+\cite{lavrenko2001relevance} and adapted it to the cases where an additional
+layer of document representation is appropriate.  With this
+change, we are able to aggregate heterogeneous data sources and operate the
+model in different granularity levels.  We demonstrated this idea with two
+real-world applications.  In the first task, we showed the feasibility of using
+a carefully-selected vocabulary as the query expansion source in a language
+model to enhance retrieval effectiveness.  The proposed query refinement model
+outperformed the relevance model counterpart in terms of MAP by 17.6\% under
+rigid relevance judgment.  Also in the second task, we established a ranking
+scheme that could be used in a faceted search session to sort the facets based
+on their corresponding relevance to the query.  The result showed that our
+approach improved the performance over the baseline method by roughly 100\% in
+terms of MAP.  \end{abstract}
 
 \section{Introduction}
 
@@ -43,7 +44,7 @@ we are able to aggregate information from various sources and to operate the
 model in different granularity as necessary.  Consider applications that could
 take advantage of this idea, such as facilitating cross-language information
 retrieval in a corpus where documents possess multiple representations over
-different languages; receiving user queries in a general vocabulary while
+different languages \cite{lavrenko2002cross-lingual}; receiving user queries in a general vocabulary while
 operating the retrieval process in another level where documents are indexed
 with more specific terms; or searching for named entities that are relevant to the
 user queries in a collection where manually-labeled, high-quality annotations
@@ -294,18 +295,19 @@ The probability estimate $\Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d},
 \mathbf{s})$ that we obtained from the proposed model can be seen as a
 \emph{refined query model}, an idea that has been proposed in
 \cite{lavrenko2001relevance}.  In this case, we can employ a two-stage
-retrieval strategy to enhance retrieval performance.  First, We made an initial
+retrieval strategy to enhance retrieval performance: We first made an initial
 retrieval run to populate a refined model, and then re-submit the model as a
-new query to the retrieval system.  What makes our approach different from the
-original relevance model, however, is the presence of the secondary document
-representation; in Lavrenko's work, only one document
-representation was assumed.
+new query to the retrieval system.  What differs our approach from the original
+relevance model \cite{lavrenko2001relevance} and its cross-lingual enhancement
+\cite{lavrenko2002cross-lingual} lies in the formalism with a Bayesian
+generative framework and the presence of Dirichlet priors for both
+representations.
 
 The major obstacle for realizing such type of model-based query refinement lies
 in the restriction of the language modeling framework, according to which the
 input query should always be specified as a sequence of terms, each associated
 with an positive integer indicating the corresponding number of occurrences in
-the query text.  We developed a technique that enabled a second-round retrieval
+the query text.  We used a technique that enabled a second-round retrieval
 in our study by \emph{realizing} the probability distribution
 $\Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})$ as a sequence of
 \emph{expected terms}.  This can be done through the construction of a
@@ -318,26 +320,33 @@ framework proposed in \cite{zhai2001language}.
 
 The benchmark corpora that we used to testify the proposed solution was the
 NTCIR-4 Test Collection.  The particular task that we considered here is a
-subtask of the NTCIR-4 CLIR Task: Chinese-to-Chinese monolingual document
+subtask of the NTCIR-4 CLIR Task \cite{kishida2004overview}: Chinese-to-Chinese monolingual document
 retrieval.  The dataset comprised of totally 381,681 newswire articles and 59
-test topics.  We used only title queries in this experiment.
+test topics.  We used only title queries in this experiment.  Only limited
+preprocessing steps were applied to the corpus.  All the punctuation marks,
+whitespace, and separators were discarded and remaining characters were send to
+a simple tokenizer.  As a result, the output was a mixture of (i) CJK-character
+bigrams and (ii) English word unigrams, which formed the primary document
+representations in our model and in other baseline methods.  
 
-We took limited preprocessing steps to the corpus.  First, we scanned through
-each document and identified a number of text segments; all the unrecognized
-texts, such as punctuation marks or symbols, were discarded immediately.  A
-text segment of interest could be formed by either (i) one or more consecutive
-CJK characters, or by (ii) one or more English words separated by hyphens or
-whitespaces.  Then, we further broke down these text segments into a number of
-tokens using the following processing rules:  \begin{itemize} \item For each
-text segment of category (i), output the bigrams obtained from the character
-sequence, i.e., the expected output for a given text segment $w_1 w_2 w_3
-\ldots w_n$ is $\{ w_i w_{i+1} | i \in [1, n-1] \}$.  \item For each text
-segment of category (ii), output the words by splitting the text with
-whitespaces or hyphens.  \end{itemize} The resulting token stream was a mixture
-of CJK-character bigrams and English word unigrams, which formed the primary
-document representations in our model and in other baseline methods.  
+%--------------------------------------------------
+% First, we scanned through each document and identified a number of text
+% segments; all the unrecognized texts, such as punctuation marks or symbols,
+% were discarded immediately.  A text segment of interest could be formed by
+% either (i) one or more consecutive CJK characters, or by (ii) one or more
+% English words separated by hyphens or whitespaces.  Then, we further broke down
+% these text segments into a number of tokens using the following processing
+% rules:  \begin{itemize} \item For each text segment of category (i), output the
+% bigrams obtained from the character sequence, i.e., the expected output for a
+% given text segment $w_1 w_2 w_3 \ldots w_n$ is $\{ w_i w_{i+1} | i \in [1, n-1]
+% \}$.  \item For each text segment of category (ii), output the words by
+% splitting the text with whitespaces or hyphens.  \end{itemize} As a result, the
+% output was a mixture of CJK-character bigrams and English word unigrams, which
+% formed the primary document representations in our model and in other baseline
+% methods.  
+%-------------------------------------------------- 
 
-The secondary representation we chose was the top-500000 CJK-character bigrams
+The secondary representation we chose was the top-500,000 CJK-character bigrams
 in the entire collection ranked by the corresponding \emph{tf-idf} score; the
 candidate set was formed by excluding those bigrams whose occurrence is less
 than 5.  The idea behind such an arrangement was to retrieve the initial result
@@ -345,17 +354,17 @@ from an index with general vocabulary, to refine the query model with the
 highly-discriminative terms, and obtain the final result from the secondary
 index.  The parameters described here were determined through experimentation.
 
-Our model was implemented in C++, and the rest of the experimental runs were
-established on top of the Lemur
+Our model was developed from scratch in C++, and the rest of the experimental
+runs were established on top of the Lemur
 toolkit\footnote{\url{http://www.lemurproject.org}}.  From all the retrieval
 methods supported by the tool, we selected {\tt tfidf}, {\tt okapi}, and {\tt
 indri} (a language-model-based method) as the baseline methods.  Our own
 language model implementation is denoted as {\tt lm}.  Standard query expansion
 techniques for each selected method were also supported in the Lemur toolkit.
-Pseudo-relevance feedback ({\tt PRF}) was implemented for both
-tf-idf and okapi models, and an adaptation of Lavrenko's relevance model ({\tt
-RM}) was also built into the core of Indri index.  In the following experiment,
-our refinement model is denoted as {\tt BRM}.  
+Pseudo-relevance feedback ({\tt PRF}) was implemented for both tf-idf and okapi
+models, and an adaptation of Lavrenko's relevance model ({\tt RM}) was also
+built into the core of Indri index.  In the following experiment, our
+refinement model is denoted as {\tt BRM}.  
 
 We stuck with the default parameter values {for} all the participant models in
 the regular runs; when employing pseudo-relevance feedback, we set the number
@@ -424,9 +433,11 @@ remains rather significant.
     \hline
     Method & MAP & P@5 & MAP & P@5 \\
     \hline
-    {\tt tfidf.500k} & 0.164 & 0.248 & 0.199 & 0.322 \\
-    {\tt okapi.500k} & 0.167 & 0.251 & 0.205 & 0.325 \\
-    {\tt indri.500k} & 0.155 & 0.248 & 0.198 & 0.315 \\
+%--------------------------------------------------
+%     {\tt tfidf.500k} & 0.164 & 0.248 & 0.199 & 0.322 \\
+%     {\tt okapi.500k} & 0.167 & 0.251 & 0.205 & 0.325 \\
+%     {\tt indri.500k} & 0.155 & 0.248 & 0.198 & 0.315 \\
+%-------------------------------------------------- 
     {\tt tfidf+PRF.500k} & 0.190 & 0.288 & 0.241 & 0.373 \\
     {\tt okapi+PRF.500k} & 0.196 & {\bf 0.302} & 0.247 & {\bf 0.383} \\
     {\tt indri+RM.500k} & 0.155 & 0.248 & 0.197 & 0.309 \\
@@ -493,31 +504,36 @@ The very nature of this task makes our proposed model feasible.  One major
 difficulty that we faced, however, was the lack of standard benchmark on the
 facet ranking task.  As a result, we went for a custom benchmark based on one
 text collection in our own applications.  The test corpus that we chose is the
-Tan-Hsin Archive, which is currently the most sizable and
-complete collection of historical documents in Taiwan dating back from 1776 to
-1895.  We took a subset of 15,314 documents from the collection to form the
-test set.  Each document in the collection was associated with a set of
-human-annotated facets.  By considering topic coverage and ease of evaluation,
-we tested model performance only on person names as the designated facet set.
-The number of unique person names in the dataset is 10,918, and the total
-number of occurrences of these facets is 37,489.  Thus, the average number of
-person names associated with a document is 2.45.  All these information were
-already made available in the metadata of the documents.  
+Tan-Hsin
+Archive\footnote{\url{http://www.lib.ntu.edu.tw/project/en/index.htm}}, which
+is currently the most sizable and complete collection of historical documents
+in Taiwan dating back from 1776 to 1895.  We took a subset of 15,314 documents
+from the collection to form the test set.  Each document in the collection was
+associated with a set of human-annotated facets.  By considering topic coverage
+and ease of evaluation, we tested model performance only on person names as the
+designated facet set.  The number of unique person names in the dataset is
+10,918, and the total number of occurrences of these facets is 37,489.  Thus,
+the average number of person names associated with a document is 2.45.  All
+these information were already made available in the metadata of the documents.  
 
 To prepare the query topics, we first fetched all the query log entries from
 the database server.  We put together a set of 105 query topics, each of which
 had obtained more than 50 hits in our database.  We randomly chose 28 topics
 out from the set and used them in the following evaluation.  The relevance
-judgment was made manually.  For each query topics, we prepared a list of
-the top 100 facets returned by the baseline retriever that operated merely
-based on occurrence counts; the domain expert would then go over the entire
-list, labeling each facet as relevant or irrelevant accordingly.
-We considered 3 competing runs in the experiment: (i) {\tt baseline}, with
-which facets were ranked by the corresponding number of counts in the result
-set; (ii) {\tt uniform-prior}, with which facets were ranked by the proposed
-model using uniform prior for $\beta$; and (iii) {\tt smoothed-prior}, with
-which facets were ranked by the proposed model using Dirichlet-smoothed prior
-for $\beta$. 
+judgment was made manually.  For each query topics, we prepared a list of the
+top 100 facets returned by the baseline retriever that operated merely based on
+occurrence counts\footnote{Relevance judgment created this way might greatly
+favor the baseline method, as noted by the friendly anonymous reviewer.  A
+better way to do this is through pooling.  As of writing, we are not able to
+revise the benchmark; however, the biases result is still able to demonstrate
+the effectiveness of the proposed method.}; the domain expert would then go
+over the entire list, labeling each facet as relevant or irrelevant
+accordingly.  We considered 3 competing runs in the experiment: (i) {\tt
+baseline}, with which facets were ranked by the corresponding number of counts
+in the result set; (ii) {\tt uniform-prior}, with which facets were ranked by
+the proposed model using uniform prior for $\beta$; and (iii) {\tt
+smoothed-prior}, with which facets were ranked by the proposed model using
+Dirichlet-smoothed prior for $\beta$. 
 
 We took the top-1000 documents retrieved by using Dirichlet-smoothed language
 model with $\mu = 2,500$ as the result set.  The hyperparameter was
@@ -532,46 +548,49 @@ assessed both in terms of mean-average precision (MAP) and precision-at-10
 
 \begin{table}[ht!]
   \centering
-  \begin{tabular}{llll}
-    Method & & MAP & P@10 \\
+  \begin{tabular}{lllll}
+    Method & & MAP & P@10 & p-value\\
     \hline
-    {\tt baseline} & & 0.2996 & 0.3857 \\
-    {\tt uniform-prior} & $\beta = 0$ & 0.5775 & 0.6179\\
-    & $\beta = 1$ & 0.5899$^*$ & 0.6464$^*$ \\
-    & $\beta = 10$ & 0.5877 & 0.6464$^*$ \\
-    {\tt smoothed-prior} & $\mu = 0.01$ & 0.5781 & 0.6179 \\
-    & $\mu = 1$ & 0.5782 & 0.6214 \\
-    & $\mu = 100$ & 0.4956 & 0.5429 \\
+    {\tt baseline} & & 0.2996 & 0.3857 & \\
+    {\tt uniform-prior} & $\beta = 0$ & 0.5775 & 0.6179 & \\
+    & $\beta = 1$ & 0.5899$^*$ & 0.6464$^*$ & \\
+    & $\beta = 10$ & 0.5877 & 0.6464$^*$ & \\
+    {\tt smoothed-prior} & $\mu = 0.01$ & 0.5781 & 0.6179 &\\
+    & $\mu = 1$ & 0.5782 & 0.6214 & \\
+    & $\mu = 100$ & 0.4956 & 0.5429 & \\
     \\
   \end{tabular}
-  \caption{The performance results for all the test runs.  The top-performer is indicated by an asterisk in the superscript.}
-  \label{t:performance}
+  \caption{The performance results for all the test runs.  The top-performer is
+  indicated by an asterisk in the superscript.} \label{t:performance}
 \end{table}
 
 The performance of the baseline method was quite moderate, with MAP a bit less
-than 0.3 and P@10 around 0.39.  That means, in general, users might find 4 out
-of the top-10 facets relevant to the query topic.  The reported P@10 value met
-our expectation; however, a higher MAP value was expected for the baseline
-between 0.33 and 0.35.  All the proposed models show significant improvement
-over the baseline, ranging from 30\% to 100\% in terms of MAP.  Encouraged by
-the initial results, we ran a line search for each model by varying the
-hyperparameter $\beta$.  We found that model performance were quite stable
-across different experimental runs.  Generally, {\tt uniform-prior} and {\tt
-smoothed-prior} achieved comparable performance.  The best one was found in the
-{\tt uniform-prior} run with $\beta = 0.2$, achieving $0.591$ in MAP.  The
-positive observation in this experiment suggested that a relevance-based
+than 0.3 and P@10 around 0.39.  All the proposed models show significant
+improvement over the baseline, ranging from 30\% to 100\% in terms of MAP.
+Encouraged by the initial results, we ran a line search for each model by
+varying the hyperparameter $\beta$.  We found that model performance were quite
+stable across different experimental runs.  Generally, {\tt uniform-prior} and
+{\tt smoothed-prior} achieved comparable performance.  The best one was found
+in the {\tt uniform-prior} run with $\beta = 0.2$, achieving $0.591$ in MAP.
+The positive observation in this experiment suggested that a relevance-based
 weighted-sum model is probably more effective than a count-based model in the
 facet ranking task.  
 
-Recall that the result also suggested that the simple uniform prior could be 
-superior to the smoothed prior, though only to a limited degree.  This may
-indicate that, at least in our test collection, the prior $\Pr(y|C)$ did not
-make good estimation for $\Pr(y|d)$.  We also found that models with
-zero prior (i.e., $\beta = 0$) were in fact among the top-performer of the
-ranking task, suggesting that using the maximum likelihood estimate alone might
-fit the data well enough.  A further investigation into the data is needed to
-explain why incorporation of the smoothed prior might wash away the influence
-of the maximum likelihood estimates.
+%--------------------------------------------------
+% Recall that the result also suggested that the simple uniform prior could be 
+% superior to the smoothed prior, though only to a limited degree.  This may
+% indicate that, at least in our test collection, the prior $\Pr(y|C)$ did not
+% make good estimation for $\Pr(y|d)$.  
+%-------------------------------------------------- 
+
+%--------------------------------------------------
+% We also found that models with
+% zero prior (i.e., $\beta = 0$) were in fact among the top-performer of the
+% ranking task, suggesting that using the maximum likelihood estimate alone might
+% fit the data well enough.  A further investigation into the data is needed to
+% explain why incorporation of the smoothed prior might wash away the influence
+% of the maximum likelihood estimates.
+%-------------------------------------------------- 
 
 %--------------------------------------------------
 % \begin{figure}[ht!]
@@ -587,13 +606,15 @@ of the maximum likelihood estimates.
 
 \section{Related Work}\label{s:related-work}
 
-Our proposed framework was inspired by the recent advances on language modeling
-applications in information retrieval
-\cite{lavrenko2001relevance,zhai2001language,zaragorza2003bayesian}.  In this
-respect, our solution can be seen as a two-stage extension of the regular
-language model over the facet data.  Our approach differs from the conventional
-language modeling methods in the presence of a secondary document
-representation.  
+Our proposed framework was greatly inspired by the recent advances on language
+modeling applications in information retrieval, including relevance models
+\cite{lavrenko2001relevance,lavrenko2002cross-lingual}, model-based feedback
+\cite{zhai2001language}, and Bayesian language model
+\cite{zaragorza2003bayesian}.  In this respect, our solution can be seen as a
+two-stage Bayesian extension of the regular language model over the facet data.
+Our approach differs from all the previous work in the formal definition of a
+secondary document representation and a corresponding generative Bayesian
+model.  
 
 To the best of our knowledge, this work is among the earliest attempt for
 retrieving relevant facets in the digital library community.  Interestingly, we
@@ -658,7 +679,8 @@ challenges should be the focus of our future work.
 % sponsored by XXXXXXXX.
 %-------------------------------------------------- 
 
-We thank Po-Yu Chen for his support on preparation of the test data.  The
-research efforts described in this paper are supported under the National Taiwan
-University Digital Archives Project (Project No.  NSC-98-2631-H-002-005), which
-is sponsored by National Science Council, Taiwan. 
+We thank Po-Yu Chen and the staff in Special Collection Department, National
+Taiwan University Library for their support on preparation of the test data.
+The research efforts described in this paper are supported under the National
+Taiwan University Digital Archives Project (Project No.
+NSC-98-2631-H-002-005), which is sponsored by National Science Council, Taiwan. 
