@@ -322,90 +322,138 @@ subtask of the NTCIR-4 CLIR Task: Chinese-to-Chinese monolingual document
 retrieval.  The dataset comprised of totally 381,681 newswire articles and 59
 test topics.  We used only title queries in this experiment.
 
-We took limited preprocessing steps to the corpus.  First, we scanned
-through each document and identified a number of text segments; all the
-unrecognized texts, such as punctuation marks or symbols, were discarded
-immediately.  A text segment of interest could be formed by either (i) one or more consecutive CJK
-characters, or by (ii) one or more English words separated by hyphens or
-whitespaces.  Then, we further broke down these text segments into a number of tokens
-using the following processing rules:  \begin{itemize} \item For each text
-segment of category (i), output the bigrams obtained from the character
+We took limited preprocessing steps to the corpus.  First, we scanned through
+each document and identified a number of text segments; all the unrecognized
+texts, such as punctuation marks or symbols, were discarded immediately.  A
+text segment of interest could be formed by either (i) one or more consecutive
+CJK characters, or by (ii) one or more English words separated by hyphens or
+whitespaces.  Then, we further broke down these text segments into a number of
+tokens using the following processing rules:  \begin{itemize} \item For each
+text segment of category (i), output the bigrams obtained from the character
 sequence, i.e., the expected output for a given text segment $w_1 w_2 w_3
 \ldots w_n$ is $\{ w_i w_{i+1} | i \in [1, n-1] \}$.  \item For each text
-segment of category (ii), output the words by splitting the text with whitespaces or
-hyphens.  \end{itemize} 
+segment of category (ii), output the words by splitting the text with
+whitespaces or hyphens.  \end{itemize} The resulting token stream was a mixture
+of CJK-character bigrams and English word unigrams, which formed the primary
+document representations in our model and in other baseline methods.  
 
-The resulting token stream was a mixture of CJK-character bigrams and English
-word unigrams, which formed the primary document representations in our model
-and in other baseline methods.  Meanwhile, the secondary representation we
-chose was the top-500000 CJK-character bigrams in the entire collection ranked
-by the corresponding \emph{tf-idf} score; the candidate set was formed by
-excluding those bigrams whose occurrence is less than 5.  The idea behind such
-an arrangement was to retrieve the initial result from an index with general
-vocabulary, to refine the query model with the highly-discriminative terms, and
-obtain the final result from the secondary index.  The parameters described
-here were determined through experimentation.
+The secondary representation we chose was the top-500000 CJK-character bigrams
+in the entire collection ranked by the corresponding \emph{tf-idf} score; the
+candidate set was formed by excluding those bigrams whose occurrence is less
+than 5.  The idea behind such an arrangement was to retrieve the initial result
+from an index with general vocabulary, to refine the query model with the
+highly-discriminative terms, and obtain the final result from the secondary
+index.  The parameters described here were determined through experimentation.
 
-Our model was implemented with C++, and the rest of the experimental runs were
-established on top of the Lemur toolkit.  From all the retrieval methods
-supported by the tool, we selected tf-idf, okapi, and indri (a
-language-model-based method) as the baseline methods.  Standard query expansion
+Our model was implemented in C++, and the rest of the experimental runs were
+established on top of the Lemur
+toolkit\footnote{\url{http://www.lemurproject.org}}.  From all the retrieval
+methods supported by the tool, we selected {\tt tfidf}, {\tt okapi}, and {\tt
+indri} (a language-model-based method) as the baseline methods.  Our own
+language model implementation is denoted as {\tt lm}.  Standard query expansion
 techniques for each selected method were also supported in the Lemur toolkit.
-Pseudo-relevance feedback was implemented for both tf-idf and okapi models, and
-an adaptation of Lavrenko's relevance model was also built into the core of
-Indri index.  In the regular runs, we stuck with the default parameter values
-{for} all the participant models; when employing pseudo-relevance feedback, we
-set the number of feedback documents as 20 and the number of feedback terms as
-100.  In our own refinement model, the refined query was computed under the
-same restriction, where terms other than the top-ranked 100's were completely
+Pseudo-relevance feedback ({\tt PRF}) was implemented for both
+tf-idf and okapi models, and an adaptation of Lavrenko's relevance model ({\tt
+RM}) was also built into the core of Indri index.  In the following experiment,
+our refinement model is denoted as {\tt BRM}.  
+
+We stuck with the default parameter values {for} all the participant models in
+the regular runs; when employing pseudo-relevance feedback, we set the number
+of feedback documents as 20 and the number of feedback terms as 100.  For our
+own refinement model, the refined query was computed under the same
+restriction, where terms other than the top-ranked 100's were completely
 ignored.  Recall that our model reviewed all the retrieved top-1000 documents
 to achieve the probability estimates.  The performance is measured in terms of
 mean average precision and precision-at-5.  
 
 \begin{table}[ht!]
   \centering
-  \begin{tabular}{llllll}
-    Method & & MAP (+\%) & P@5 (+\%) & MAP (+\%) & P@5 (+\%) \\
+  \begin{tabular}{p{2.4cm}llllllll}
+    & \multicolumn{4}{c}{Rigid Judgment} & \multicolumn{4}{c}{Relax Jugment} \\
     \hline
-    {\tt tfidf} & & 0.181 & 0.264 & 0.213 & 0.335 \\
-    {\tt tfidf} + PRF & & 0.217 (+19.9\%) & 0.295 (+11.7\%) & 0.264 (+23.9\%) & 0.383 (+14.3\%) \\
-    {\tt okapi} & & 0.185 & 0.278 & 0.223 & 0.356 \\
-    {\tt okapi} + PRF & & 0.224$^{**}$ (+21.1\%) & 0.315 (+13.3\%) & 0.270$^{**}$ (+21.1\%) & 0.400 (+12.4\%) \\
+    Regular & MAP & (+\%) & P@5 & (+\%) & MAP & (+\%) & P@5 & (+\%) \\
     \hline
-    {\tt indri} & & 0.174 & 0.258 & 0.216 & 0.346 \\
-    {\tt indri} + Relevance & & 0.180 (+3.4\%) & 0.271 (+5.3\%) & 0.222 (+2.8\%) & 0.342 (-1.2\%) \\
-    {\tt lm} & & 0.170 & 0.251 & 0.209 & 0.322 \\
-    {\tt lm} + Refinement & & 0.207$^*$ (+21.8\%) & 0.302 (+20.3\%) & 0.261$^*$ (+24.9\%) & 0.369 (+14.6\%) \\
+    {\tt tfidf} & 0.181 & & 0.264 & & 0.213 & & 0.335 & \\
+    {\tt okapi} & 0.185 & & 0.278 & & 0.223 & & 0.356 & \\
+    {\tt indri} & 0.174 & & 0.258 & & 0.216 & & 0.346 & \\
+    {\tt lm}    & 0.170 & & 0.251 & & 0.209 & & 0.322 & \\
+    \hline
+    Expansion & & & & & & & & \\
+    \hline
+    {\tt tfidf+PRF} & 0.217 & (+19.9\%) & 0.295 & (+11.7\%) & 0.264 & (+23.9\%) & 0.383 & (+14.3\%) \\
+    {\tt okapi+PRF} & {\bf 0.224} & (+21.1\%) & {\bf 0.315} & (+13.3\%) & {\bf 0.270} & (+21.1\%) & {\bf 0.400} & (+12.4\%) \\
+    {\tt indri+RM} & 0.180 & (+3.4\%) & 0.271 & (+5.3\%) & 0.222 & (+2.8\%) & 0.342 & (-1.2\%) \\
+    {\tt lm+BRM} & 0.207 & (+21.8\%) & 0.302 & (+20.3\%) & 0.261 & (+24.9\%) & 0.369 & (+14.6\%) \\
     \\
   \end{tabular}
-
-  \caption{The result for the query refinement task.  Retrieval methods listed in the
-  upper-half are tfidf-based, while those in the lower-half are
-  language-model-based.  The overall top-performer is indicated with two
-  asterisks in the superscript, while the best run in the language-modeling
-  side is indicated with one asterisk.}
-  \label{t:query-modeling}
+  \caption{The overall performance result is summarized in this table.  Regular
+  retrieval runs are listed in the upper-half and expansion runs in the
+  lower-half.  Boldfaced values indicate the best-performers.  Evaluation
+  results for using rigid and relax judgment sets are both listed here.  Note
+  that improvements (+\%) for expansion runs are calculated against the
+  corresponding regular runs.} \label{t:retrieval}
 \end{table}
 
-Table~\ref{t:query-modeling} shows the experimental result.  The overall best
-performance fell on the okapi + PRF run, achieving 0.224 under rigid judgment
-and 0.270 under relax judgment in terms of MAP.  Even though our proposed
-method achieved roughly comparable performance as tfidf + PRF, the difference
-between the performance of tfidf-based methods and that of language-model-based
-methods remains rather significant.  Generally, the performance for all the
-expansion runs can be summarized as okapi + PRF $>$ tfidf + PRF $>$ lm + refinement
-$>>$ indri + relevance.
-
-Among all the regular runs, our language modeling implementation achieved the
-lowest MAP under both judgment sets; the retrieval performance was greatly
-improved when refinement model was applied, achieving 0.207 for rigid relevance
-judgment and 0.261 for relax in terms of MAP.  The proposed query refinement
-model outperformed the relevance model built into the Indri index.  Since our
-proposed model can be viewed as a relaxed (or adapted) version of the original
-relevance model, this encouraging result partly confirmed our hypothesis that
-bad expansion terms could be avoided by biasing the expansion source toward a
-secondary document representation that possesses a cleaner,
+Table~\ref{t:retrieval} shows the experimental result.  Among all the regular
+runs, our language modeling implementation ({\tt lm}) achieved the lowest MAP
+under both judgment sets; the retrieval performance was greatly improved when
+the refinement model ({\tt lm+BRM})was applied, achieving 0.207 for rigid
+relevance judgment and 0.261 for relax in terms of MAP.  It turned out that the
+proposed query refinement model greatly enhanced the performance of relevance
+model counterpart in Indri ({\tt indri+RM}) by 17.6\% in terms of MAP.  Since
+our proposed model can be viewed as a relaxed (or adapted) version of the
+original relevance model, this encouraging result partly confirmed our
+hypothesis that bad expansion terms could be avoided by biasing the expansion
+source toward a secondary document representation that possesses a cleaner,
 highly-discriminative vocabulary.  
+
+The overall best performance, however, still fell on the tfidf-side.  The
+expansion run {\tt okapi+PRF} achieved 0.224 under rigid and 0.270 under relax
+judgment set in terms of MAP.  Generally, the performance for all the expansion
+runs can be summarized as: $\mathtt{okapi+PRF} > \mathtt{tfidf+PRF} >
+\mathtt{lm+BRM} \gg \mathtt{indri+RM}$.  As we can see in
+Table~\ref{t:retrieval}, even though the proposed method achieved roughly
+comparable performance as {\tt tfidf+PRF}, the difference between the
+performance of tfidf-based methods and that of language-model-based methods
+remains rather significant.  
+
+\begin{table}[ht!]
+  \centering
+  \begin{tabular}{p{3cm}p{1.5cm}p{1.5cm}p{1.5cm}p{1.5cm}}
+    & \multicolumn{2}{c}{Rigid Judgment} & \multicolumn{2}{c}{Relax Jugment} \\
+    \hline
+    Method & MAP & P@5 & MAP & P@5 \\
+    \hline
+    {\tt tfidf.500k} & 0.164 & 0.248 & 0.199 & 0.322 \\
+    {\tt okapi.500k} & 0.167 & 0.251 & 0.205 & 0.325 \\
+    {\tt indri.500k} & 0.155 & 0.248 & 0.198 & 0.315 \\
+    {\tt tfidf+PRF.500k} & 0.190 & 0.288 & 0.241 & 0.373 \\
+    {\tt okapi+PRF.500k} & 0.196 & {\bf 0.302} & 0.247 & {\bf 0.383} \\
+    {\tt indri+RM.500k} & 0.155 & 0.248 & 0.197 & 0.309 \\
+    \multicolumn{5}{c}{({\it The above runs were indexed against top-50k bigrams only})} \\
+    \hline
+    {\tt lm+BRM} & {\bf 0.207} & {\bf 0.302} & {\bf 0.261} & 0.369 \\
+    \multicolumn{5}{c}{({\it This above run was operated on both representations})} \\
+    \\
+  \end{tabular}
+  \caption{The performance results of all the methods (except the proposed one)
+  using top-500,000 bigram representation only.  Boldfaced values indicate the
+  best-performers.  Evaluation results for using rigid and relax judgment sets
+  are both listed here.} \label{t:retrieval.500k}
+\end{table}
+
+One thing to note is that readers might argue that the performance improvement
+of our model was largely contributed by using the terms in the secondary
+representation as expansion source.  Table~\ref{t:retrieval.500k} summarizes
+the performance results for another round of experiments conducted on the same
+corpus where only the secondary representation (i.e., top-500,000 bigrams) was
+available.  The result shows that using the secondary representation alone was
+not enough for achieving high retrieval effectiveness.  The performance for all
+the participating runs except our proposed method decreased due to the choice
+of the document representation.  Note that we do not intend to claim
+superiority of our method over the other runs, since our model possessed better
+knowledge about the complete document distribution and making comparison
+against other approaches in this case would not be appropriate.
 
 \subsection{Retrieving Query-Relevant Facets}\label{s:facet-ranking}
 
