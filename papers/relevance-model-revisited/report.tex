@@ -24,31 +24,32 @@ needed.  There was also a time when user-contributed tags or human annotations
 were not so popular or even made available to the researchers.  Today, the
 table has turned.  We have seen many successful IR applications that made use
 of these external resources to improve retrieval efficiency, cases where the
-use of metadata items and keywords, data that surrounds the documents that used
-to be left outside of a document model, could benefit the research field.  
+use of metadata items and keywords, data that surrounds the documents but is
+usually left outside of a formal model, could benefit the research field.  
 
-The presence of these augmented contents poses new challenges to researchers in
-the way the retrieval model is operated on top of heterogeneous data sources.
-One intuitive way to get over this problem is to mix various sources into one
+Presence of augmented contents poses a new challenge to researchers in the way
+retrieval is operated on top of heterogeneous data sources.  One intuitive way
+to get over this is to mix text data from various sources into one
 distribution, which is a commonly-used technique in the literature.  Doing so,
-however, might give rise to other issues since the new representation did not necessarily
-share the same context with the original one, making it difficult to assign
-term weights or distribute probability masses.  Recall that we have experienced
-the same issue when trying to mix the contents in the document title with that
-in the document body to create an single index; any attempt for adjusting the
-weight of title words might end up harming theoretical soundness.
+however, might give rise to other issues since the new representation did not
+necessarily share the same context with the original one, making it difficult
+to assign weights or distribute probability masses.  Recall that we have
+experienced the same issue when trying to mix the contents in the document
+title with that in the document body to create an single index; any attempt for
+adjusting the weight of title words might end up harming theoretical soundness.
 
 This issue has brought our attention to the possibility of building additional
 layers of document representations into existing retrieval frameworks, in which
-we are able to aggregate information from various sources and to operate the
-model in different granularity as necessary.  Consider applications that could
+we are able to aggregate information contents and to manipulate them in
+different granularity levels as necessary.  Consider applications that could
 take advantage of this idea, such as facilitating cross-language information
 retrieval in a corpus where documents possess multiple representations over
-different languages \cite{lavrenko2002cross-lingual}; receiving user queries in a general vocabulary while
-operating the retrieval process in another level where documents are indexed
-with more specific terms; or searching for named entities that are relevant to the
-user queries in a collection where manually-labeled, high-quality annotations
-were already made available at the document level.  
+different languages \cite{lavrenko2002cross-lingual}; receiving user queries in
+a general vocabulary while operating the retrieval process in another level
+where documents are indexed with more specific terms; or searching for named
+entities that are relevant to the user queries in a collection where
+manually-labeled, high-quality annotations were already made available at the
+document level.  
 
 The aforementioned thoughts have motivated our research on formal retrieval
 methods.  In addition to the regular term set $T$, we look {for} ways to build
@@ -58,17 +59,17 @@ side with that of the other as the query.  In mathematical terms, we want to
 estimate the probability $\Pr(s|t)$, given that a document $d_i$ is indexed in
 two different representations $T_i$ and $S_i$, where $T_i \subset T$ and $S_i
 \subset S$.  A concrete application of this is to let the user form a query
-$\mathbf{q} \subset T$ and estimate the probability $\Pr(s|\mathbf{q})$
+$\mathbf{q} \subset T$ and to estimate the probability $\Pr(s|\mathbf{q})$
 accordingly.
 
-To achieve our goal, in this paper we proposed a generalization over Lavrenko
-and Croft's work \cite{lavrenko2001relevance} on relevance modeling.  The
-relevance model was adapted to the cases where two individual term
-distributions were available in the text collection.  We took a Bayesian
+To achieve our goal, in this paper we propose a generalization over the
+relevance models \cite{lavrenko2001relevance,lavrenko2002cross-lingual}.  The
+original relevance model was adapted to the cases where two individual term
+distributions were available in the text collection.  We take a Bayesian
 generative approach, starting from a graphical model in which documents, terms,
-and hyperparameters were all explicitly specified and then broke down the
+and hyperparameters are all explicitly specified and then break down the
 full-blown probabilistic network to a few equations that could easily
-implemented at the index level.  
+implemented at the index level.
 
 The rest of the work is structured as follows.  First, we introduce a Bayesian
 generative process that involves two individual term distributions in
@@ -81,7 +82,7 @@ by collecting relevant concepts in a more specific vocabulary; the other task
 we introduce in Section~\ref{s:facet-ranking} is about named-entity ranking, in
 which we use $\Pr(s|\mathbf{q})$ to sort the named entities retrieved in a facet search
 session and present the entities according to their relevance to the query.  In
-each task, the corresponding evaluation benchmark are also described.  We
+each task, the corresponding evaluation benchmark is also described.  We
 briefly summarize the related work in Section~\ref{s:related-work}.  Finally,
 we discuss a few issues arise in the development of the work and give out
 concluding remarks in Section~\ref{s:concluding-remarks}.
@@ -96,47 +97,21 @@ concluding remarks in Section~\ref{s:concluding-remarks}.
 % benefit from, such as the usability of the faceted interface
 % \cite{kules2009what} and the approach for automatically extracting facets from
 % the texts \cite{mimno2007organizing}.  
-% 
-% We argue that a reasonable facet ranking algorithm should always assign higher
-% weights to the facets discovered from the top-ranked documents; therefore, the
-% algorithm itself may need to co-operate with the retrieval model for obtaining
-% better facet ranking.  In this paper, we proposed one such algorithm to address
-% this issue.  Our idea is to induce two document-specific distributions for each
-% document: One accounts for the generation of terms, and the other the
-% generation of facets.  We incorporated both distributions in a Bayesian
-% framework and used the model to infer probability estimates for ranking facets.
-% We conducted a series of experiments on a custom benchmark.  The result showed
-% that our methods outperformed the regular count-based baseline in the facet
-% ranking task, achieving promising improvement in mean-average precision and
-% precision-at-10. 
 %-------------------------------------------------- 
 
 \section{Model}\label{s:model}
 
-%--------------------------------------------------
-% An intuitive way to induce a ranking scheme for facets is to consider the
-% relevance scores contributed by the documents that cover the target facet.
-% This can be stated as the following two criteria: \begin{itemize} \item A facet
-% should receive greater weight if it is covered by a highly-relevant document and
-% less weight if it is covered by an irrelevant one. \item There
-% should be a way to accumulate the weights received from multiple documents.
-% \end{itemize} Based on this idea, we exploit the document retrieval scores to
-% model the contribution of relevance.  We find it more appealing to apply this
-% technique on a language-model-based backend, since the document relevance score
-% can be easily integrated into the final ranking results; the detail is
-% elaborated in the upcoming sections.
-%-------------------------------------------------- 
-
 In this model, we hypothesize the existence of the two independent multinomial
-distributions associated with each document $d_j$; we further assume that, in
-each document, the terms observed in the \emph{primary} representation $T_j$
-are drawn from the first multinomial, and those in the \emph{secondary}
-representation $S_j$ drawn from the second.  The advantage of making this
-independent assumption can be stated in two respects.  First, separation of the
-generation processes on both sides may lead to a cleaner framework, which makes
-model inference a bit easier; second, we want to highlight the fact that these
-two terms sets do not necessarily share the same context and further simplify
-the dependency relations in the resulting Bayesian network.  
+distributions $\tau^{(j)}$ and $\phi^{(j)}$ associated with each document
+$d_j$; we further assume that, in each document, the terms observed in the
+\emph{primary} representation $T_j$ are drawn from the first multinomial, and
+those in the \emph{secondary} representation $S_j$ drawn from the second.  The
+advantage of making this independent assumption can be stated in two respects.
+First, separation of the generation processes on both sides may lead to a
+cleaner framework, which makes model inference a bit easier; second, we want to
+highlight the fact that these two terms sets do not necessarily share the same
+context and further simplify the dependency relations in the resulting Bayesian
+network.  
 
 \subsection{The Generative Framework}
 
@@ -146,11 +121,12 @@ $d_j$ is associated with two sets of terms $T_j$ and $S_j$.  We refer $T_j$ as
 the primary representation and $S_j$ the secondary representation.  Each
 document $d_j$ possesses two multinomial distributions, denoted by $\tau^{(j)}$
 and $\phi^{(j)}$, from which elements in $T_j$ and $S_j$ are drawn
-independently.  The two multinomials for a document could also be understood as
-two independent document models $p(w|\tau^{(j)})$ and $p(w|\phi^{(j)})$ that
-work on two different sets of vocabularies.  Two Dirichlet distributions
-$\{\alpha_i; i \in [1, |T|]\}$ and $\{\beta_k; k \in [1, |S|]\}$ are assumed in
-the model to govern the generation of these multinomials.  
+independently, respectively.  The two multinomials for a document could also be
+understood as two independent document models $p(w|\tau^{(j)})$ and
+$p(w|\phi^{(j)})$ that work on two different sets of vocabularies.  Two
+Dirichlet distributions $\{\alpha_i; i \in [1, |T|]\}$ and $\{\beta_k; k \in
+[1, |S|]\}$ are assumed in the model to govern the generation of these
+multinomials.  
 
 \begin{figure}[ht!]
   \centering
@@ -197,11 +173,11 @@ the model to govern the generation of these multinomials.
 
 As suggested in the upper-half of Figure~\ref{f:model}, the input query
 $\mathbf{q}$ is modeled as a set of observed terms drawn from an unknown
-document model $x$ in the collection.  Specifically, the query terms are
-encoded in the same vocabulary as in that form the primary representation of
-document $x$.  By making this assumption, we are able to match the query
-against all the document models and to estimate the query likelihood
-$\Pr(\mathbf{q}|d_j)$.  This leads us to the probabilistic generative methods,
+document model $x$ in the collection.  Specifically, we assume that the query
+terms and the primary representation of document $x$ are encoded in the same
+vocabulary.  By making this assumption, we are able to match the query against
+all the document models and to estimate the query likelihood
+$\Pr(\mathbf{q}|d_j)$.  This leads us to probabilistic generative methods,
 such as language modeling.  Recall that the unknown document $x$ is connected
 to another unknown variable $y$.  The variable $y$ represents the most probable
 term generated from the secondary multinomial distribution $\phi^{(x)}$.
@@ -223,9 +199,9 @@ The entire generative process can be summarized as follows:
 
 The discussions have brought us to the focus of this work, which is to explicitly
 estimate the likelihood of one term $s$ in the secondary term domain being
-triggered\footnote{We coin the term due to lack of obvious dependency
-between both sides.} by another set of terms from the primary term
-domain.  This task can be framed as a optimization problem:
+triggered\footnote{We coin the term due to the lack of obvious dependency
+between both sides.} by another set of terms in the primary term
+domain.  This task can be framed as an optimization problem:
 \begin{equation} y^* = \arg\max_{y \in S} \Pr(y|\mathbf{q}, \mathbf{t},
 \mathbf{d}, \mathbf{s}) \label{eq:forward} \end{equation} where $\mathbf{t}$
 and $\mathbf{s}$ represent all the observed terms in the primary/secondary
@@ -235,48 +211,53 @@ right-hand-side of Equation~\eqref{eq:forward} can be broken down into the follo
 \begin{eqnarray}
   \Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) 
   &=& \sum_{x \in [1, N]} \Pr(y|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \Pr(x|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
-  &\propto& \sum_{x \in [1, N]} \left\{ \int \Pr(y|x, \phi^{(x)}) \Pr(\phi^{(x)}|d_x, \mathbf{s_x}) \mathrm{d}\phi^{(x)} \right. \nonumber\\
-  && \left. \int \Pr(\mathbf{q}| x, \tau^{(x)}) \Pr(\tau^{(x)}|d_x, \mathbf{t_x})\mathrm{d}\tau^{(x)} \Pr(x) \right\} \nonumber\\
+  &\propto& \sum_{x \in [1, N]} \left\{ \int \Pr(y|x, \phi^{(x)}) \Pr(\phi^{(x)}|d_x, \mathbf{s}_x) \mathrm{d}\phi^{(x)} \right. \nonumber\\
+  && \left. \int \Pr(\mathbf{q}| x, \tau^{(x)}) \Pr(\tau^{(x)}|d_x, \mathbf{t}_x)\mathrm{d}\tau^{(x)} \Pr(x) \right\} \nonumber\\
   &=& \sum_{x \in [1, N]} \frac{\beta_y + c_{y,x}}{\sum_k \beta_k + c_{k,x}} \frac{\mathcal{B}(\{\alpha_i + c_{i,x} + c_{i,q} \})}{\mathcal{B}(\{\alpha_i + c_{i,x} \})} \Pr(x) \label{eq:forward-solution}
 \end{eqnarray}
 The last line follows the conjugacy of Dirichlet distribution, as in:
 \begin{eqnarray*}
-\Pr(\phi^{(x)}|d_x,\mathbf{f_x}) &\sim& \mathrm{Dirichlet}(\{\beta_k + c_{k,x}; \forall k \}) \\
-\Pr(\tau^{(x)}|d_x, \mathbf{t_x}) &\sim& \mathrm{Dirichlet}(\{\alpha_i + c_{i,x}; \forall i \}).
+\Pr(\phi^{(x)}|x, y, d_x,\mathbf{s}_x) &\sim& \mathrm{Dirichlet}(\{\beta_k + c_{k,x}; \forall k \}) \\
+\Pr(\tau^{(x)}|x, \mathbf{q}, d_x, \mathbf{t}_x) &\sim& \mathrm{Dirichlet}(\{\alpha_i + c_{i,x}; \forall i \}).
 \end{eqnarray*}
 Recall that $\mathcal{B}(\cdot)$ is the multinomial beta
-function defined by \[\mathcal{B}(a_1, \ldots, a_n) = \frac{\prod_i
+function defined by: \[\mathcal{B}(a_1, \ldots, a_n) = \frac{\prod_i
 \Gamma(a_i)}{\Gamma(\sum_i a_i)}. \]
 
-\subsection{Hyperparameters and Index Structure}
+\subsection{Hyperparameters}
 
-Another issue that we would like to address in this work is the choice of
-priors.  Consider a prior as a vector of size $|S|$: $(\beta_1, \beta_2,
-\ldots, \beta_{|S|})$.  There are two particular prior distributions that we
-want to study in this work.  The first one is the \emph{uniform} prior: \[ (c, c,
-\ldots, c), \] in which we let $\beta_k = c$ for each $k \in [1, |S|]$ and $c$
-denote some constant.  The second one is called \emph{smoothed-Dirichlet},
-which is widely-used as a smoothing method in the language modeling
-applications for information retrieval \cite{zhai2004study}: \[ (\mu
-\Pr(s_1|C), \mu \Pr(s_2|C), \ldots, \mu \Pr(s_{|S|}|C)), \] where $\Pr(s_k|C)$
-denotes the probability of generating term $s_k$ (in the secondary
-term domain) from the collection by viewing the entire collection as one
-language model; $\mu$ represents some constant.
+There are two particular prior distributions that we want to study in this
+work.  Consider a prior as a vector of size $|S|$: $(\beta_1, \beta_2, \ldots,
+\beta_{|S|})$.  The first one is the \emph{uniform} prior: \[ (c, c, \ldots,
+c), \] in which we let $\beta_k = c$ for each $k \in [1, |S|]$ and $c$ denote
+some constant.  The second one is called \emph{smoothed-Dirichlet}, which is
+widely-used as a smoothing method in the language modeling applications for
+information retrieval \cite{zhai2004study}: \[ (\mu \Pr(s_1|C), \mu \Pr(s_2|C),
+\ldots, \mu \Pr(s_{|S|}|C)), \] where $\Pr(s_k|C)$ denotes the probability of
+generating term $s_k$ (in the secondary term domain) from the collection by
+viewing the entire collection as one language model; $\mu$ represents some
+constant.
 
-One interesting feature of our model is that it offers seamless integration
-with the language-model-based retrieval method.  It comes from
-the fact we could further simplify Equations~\eqref{eq:forward-solution} by
-assigning $\alpha$ as a smoothed-Dirichlet prior and $\Pr(x)$ as a uniform
-prior.  When $\alpha_i = \mu \Pr(t_i|C)$, it can be shown that: \[
-\frac{\mathcal{B}(\{\alpha_i + c_{i,x} + c_{i,q} \})}{\mathcal{B}(\{\alpha_i +
-c_{i,x} \})} \propto {\rm L}_{\rm LM}(\mathbf{q}|d), \] where ${\rm L}_{\rm
-LM}(\mathbf{q}|d)$ denotes the query likelihood score in the language model
-with Dirichlet smoothing scheme.  In this case, the model scores becomes:
-\begin{eqnarray*}
+\subsection{Computationtal Efficiency}
+
+One interesting feature of our model is
+that it offers seamless integration with the language-model-based retrieval
+method.  It comes from the fact that we could further simplify
+Equation~\eqref{eq:forward-solution} by assigning $\alpha$ as a
+smoothed-Dirichlet prior and $\Pr(x)$ as a uniform prior.  When $\alpha_i = \mu
+\Pr(t_i|C)$, it can be shown that: \[ \frac{\mathcal{B}(\{\alpha_i + c_{i,x} +
+c_{i,q} \})}{\mathcal{B}(\{\alpha_i + c_{i,x} \})} \propto {\rm L}_{\rm
+LM}(\mathbf{q}|d), \] where ${\rm L}_{\rm LM}(\mathbf{q}|d)$ denotes the query
+likelihood score in the language model with Dirichlet smoothing scheme.  In
+this case, the model scores becomes:
+\begin{eqnarray}
   \Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) &\propto& 
   \sum_{x \in [1, N]} \frac{\beta_y + c_{y,x}}{\sum_k \beta_k + c_{k,x}}
-  {\rm L}_{\rm LM}(\mathbf{q}|x) \nonumber\\
-\end{eqnarray*} 
+  {\rm L}_{\rm LM}(\mathbf{q}|x)
+\end{eqnarray} 
+It can be shown that the expected complexity for computing the summation is
+linear to the size of top-ranked documents, namely $n$, and the average size of
+secondary domain terms associated with each document, i.e., $(\sum_j |S_j|)/N$.
 
 \section{Experimental Results}\label{s:experimental-results}
 
@@ -285,49 +266,43 @@ the first experiment, we use a different set of terms to refine the query model
 so as to leverage retrieval effectiveness; in the second experiment, we showed
 that we were able to retrieve the named entities relevant to the user query
 from a database by supplying the entities as the secondary document
-representation.  Both experiments were conducted in a way that is general
-enough so that the result could be reproduced by any follow-up research.
+representation.  Both experiments were conducted in a general way so as to be
+reproduced by any follow-up research.
 
 \subsection{Query Refinement Using the Secondary
 Representation}\label{s:query-modeling}
 
 The probability estimate $\Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d},
 \mathbf{s})$ that we obtained from the proposed model can be seen as a
-\emph{refined query model}, an idea that has been proposed in
-\cite{lavrenko2001relevance}.  In this case, we can employ a two-stage
-retrieval strategy to enhance retrieval performance: We first made an initial
-retrieval run to populate a refined model, and then re-submit the model as a
-new query to the retrieval system.  What differs our approach from the original
-relevance model \cite{lavrenko2001relevance} and its cross-lingual enhancement
-\cite{lavrenko2002cross-lingual} lies in the formalism with a Bayesian
-generative framework and the presence of Dirichlet priors for both
-representations.
+\emph{refined query model}.  In other words, we employ a two-stage retrieval
+strategy by launching an initial retrieval run to populate a refined model, and
+then re-submit the model as a new query to the retrieval system.  Our idea here
+differs from the previous efforts \cite{lavrenko2001relevance} in the use of a
+more specific vocabulary as the secondary representation.  The major obstacle,
+however, {for} realizing such type of model-based query refinement lies in the
+restriction of the language modeling framework, according to which the input
+query should be specified as a sequence of terms.  We used a technique
+that enabled a second-round retrieval by \emph{realizing} the probability
+distribution $\Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})$ as a
+sequence of \emph{expected terms}, in which each term $s_k$ appears exactly
+$\mathrm{E}(s_k|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})$ times.  It can
+be shown that the technique reduces to the KL-divergence retrieval
+framework \cite{zhai2001language}. 
 
-The major obstacle for realizing such type of model-based query refinement lies
-in the restriction of the language modeling framework, according to which the
-input query should always be specified as a sequence of terms, each associated
-with an positive integer indicating the corresponding number of occurrences in
-the query text.  We used a technique that enabled a second-round retrieval
-in our study by \emph{realizing} the probability distribution
-$\Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})$ as a sequence of
-\emph{expected terms}.  This can be done through the construction of a
-very-long, pseudo-query sequence.  We begin by incorporating all the term $s_k$
-in the secondary representation, and then take the conditional expectation
-$\mathrm{E}(s_k|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})$ for each term
-$s_k$ as the corresponding number of occurrences in the new query.  It can be
-shown that this simple technique reduces to the KL-divergence retrieval
-framework proposed in \cite{zhai2001language}. 
-
-The benchmark corpora that we used to testify the proposed solution was the
-NTCIR-4 Test Collection.  The particular task that we considered here is a
-subtask of the NTCIR-4 CLIR Task \cite{kishida2004overview}: Chinese-to-Chinese monolingual document
-retrieval.  The dataset comprised of totally 381,681 newswire articles and 59
-test topics.  We used only title queries in this experiment.  Only limited
-preprocessing steps were applied to the corpus.  All the punctuation marks,
-whitespace, and separators were discarded and remaining characters were send to
-a simple tokenizer.  As a result, the output was a mixture of (i) CJK-character
-bigrams and (ii) English word unigrams, which formed the primary document
-representations in our model and in other baseline methods.  
+The benchmark corpora that we used here was the NTCIR-4 Test Collection.  We
+considered a subtask of the NTCIR-4 CLIR Task \cite{kishida2004overview}:
+Chinese-to-Chinese monolingual document retrieval.  The dataset comprised of
+totally 381,681 newswire articles and 59 test topics.  Only title queries were
+used in this experiment.  Limited preprocessing steps were applied to the
+corpus in advance.  All the punctuation marks, whitespace, and separators were
+discarded and the remaining texts were send to a simple tokenizer.  As a
+result, the output was a mixture of CJK-character bigrams and English
+word unigrams, which formed the primary document representations in our model
+and in other baseline methods.  The secondary representation we chose was the
+top-500,000 CJK-character bigrams in the entire collection ranked by the
+corresponding \emph{tf-idf} score; the candidate set was formed by excluding
+those bigrams occured less than 5 times.  The parameters described here were
+determined through experimentation.
 
 %--------------------------------------------------
 % First, we scanned through each document and identified a number of text
@@ -346,34 +321,24 @@ representations in our model and in other baseline methods.
 % methods.  
 %-------------------------------------------------- 
 
-The secondary representation we chose was the top-500,000 CJK-character bigrams
-in the entire collection ranked by the corresponding \emph{tf-idf} score; the
-candidate set was formed by excluding those bigrams whose occurrence is less
-than 5.  The idea behind such an arrangement was to retrieve the initial result
-from an index with general vocabulary, to refine the query model with the
-highly-discriminative terms, and obtain the final result from the secondary
-index.  The parameters described here were determined through experimentation.
-
 Our model was developed from scratch in C++, and the rest of the experimental
 runs were established on top of the Lemur
 toolkit\footnote{\url{http://www.lemurproject.org}}.  From all the retrieval
 methods supported by the tool, we selected {\tt tfidf}, {\tt okapi}, and {\tt
-indri} (a language-model-based method) as the baseline methods.  Our own
+indri} (a language-model-based method) as the baseline methods; our own
 language model implementation is denoted as {\tt lm}.  Standard query expansion
-techniques for each selected method were also supported in the Lemur toolkit.
-Pseudo-relevance feedback ({\tt PRF}) was implemented for both tf-idf and okapi
-models, and an adaptation of Lavrenko's relevance model ({\tt RM}) was also
-built into the core of Indri index.  In the following experiment, our
-refinement model is denoted as {\tt BRM}.  
+techniques for each method were also tested: Pseudo-relevance feedback ({\tt
+PRF}) was implemented for both tf-idf and okapi models, and an adaptation of
+Lavrenko's relevance model ({\tt RM}) was also built into the core of Indri
+index; our refinement model is denoted as {\tt BRM} in this experiment.  
 
 We stuck with the default parameter values {for} all the participant models in
-the regular runs; when employing pseudo-relevance feedback, we set the number
-of feedback documents as 20 and the number of feedback terms as 100.  For our
-own refinement model, the refined query was computed under the same
-restriction, where terms other than the top-ranked 100's were completely
-ignored.  Recall that our model reviewed all the retrieved top-1000 documents
-to achieve the probability estimates.  The performance is measured in terms of
-mean average precision and precision-at-5.  
+the regular runs; for standard query expansion, we set the number of feedback
+documents as 20 and the number of feedback terms as 100.  The refined query was
+computed under the same restriction in {\tt BRM}, where terms other than the
+top-ranked 100's were completely ignored.  Recall that our model reviewed all
+the retrieved top-1000 documents to achieve the probability estimates.  The
+performance is measured in terms of mean average precision and precision-at-5.  
 
 \begin{table}[ht!]
   \centering
@@ -398,15 +363,15 @@ mean average precision and precision-at-5.
   \caption{The overall performance result is summarized in this table.  Regular
   retrieval runs are listed in the upper-half and expansion runs in the
   lower-half.  Boldfaced values indicate the best-performers.  Evaluation
-  results for using rigid and relax judgment sets are both listed here.  Note
-  that improvements (+\%) for expansion runs are calculated against the
-  corresponding regular runs.} \label{t:retrieval}
+  results for using the rigid and the relax judgment sets are both listed.  Note
+  that improvement (+\%) for each expansion run is calculated against the
+  performance of the corresponding regular run.} \label{t:retrieval}
 \end{table}
 
 Table~\ref{t:retrieval} shows the experimental result.  Among all the regular
 runs, our language modeling implementation ({\tt lm}) achieved the lowest MAP
 under both judgment sets; the retrieval performance was greatly improved when
-the refinement model ({\tt lm+BRM})was applied, achieving 0.207 for rigid
+the refinement model ({\tt lm+BRM}) was applied, achieving 0.207 for rigid
 relevance judgment and 0.261 for relax in terms of MAP.  It turned out that the
 proposed query refinement model greatly enhanced the performance of relevance
 model counterpart in Indri ({\tt indri+RM}) by 17.6\% in terms of MAP.  Since
@@ -448,9 +413,8 @@ remains rather significant.
     \\
   \end{tabular}
   \caption{The performance results of all the methods (except the proposed one)
-  using top-500,000 bigram representation only.  Boldfaced values indicate the
-  best-performers.  Evaluation results for using rigid and relax judgment sets
-  are both listed here.} \label{t:retrieval.500k}
+  using only the top-500,000 bigram representation.  Boldfaced values indicate the
+  best performers.} \label{t:retrieval.500k}
 \end{table}
 
 One thing to note is that readers might argue that the performance improvement
@@ -485,13 +449,13 @@ this simple ranking scheme is employed.
 This can also be a problem when the user wants to consult the retrieved facets
 to guide the subsequent exploratory search.  Since the facets are not sorted in
 terms of relevance, the user might be mislead by top-ranked facets that are not
-actually relevant to input query but merely make it to the top by being
-commonly referred in low-ranked documents.  We argue that a reasonable facet
-ranking algorithm should always assign higher weights to the facets discovered
-from the top-ranked documents; therefore, the algorithm itself may need to
-co-operate with the retrieval model for obtaining better facet ranking.  This
-observation has brought us to a simple solution: We can build in the facets
-associated with each document as a secondary representation and utilize
+actually relevant to the input query but merely possess more counts in the
+lower-ranked documents.  We argue that a reasonable facet ranking algorithm
+should always assign higher weights to the facets discovered from the
+top-ranked documents; therefore, the algorithm itself may need to co-operate
+with the retrieval model for obtaining better facet ranking.  This observation
+has brought us to a simple solution: We can build in the facets associated with
+each document as a secondary representation and utilize
 Equation~\ref{eq:forward-solution} to rank the facets.  
 
 %--------------------------------------------------
@@ -503,12 +467,12 @@ Equation~\ref{eq:forward-solution} to rank the facets.
 The very nature of this task makes our proposed model feasible.  One major
 difficulty that we faced, however, was the lack of standard benchmark on the
 facet ranking task.  As a result, we went for a custom benchmark based on one
-text collection in our own applications.  The test corpus that we chose is the
+text collection in our own applications.  The test corpus that we chose was the
 Tan-Hsin
 Archive\footnote{\url{http://www.lib.ntu.edu.tw/project/en/index.htm}}, which
 is currently the most sizable and complete collection of historical documents
 in Taiwan dating back from 1776 to 1895.  We took a subset of 15,314 documents
-from the collection to form the test set.  Each document in the collection was
+from the collection to form the test set.  Each document in the collection is
 associated with a set of human-annotated facets.  By considering topic coverage
 and ease of evaluation, we tested model performance only on person names as the
 designated facet set.  The number of unique person names in the dataset is
@@ -533,7 +497,10 @@ baseline}, with which facets were ranked by the corresponding number of counts
 in the result set; (ii) {\tt uniform-prior}, with which facets were ranked by
 the proposed model using uniform prior for $\beta$; and (iii) {\tt
 smoothed-prior}, with which facets were ranked by the proposed model using
-Dirichlet-smoothed prior for $\beta$. 
+Dirichlet-smoothed prior for $\beta$.  Note that the language-model-based
+approach proposed in \cite{balog2009language} was also implemented in this
+experiment.  In fact, it is a special case of the {\tt uniform-prior} method
+for $\beta = 0$.
 
 We took the top-1000 documents retrieved by using Dirichlet-smoothed language
 model with $\mu = 2,500$ as the result set.  The hyperparameter was
@@ -543,37 +510,40 @@ scores returned by the document-level retrieval model, as stated in the
 preceding sections.  The output was a sorted list of all the associated facets
 in descending order of the ranking score.  For efficiency, we used only the
 top-100 facets returned by each run as the final results.  The performance was
-assessed both in terms of mean-average precision (MAP) and precision-at-10
-(P@10).  
+assessed both in terms of mean-average precision and precision-at-10.
 
 \begin{table}[ht!]
   \centering
   \begin{tabular}{lllll}
-    Method & & MAP & P@10 & p-value\\
+    Method & & MAP & P@10 & \\
     \hline
     {\tt baseline} & & 0.2996 & 0.3857 & \\
-    {\tt uniform-prior} & $\beta = 0$ & 0.5775 & 0.6179 & \\
-    & $\beta = 1$ & 0.5899$^*$ & 0.6464$^*$ & \\
-    & $\beta = 10$ & 0.5877 & 0.6464$^*$ & \\
+    {\tt uniform-prior} & $\beta = 0$ \cite{balog2009language} & 0.5775 & 0.6179 & \\
+    & $\beta = 1$ & {\bf 0.5899} & {\bf 0.6464} & \\
+    & $\beta = 10$ & 0.5877 & {\bf 0.6464} & \\
     {\tt smoothed-prior} & $\mu = 0.01$ & 0.5781 & 0.6179 &\\
     & $\mu = 1$ & 0.5782 & 0.6214 & \\
     & $\mu = 100$ & 0.4956 & 0.5429 & \\
     \\
   \end{tabular}
-  \caption{The performance results for all the test runs.  The top-performer is
-  indicated by an asterisk in the superscript.} \label{t:performance}
+  \caption{The performance results for all the test runs.  The top performers are
+  shown in boldface.} \label{t:performance}
 \end{table}
 
-The performance of the baseline method was quite moderate, with MAP a bit less
-than 0.3 and P@10 around 0.39.  All the proposed models show significant
+The performance of the baseline was quite moderate, with MAP a bit less
+than 0.3 and P@10 around 0.39.  All the other models showed significant
 improvement over the baseline, ranging from 30\% to 100\% in terms of MAP.
-Encouraged by the initial results, we ran a line search for each model by
-varying the hyperparameter $\beta$.  We found that model performance were quite
-stable across different experimental runs.  Generally, {\tt uniform-prior} and
-{\tt smoothed-prior} achieved comparable performance.  The best one was found
-in the {\tt uniform-prior} run with $\beta = 0.2$, achieving $0.591$ in MAP.
-The positive observation in this experiment suggested that a relevance-based
-weighted-sum model is probably more effective than a count-based model in the
+From the result, we find that the performance of our best model ({\tt
+uniform-prior} with $\beta = 1$) was slightly better than that of the
+language-model-based approach \cite{balog2009language} ({\tt uniform-prior}
+with $\beta = 1$), though only to a limited extent, by 2.15\% in terms of MAP.
+Out of curiosity, we also ran a line search for each model by varying the
+hyperparameter $\beta$.  We found that model performance were quite stable
+across different experimental runs.  Generally, {\tt uniform-prior} and {\tt
+smoothed-prior} achieved comparable performance.  The best one was found in the
+{\tt uniform-prior} run with $\beta = 0.2$, achieving $0.591$ in MAP.  The
+positive observation in this experiment suggested that a relevance-based
+model is probably more effective than a count-based model in the
 facet ranking task.  
 
 %--------------------------------------------------
@@ -597,9 +567,12 @@ modeling applications in information retrieval, including relevance models
 \cite{zhai2001language}, and Bayesian language model
 \cite{zaragorza2003bayesian}.  In this respect, our solution can be seen as a
 two-stage Bayesian extension of the regular language model over the facet data.
-Our approach differs from all the previous work in the formal definition of a
+Our approach differs from the previous efforts in the formal definition of a
 secondary document representation and a corresponding generative Bayesian
-model.  
+model.  Specifically, our work departs from the original relevance model
+\cite{lavrenko2001relevance} and its cross-lingual counterpart
+\cite{lavrenko2002cross-lingual} in the way Dirichlet priors are associated
+with the both representations.
 
 To the best of our knowledge, this work is among the earliest attempt for
 retrieving relevant facets in the digital library community.  Interestingly, we
@@ -617,15 +590,15 @@ belief.
  
 \section{Discussion and Concluding Remarks}\label{s:concluding-remarks}
 
-In this work, we proposed a Bayesian framework that enabled the use of a
-secondary document representation in language modeling.  The framework extended
+In this work, we propose a Bayesian framework that enables the use of a
+secondary document representation in language modeling.  The framework extends
 Lavrenko's relevance model to offer interoperability between two different
-term domains.  Moreover, we showed that our method is capable of working with a
+term domains.  Moreover, we show that our method is capable of working with a
 language-model-based retrieval engine to achieve high efficiency in
 computation.  
 
-Two applications were introduced in this paper to evaluate the performance of
-the proposed solution.  In the first task, we showed that the presence of a
+Two applications are introduced in this paper to evaluate the performance of
+the proposed solution.  In the first task, we show that the presence of a
 secondary document layer that is made of a carefully-selected vocabulary could
 greatly enhance retrieval effectiveness.  Even though the proposed query
 refinement model did not achieve the best performance, the model still beaten
@@ -635,14 +608,14 @@ feedback.  The refinement model alone improved the MAP of the regular language
 modeling run by 21.8\% (rigid) and 24.9\% (relax).  In the second application,
 where the model was used to rank named entities returned in the query session
 by the underlying retrieval system, the proposed solution achieved encouraging
-result on the custom benchmark.  The baseline performance was improved by
-roughly 100\% in MAP.  
+result on the custom benchmark.  Our approach outperformed the baseline and the language-model-based
+approach \cite{balog2009language} by roughly 100\% and 2.15\%, respectively, in terms of MAP.
 
 Despite the early success in the evaluation results, there is still room for
 improvements.  We see our contributions here as a starting point toward further
 exploration on several issues that have not yet been covered in this study: the
 use of different prior families, the formal inference model for the
-hyperparameters, potential applications on other datasets, etc.  These
+hyperparameters, potential applications on the other datasets, etc.  These
 challenges should be the focus of our future work.
 
 %--------------------------------------------------
