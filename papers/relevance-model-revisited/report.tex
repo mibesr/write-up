@@ -238,7 +238,7 @@ generating term $s_k$ (in the secondary term domain) from the collection by
 viewing the entire collection as one language model; $\mu$ represents some
 constant.
 
-\subsection{Computationtal Efficiency}
+\subsection{Computational Efficiency}
 
 One interesting feature of our model is
 that it offers seamless integration with the language-model-based retrieval
@@ -294,14 +294,14 @@ considered a subtask of the NTCIR-4 CLIR Task \cite{kishida2004overview}:
 Chinese-to-Chinese monolingual document retrieval.  The dataset comprised of
 totally 381,681 newswire articles and 59 test topics.  Only title queries were
 used in this experiment.  Limited preprocessing steps were applied to the
-corpus in advance.  All the punctuation marks, whitespace, and separators were
+corpus in advance.  All the punctuation marks, whitesapces, and separators were
 discarded and the remaining texts were send to a simple tokenizer.  As a
 result, the output was a mixture of CJK-character bigrams and English
 word unigrams, which formed the primary document representations in our model
 and in other baseline methods.  The secondary representation we chose was the
 top-500,000 CJK-character bigrams in the entire collection ranked by the
 corresponding \emph{tf-idf} score; the candidate set was formed by excluding
-those bigrams occured less than 5 times.  The parameters described here were
+those bigrams occurred less than 5 times.  The parameters described here were
 determined through experimentation.
 
 %--------------------------------------------------
@@ -343,7 +343,7 @@ performance is measured in terms of mean average precision and precision-at-5.
 \begin{table}[ht!]
   \centering
   \begin{tabular}{p{2.4cm}llllllll}
-    & \multicolumn{4}{c}{Rigid Judgment} & \multicolumn{4}{c}{Relax Jugment} \\
+    & \multicolumn{4}{c}{Rigid Judgment} & \multicolumn{4}{c}{Relax Judgment} \\
     \hline
     Regular & MAP & (+\%) & P@5 & (+\%) & MAP & (+\%) & P@5 & (+\%) \\
     \hline
@@ -394,7 +394,7 @@ remains rather significant.
 \begin{table}[ht!]
   \centering
   \begin{tabular}{p{3cm}p{1.5cm}p{1.5cm}p{1.5cm}p{1.5cm}}
-    & \multicolumn{2}{c}{Rigid Judgment} & \multicolumn{2}{c}{Relax Jugment} \\
+    & \multicolumn{2}{c}{Rigid Judgment} & \multicolumn{2}{c}{Relax Judgment} \\
     \hline
     Method & MAP & P@5 & MAP & P@5 \\
     \hline
