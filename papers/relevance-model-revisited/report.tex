@@ -1,17 +1,17 @@
 \begin{abstract} In this work, we extended Lavrenko's relevance model
 \cite{lavrenko2001relevance} and adapted it to the cases where an additional
-layer of document representation is appropriate.  With this
-change, we are able to aggregate heterogeneous data sources and operate the
-model in different granularity levels.  We demonstrated this idea with two
-real-world applications.  In the first task, we showed the feasibility of using
-a carefully-selected vocabulary as the query expansion source in a language
-model to enhance retrieval effectiveness.  The proposed query refinement model
-outperformed the relevance model counterpart in terms of MAP by 17.6\% under
-rigid relevance judgment.  Also in the second task, we established a ranking
-scheme that could be used in a faceted search session to sort the facets based
-on their corresponding relevance to the query.  The result showed that our
-approach improved the performance over the baseline method by roughly 100\% in
-terms of MAP.  \end{abstract}
+layer of document representation is appropriate.  With this change, we are able
+to aggregate heterogeneous data sources and operate the model in different
+granularity levels.  We demonstrated this idea with two applications.  In the
+first task, we showed the feasibility of using a carefully-selected vocabulary
+as the query expansion source in a language model to enhance retrieval
+effectiveness.  The proposed query refinement model outperformed the relevance
+model counterpart in terms of MAP by 17.6\% under rigid relevance judgment.  In
+the second task, we established a ranking scheme in a faceted search session to
+sort the facets based on their corresponding relevance to the query.  The
+result showed that our approach improved the baseline performance by roughly
+100\% in terms of MAP.  \keywords{Bayesian relevance model, multiple
+representations} \end{abstract}
 
 \section{Introduction}
 
@@ -328,7 +328,7 @@ methods supported by the tool, we selected {\tt tfidf}, {\tt okapi}, and {\tt
 indri} (a language-model-based method) as the baseline methods; our own
 language model implementation is denoted as {\tt lm}.  Standard query expansion
 techniques for each method were also tested: Pseudo-relevance feedback ({\tt
-PRF}) was implemented for both tf-idf and okapi models, and an adaptation of
+PRF}) was implemented for both {\tt tfidf} and {\tt okapi} models, and an adaptation of
 Lavrenko's relevance model ({\tt RM}) was also built into the core of Indri
 index; our refinement model is denoted as {\tt BRM} in this experiment.  
 
@@ -341,6 +341,12 @@ the retrieved top-1000 documents to achieve the probability estimates.  The
 performance is measured in terms of mean average precision and precision-at-5.  
 
 \begin{table}[ht!]
+  \caption{The overall performance result is summarized in this table.  Regular
+  retrieval runs are listed in the upper-half and expansion runs in the
+  lower-half.  Boldfaced values indicate the best-performers.  Evaluation
+  results for using the rigid and the relax judgment sets are both listed.  Note
+  that improvement (+\%) for each expansion run is calculated against the
+  performance of the corresponding regular run.} \label{t:retrieval}
   \centering
   \begin{tabular}{p{2.4cm}llllllll}
     & \multicolumn{4}{c}{Rigid Judgment} & \multicolumn{4}{c}{Relax Judgment} \\
@@ -357,15 +363,8 @@ performance is measured in terms of mean average precision and precision-at-5.
     {\tt tfidf+PRF} & 0.217 & (+19.9\%) & 0.295 & (+11.7\%) & 0.264 & (+23.9\%) & 0.383 & (+14.3\%) \\
     {\tt okapi+PRF} & {\bf 0.224} & (+21.1\%) & {\bf 0.315} & (+13.3\%) & {\bf 0.270} & (+21.1\%) & {\bf 0.400} & (+12.4\%) \\
     {\tt indri+RM} & 0.180 & (+3.4\%) & 0.271 & (+5.3\%) & 0.222 & (+2.8\%) & 0.342 & (-1.2\%) \\
-    {\tt lm+BRM} & 0.207 & (+21.8\%) & 0.302 & (+20.3\%) & 0.261 & (+24.9\%) & 0.369 & (+14.6\%) \\
-    \\
+    {\tt lm+BRM} & 0.207 & (+21.8\%) & 0.302 & (+20.3\%) & 0.261 & (+24.9\%) & 0.369 & (+14.6\%)
   \end{tabular}
-  \caption{The overall performance result is summarized in this table.  Regular
-  retrieval runs are listed in the upper-half and expansion runs in the
-  lower-half.  Boldfaced values indicate the best-performers.  Evaluation
-  results for using the rigid and the relax judgment sets are both listed.  Note
-  that improvement (+\%) for each expansion run is calculated against the
-  performance of the corresponding regular run.} \label{t:retrieval}
 \end{table}
 
 Table~\ref{t:retrieval} shows the experimental result.  Among all the regular
@@ -392,6 +391,9 @@ performance of tfidf-based methods and that of language-model-based methods
 remains rather significant.  
 
 \begin{table}[ht!]
+  \caption{The performance results of all the methods (except the proposed one)
+  using only the top-500,000 bigram representation.  Boldfaced values indicate the
+  best performers.} \label{t:retrieval.500k}
   \centering
   \begin{tabular}{p{3cm}p{1.5cm}p{1.5cm}p{1.5cm}p{1.5cm}}
     & \multicolumn{2}{c}{Rigid Judgment} & \multicolumn{2}{c}{Relax Judgment} \\
@@ -409,12 +411,8 @@ remains rather significant.
     \multicolumn{5}{c}{({\it The above runs were indexed against top-50k bigrams only})} \\
     \hline
     {\tt lm+BRM} & {\bf 0.207} & {\bf 0.302} & {\bf 0.261} & 0.369 \\
-    \multicolumn{5}{c}{({\it This above run was operated on both representations})} \\
-    \\
+    \multicolumn{5}{c}{({\it This run was operated on both representations})}
   \end{tabular}
-  \caption{The performance results of all the methods (except the proposed one)
-  using only the top-500,000 bigram representation.  Boldfaced values indicate the
-  best performers.} \label{t:retrieval.500k}
 \end{table}
 
 One thing to note is that readers might argue that the performance improvement
@@ -498,9 +496,9 @@ in the result set; (ii) {\tt uniform-prior}, with which facets were ranked by
 the proposed model using uniform prior for $\beta$; and (iii) {\tt
 smoothed-prior}, with which facets were ranked by the proposed model using
 Dirichlet-smoothed prior for $\beta$.  Note that the language-model-based
-approach proposed in \cite{balog2009language} was also implemented in this
-experiment.  In fact, it is a special case of the {\tt uniform-prior} method
-for $\beta = 0$.
+approach proposed in \cite{balog2009language} was partly involved in this
+experiment.  The method is roughly comparable\footnote{The equivalence takes place only when the mixture component $\lambda_{CA}$ is set to 0.} to a special case of the {\tt uniform-prior} method
+for $\beta = 0$.  
 
 We took the top-1000 documents retrieved by using Dirichlet-smoothed language
 model with $\mu = 2,500$ as the result set.  The hyperparameter was
@@ -513,21 +511,20 @@ top-100 facets returned by each run as the final results.  The performance was
 assessed both in terms of mean-average precision and precision-at-10.
 
 \begin{table}[ht!]
+  \caption{The performance results for all the test runs.  The top performers are
+  shown in boldface.} \label{t:performance}
   \centering
   \begin{tabular}{lllll}
     Method & & MAP & P@10 & \\
     \hline
     {\tt baseline} & & 0.2996 & 0.3857 & \\
-    {\tt uniform-prior} & $\beta = 0$ \cite{balog2009language} & 0.5775 & 0.6179 & \\
+    {\tt uniform-prior} & $\beta = 0$ & 0.5775 & 0.6179 & \\
     & $\beta = 1$ & {\bf 0.5899} & {\bf 0.6464} & \\
     & $\beta = 10$ & 0.5877 & {\bf 0.6464} & \\
     {\tt smoothed-prior} & $\mu = 0.01$ & 0.5781 & 0.6179 &\\
     & $\mu = 1$ & 0.5782 & 0.6214 & \\
-    & $\mu = 100$ & 0.4956 & 0.5429 & \\
-    \\
+    & $\mu = 100$ & 0.4956 & 0.5429 &
   \end{tabular}
-  \caption{The performance results for all the test runs.  The top performers are
-  shown in boldface.} \label{t:performance}
 \end{table}
 
 The performance of the baseline was quite moderate, with MAP a bit less
@@ -535,11 +532,11 @@ than 0.3 and P@10 around 0.39.  All the other models showed significant
 improvement over the baseline, ranging from 30\% to 100\% in terms of MAP.
 From the result, we find that the performance of our best model ({\tt
 uniform-prior} with $\beta = 1$) was slightly better than that of the
-language-model-based approach \cite{balog2009language} ({\tt uniform-prior}
+language-model-based counterpart({\tt uniform-prior}
 with $\beta = 0$), though only to a limited extent, by 2.15\% in terms of MAP.
 Out of curiosity, we also ran a line search for each model by varying the
 hyperparameter $\beta$.  We found that model performance were quite stable
-across different experimental runs.  Generally, {\tt uniform-prior} and {\tt
+across different experimental runs.  Generally speaking, {\tt uniform-prior} and {\tt
 smoothed-prior} achieved comparable performance.  The best one was found in the
 {\tt uniform-prior} run with $\beta = 0.2$, achieving $0.591$ in MAP.  The
 positive observation in this experiment suggested that a relevance-based
@@ -609,7 +606,7 @@ modeling run by 21.8\% (rigid) and 24.9\% (relax).  In the second application,
 where the model was used to rank named entities returned in the query session
 by the underlying retrieval system, the proposed solution achieved encouraging
 result on the custom benchmark.  Our approach outperformed the baseline and the language-model-based
-approach \cite{balog2009language} by roughly 100\% and 2.15\%, respectively, in terms of MAP.
+approach by roughly 100\% and 2.15\%, respectively, in terms of MAP.
 
 Despite the early success in the evaluation results, there is still room for
 improvements.  We see our contributions here as a starting point toward further
