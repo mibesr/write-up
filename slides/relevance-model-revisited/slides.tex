@@ -1,14 +1,19 @@
-\documentclass{beamer}
+\documentclass[serif]{beamer}
 
 \mode<presentation>{
-  \usetheme{Madrid}
-  \usefonttheme{serif}
+  \usetheme{Pittsburgh}
 %--------------------------------------------------
 %   \setbeamercovered{transparent}
 %-------------------------------------------------- 
   \setbeamerfont{institute}{size=\normalsize}
   \setbeamerfont{section in toc}{size=\large}
   \setbeamerfont{subsection in toc}{size=\normalsize}
+  \setbeamertemplate{frametitle}{%
+    \vskip 12pt
+    \begin{centering}
+    \structure{\textbf{\insertframetitle}}\par
+    \end{centering}
+  }
 }
 
 \usepackage[english]{babel}
