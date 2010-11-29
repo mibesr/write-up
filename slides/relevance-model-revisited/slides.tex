@@ -1,10 +1,14 @@
-\documentclass[serif]{beamer}
+\documentclass[bigger]{beamer}
+
+%--------------------------------------------------
+% \usepackage{pst-all} % PSTricks
+% \usepackage{com.braju.pstricks} % The package that really does the hard work
+% \usepackage{com.braju.graphicalmodels} % The package that really does the hard work
+%-------------------------------------------------- 
 
 \mode<presentation>{
   \usetheme{Pittsburgh}
-%--------------------------------------------------
-%   \setbeamercovered{transparent}
-%-------------------------------------------------- 
+  \usefonttheme{serif}
   \setbeamerfont{institute}{size=\normalsize}
   \setbeamerfont{section in toc}{size=\large}
   \setbeamerfont{subsection in toc}{size=\normalsize}
@@ -23,10 +27,6 @@
 \usepackage{epsfig}
 \usepackage{pgf}
 \usepackage[absolute,overlay]{textpos}
-
-\usepackage{pst-all} % PSTricks
-\usepackage{com.braju.graphicalmodels} % The package that really does the hard work
-
 %--------------------------------------------------
 % \usepackage{mathtime}
 %-------------------------------------------------- 
@@ -43,10 +43,13 @@
 % \SetUnicodeOption{cjkbg5}#1\egroup}
 %-------------------------------------------------- 
 
-\title[]{Multiple-Representation Relevance Model}
-\author[]{Ruey-Cheng Chen <cobain@turing.csie.ntu.edu.tw>}
-\institute{National Taiwan University, Taiwan}
-\date[]{\today}
+\title[]{Relevance Model Revisited: With Multiple Representation}
+\author[]{Ruey-Cheng Chen {\tt \scriptsize <cobain@turing.csie.ntu.edu.tw>}\\
+Chiung-Min Tsai {\tt \scriptsize <cmtsai@mail.lis.ntu.edu.tw>}\\
+Jieh Hsiang {\tt \scriptsize <jhsiang@ntu.edu.tw>}}
+\institute{Dept. of Computer Science and Information Engineering\\
+National Taiwan University, Taiwan}
+\date[AIRS 2010]{AIRS 2010 (December 1, 2010)}
 \subject{Information Retrieval}
 %--------------------------------------------------
 % \AtBeginSubsection[]
@@ -74,298 +77,182 @@
 
 \frame{ \titlepage }
 
-%--------------------------------------------------
-% \f{References}{
-%   \ul{Mandatory References}{ 
-%     \item Craswell, N. and Szummer, M. 2007. Random walks on the click graph.
-%     In \emph{Proceedings of the 30th Annual international ACM SIGIR Conference
-%     on Research and Development in information Retrieval} (Amsterdam, The
-%     Netherlands, July 23 - 27, 2007). SIGIR '07. ACM, New York, NY, 239-246.
-%   }
-% 
-%   \ul{Authors}{ 
-%     \item Nick Craswell: \footnotesize{\url{ http://research.microsoft.com/~nickcr/ }}
-%     \item Martin Szummer: \footnotesize{\url{ http://research.microsoft.com/~szummer/ }}
-%   }
-% }
-%-------------------------------------------------- 
-
 \f{Outline}{ \tableofcontents }
 
 \section{Introduction}
-\f{Document Representation}{
-  \ul{In conventional thinking...}{
-    \item We assume a document is represented as a collection of term
-    \item A more subtle assumption: Every document possesses \textbf{only one} such representation
-    \item This leads to simple, effective retrieval models, such as: \ull{
-      \item Vector-space model
-      \item Binary-independence retrieval model
-      \item Language modeling approach
-    }
-  }
+\f{Homogeneous Assumption in IR}{
+  
+  Texts in a document is usually modeled as a set of terms, and every document
+  possesses \textbf{only one} such representation
 
-  \ul{The downside}{
-    \item Terms are supposed to be homogeneous (or drawn from a mixture of homogeneous data sources)
-    \item There is no room for modeling user-contributed tags, annotations, and metadata
-  }
+  \begin{itemize}
+    \item Terms are assumed to be homogeneous \\
+    (or drawn from a mixture of homogeneous sources)
+    \item It leads to simple models
+    \item It leaves no room for modeling heterogeneous data
+  \end{itemize}
 }
 
-\f{Multi-Layer Document Representation}{
-  \ul{Information sources relevant to a document}{
-    \item Metadata: Precise, detailed descriptions 
-    \item Tags: Short, less precise, conceptual descriptions
-    \item Fulltext: Long and loose text; diverse vocabulary
-  }
+\f{Heterogeneous Data}{
+  \begin{table}
+    \centering
+    \small
+    \begin{tabular}{|l|l|}
+      \hline
+      Full-text & Long and loose textual content \\
+      \hline
+      Abstract & Summary of the content \\
+      \hline
+      Title & Short, conceptual description \\
+      \hline
+      Tags & Short, conceptual description (from the user side) \\
+      \hline
+      Metadata & Data describing the document \\
+      \hline
+    \end{tabular}
+  \end{table}
 
-  \ul{We need additional layers in a retrieval model because...}{
-    \item Incorporation of vocabularies enables high usability
-    \item Retrieval can then be operated in different granularity levels
-    \item Retrieval can be operated on a mixture of \textbf{heterogeneous} sources
-    \item Possible applications include...
-    \ull{
-      \item Cross-language query modeling 
-      \item Cross-vocabulary query modeling
-      \item Named-entities ranking
-    }
-  }
+  The data differ in scope, specificity, and semantics
+
+  \begin{itemize}
+    \item Under the homogeneous assumption, a document needs to be represented as a weighted combination
+    \item Is there any other way out?
+  \end{itemize}
 }
 
-\f{Challenge: Building the Model}{
-  \ul{A language model that work with two document representation}{
-    \item \emph{Terms} are denoted as $T$
-    \item The \emph{secondary document representation} is denoted as $S$
-    \item We built a model to enable interaction between the two layers, such as 
-    retrieving elements in one side from that in the other
-  }
+\f{Idea: Layered Combination}{
 
-  \mydef[Formulation]{
-    We want to estimate the probability $\Pr(s|t)$, given that a document $d_i$
-    is indexed in two different representations $T_i$ and $S_i$, where $T_i
-    \subset T$ and $S_i \subset S$.  A concrete application of this is to let
-    the user form a query $\mathbf{q} \subset T$ and estimate the probability
-    $\Pr(s|\mathbf{q})$ accordingly.
-  }
+  What if the model assumes \textit{multiple} document representations rather than only one?
+
+  \begin{itemize}
+    \item It is easy to incorporate heterogeneous data
+    \item Retrieval can then be operated in different semantic layers
+    \item Interoperation between layers is possible \\
+    (and can be useful)
+  \end{itemize}
+
+  \vskip 1em
+  Possible applications include
+
+  \begin{itemize}
+    \item Query expansion/refinement
+    \item Facet ranking
+  \end{itemize}
 }
 
-\f{Roadmap}{
-  \ul{Where do we go from here?}{
-    \item We proposed a generalization over Lavrenko and Croft's work \cite{lavrenko2001relevance} by
-    adapting it to cases where two document representations are appropriate
-    \item We took a Bayesian generative approach 
-    \item The result can be easily implemented in index level
-    \item Two applications are introduced to evaluate our work 
-    \ull{ \item Refining query model by using secondary representation \item Retrieving query-dependent facets }
-    \item The model achieved satisfactory result in both experiments
-  }
+\f{Challenge: The Model}{
+
+  To estimate the probability $\Pr(s|t)$, given that a document is indexed in
+  two different vocabularies $T$ and $S$ (called the \emph{primary} and the
+  \emph{secondary} term space, respectively)
+
+  \vskip 1em
+  More specifically, we want to estimate $\Pr(s|\mathbf{q})$ given the user query $\mathbf{q} \subset T$ 
+
+  \begin{itemize}
+    \item $\Pr(s|t)$ is the key to enable interactions
+    \item It led us to a generalization of the relevance model \cite{lavrenko2001relevance}
+  \end{itemize}
 }
 
 \section{Related Work}
 
 \f{Related Work}{
-  \ul{Query modeling}{
-    \item Our method was inspired by the recent advances on language modeling
-    applications \cite{lavrenko2001relevance,zhai2001language,zaragorza2003bayesian}
-    \item Our approach differs from the previous work in the presence of a secondary document representation
-  }
-  \par
-  \ul{Facet ranking}{
-    \item Our work is among the earliest attempt for facet ranking
-    \item Similar attempts were made in the area of expert finding \ull{
-      \item Amitay et al. \cite{amitay2008finding} formulated the problem of expert
-      finding as a two-layered retrieval task by using \emph{inverse entity-frequency} 
-      \item Balog et al. \cite{balog2009language} followed up and
-      proposed a language modeling approach with the similar rationale to
-      exploit person-term and person-document links
-    }
-    \item Our approach departs from these work in the 
-    way document relevance is modeled and that prior belief is supported
-  }
+  Our method is inspired by the recent advances on language modeling
+  \begin{itemize}
+    \item Relevance model \cite{lavrenko2001relevance}
+    \item Smoothing in language modeling \cite{zhai2001language}
+    \item Bayesian language model \cite{zaragorza2003bayesian}
+  \end{itemize}
+
+  \vskip 1em
+  Similar attempts toward facet ranking were made in the area of expert finding
+  \begin{itemize}
+    \item Inverse entity-frequency \cite{amitay2008finding}
+    \item language-model-based approach \cite{balog2009language} 
+  \end{itemize}
+}
+
+\f{Roadmap}{
+
+  Our approach differs in:
+  \begin{itemize}
+    \item The presence of a secondary document representation
+    \item The way document relevance is modeled 
+    \item The way prior belief is supported
+  \end{itemize}
+
+  \vskip 1em
+  Where do we go from here?
+  \begin{itemize}
+    \item We introduce an adapation of the relevance model \cite{lavrenko2001relevance}
+    (to cases where two representations are appropriate)
+    \item We derive the model using Bayesian generative approach
+    \item Two applications are introduced to evaluate our work 
+  \end{itemize}
 }
 
 \section{Model}
 \subsection{The Generative Framework}
 
-\f{The Generative Framework}{
+\begin{frame}[fragile]
+  \frametitle{The Generative Framework}
   \begin{figure}
     \centering
     \includegraphics[width=8cm]{model}
   \end{figure}
 
-  \ul{Tips for reading the plate notations}{
+  \begin{itemize}
 
-    \only<1>{ \item Circles are variables; observed variables are shaded.
-    \item Dotted circles denotes hyperparameters.  \item Arrows denote
-    dependencies. }
-
-    \only<2>{ \item Consider the collection is composed of $N$ documents.
-    \item Each document $d_j$ is associated with two sets of terms $T_j$ and
-    $S_j$. \item We refer $T_j$ as the primary representation and $S_j$ as the
-    secondary. }
+    \only<1>{ \item Document $d_j$ is associated with two sets of terms $T_j$
+    and $S_j$  }
     
-    \only<3>{ \item Each document $d_j$ possesses two multinomials $\tau^{(j)}$
-    and $\phi^{(j)}$ from which elements in $T_j$ and $S_j$ are drawn,
-    respectively.  \item Now we have two document models $p(w|\tau^{(j)})$ and
-    $p(w|\phi^{(j)})$. }
-
-    \only<4>{ 
-      \item The multinomils work on two different sets of vocabularies.
-      \item Two Dirichlets $\{\alpha_i; i \in [1, |T|]\}$ and $\{\beta_k; k \in [1, |S|]\}$ are assumed. 
-      \item They govern the generation of the document multinomials.
-    }
-  }
-}
-
-\f{The Generative Framework}{
-  \begin{figure}
-    \centering
-    \includegraphics[width=8cm]{model}
-  \end{figure}
-
-  \mydef[Obtaining the predictive distribution]{
-
-    \only<1>{The query $\mathbf{q}$ is a set of observed terms drawn
-    from an unknown document model $x$ in the collection.  Specifically, the
-    query terms are encoded in the same vocabulary as in that form the primary
-    representation of document $x$.}
+    \only<2>{ \item Elements in $T_j$ and $S_j$ are drawn from two multinomials
+    $\tau^{(j)}$ and $\phi^{(j)}$, respectively  }
     
-    \only<2>{By making this assumption, we are able to match the query
-    against all the document models and to estimate the query likelihood
-    $\Pr(\mathbf{q}|d_j)$.  This leads us to the probabilistic generative methods,
-    such as language modeling.}
-    
-    \only<3>{Recall that the unknown document $x$ is connected
-    to another unknown variable $y$.  The variable $y$ represents the most probable
-    term generated from the secondary multinomial distribution $\phi^{(x)}$.}
+    \only<3>{ \item Two Dirichlets priors $\{\alpha_i; i \in [1, |T|]\}$ and
+    $\{\beta_k; k \in [1, |S|]\}$ are assumed }
 
-  }
-}
+    \only<4>{ \item Some unknown document has generated $\mathbf{q}$ and $y$
+    (an unknown secondary term)}
 
-\f{Summary of the Framework}{
-  \mydef[]{
-    The entire generative process can be summarized as follows:
-    \begin{enumerate} 
-      \item For each document $d_j$, \begin{enumerate}
-	\item $\tau^{(j)} \sim \textrm{Dirichlet}(\alpha_i; i \in [1, |T|])$
-	\item $\phi^{(j)} \sim \textrm{Dirichlet}(\beta_k; i \in [1, |S|])$
-	\item For $i \in \{ 1, \ldots, |T_j| \}$, $t_i \sim \textrm{Mult}(\tau^{(j)})$ 
-	\item For $k \in \{ 1, \ldots, |S_j| \}$, $s_k \sim \textrm{Mult}(\phi^{(j)})$ 
-      \end{enumerate}
-      \item For some unknown document $d_x$, \begin{enumerate}
-	\item For $i \in \{ 1, \ldots, |\mathbf{q}|\}$, $q_i \sim \textrm{Mult}(\tau^{(x)})$
-      \end{enumerate}
-    \end{enumerate}
-  }
+  \end{itemize}
+
+\end{frame}
+
+\f{Generative Process}{
+  For each document $d_j$:
+  \begin{enumerate}
+    \item $\tau^{(j)} \sim \textrm{Dirichlet}(\alpha_i; i \in [1, |T|])$
+    \item $\phi^{(j)} \sim \textrm{Dirichlet}(\beta_k; i \in [1, |S|])$
+    \item For $i \in \{ 1, \ldots, |T_j| \}$, $t_i \sim \textrm{Mult}(\tau^{(j)})$ 
+    \item For $k \in \{ 1, \ldots, |S_j| \}$, $s_k \sim \textrm{Mult}(\phi^{(j)})$ 
+  \end{enumerate}
+
+  \vskip 1em
+  \textbf{Goal}: Find $y^*$ by using the predictive distribution 
+  \begin{equation} y^* = \arg\max_{y \in S} \Pr(y|\mathbf{q},
+  \mathbf{t}, \mathbf{d}, \mathbf{s}) \label{eq:forward} \end{equation} 
+  \begin{itemize}
+    \item $\mathbf{t}$, $\mathbf{s}$, $\mathbf{d}$, $\mathbf{q}$: all the observed primary/secondary terms, documents, and query
+  \end{itemize}
 }
 
 \subsection{Inference}
 
-\f{Term Likelihood in the Second Representation}{
-  \mydef[Formulation]{
-    We want to explicitly estimate the likelihood of one term $s$ in the
-    secondary term domain being ``\emph{triggered}'' by another set of terms
-    from the primary term domain.  This task can be framed as a optimization
-    problem: \begin{equation} y^* = \arg\max_{y \in S} \Pr(y|\mathbf{q},
-    \mathbf{t}, \mathbf{d}, \mathbf{s}) \label{eq:forward} \end{equation} where
-    $\mathbf{t}$ and $\mathbf{s}$ represent all the observed terms in the
-    primary/secondary representations in the collection, respectively;
-    $\mathbf{q}$ represents the input query and $\mathbf{d}$ denotes all the
-    observed documents.  
-  }
-}
-
-\f{Inference (For Impatient Readers)}{
+\f{Exact Inference}{
   \begin{eqnarray}
-    \Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) 
-    &=& \sum_{x \in [1, N]} \Pr(y|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \Pr(x|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
+    && \Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})
+    = \sum_{x \in [1, N]} \Pr(y|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \Pr(x|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
     &\propto& \sum_{x \in [1, N]} \left\{ \int \Pr(y|x, \phi^{(x)}) \Pr(\phi^{(x)}|d_x, \mathbf{s_x}) \mathrm{d}\phi^{(x)} \right. \nonumber\\
     && \left. \int \Pr(\mathbf{q}| x, \tau^{(x)}) \Pr(\tau^{(x)}|d_x, \mathbf{t_x})\mathrm{d}\tau^{(x)} \Pr(x) \right\} \nonumber\\
     &=& \alert{\sum_{x \in [1, N]} \frac{\beta_y + c_{y,x}}{\sum_k \beta_k + c_{k,x}} \frac{\mathcal{B}(\{\alpha_i + c_{i,x} + c_{i,q} \})}{\mathcal{B}(\{\alpha_i + c_{i,x} \})} \Pr(x)} \label{eq:forward-solution}
   \end{eqnarray}
-  Recall that $\mathcal{B}(\cdot)$ is the multinomial beta
-  function defined by \[\mathcal{B}(a_1, \ldots, a_n) = \frac{\prod_i
-  \Gamma(a_i)}{\Gamma(\sum_i a_i)}. \]
-}
-
-\f{Inference: Step by Step}{
-  \mydef[Inducing the first term in the summation]{
-    \begin{eqnarray}
-      \Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) &=& \sum_{x \in
-      [1, N]} \alert{\Pr(y|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})}
-      \Pr(x|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
-      && \nonumber\\
-      \Pr(y|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})
-      &=& \int \Pr(y, \phi^{(x)}|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \mathrm{d}\phi^{(x)} \nonumber\\
-      &=& \int \Pr(y|\phi^{(x)}, x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) 
-      \Pr(\phi^{(x)}|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \mathrm{d}\phi^{(x)} \nonumber\\
-      &=& \int \Pr(y|\phi^{(x)}, x) \Pr(\phi^{(x)}|d_x, \mathbf{s}_x) \mathrm{d}\phi^{(x)} \label{eq:first}
-    \end{eqnarray}
-  }
-}
-
-\f{Inference: Step by Step}{
-  \mydef[Inducing the second term in the summation]{
-    \begin{eqnarray}
-      \Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) &=& \sum_{x \in
-      [1, N]} \Pr(y|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})
-      \alert{\Pr(x|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})} \nonumber\\
-      && \nonumber\\
-      \Pr(x|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})
-      &=& \frac{\Pr(\mathbf{q}|x, \mathbf{t}, \mathbf{d}, \mathbf{s}) \Pr(x|\mathbf{t}, \mathbf{d}, \mathbf{s})}
-      {\Pr(\mathbf{q}|\mathbf{t}, \mathbf{d}, \mathbf{s})} \nonumber\\
-      &\propto& \Pr(\mathbf{q}|x, \mathbf{t}, \mathbf{d}, \mathbf{s}) \Pr(x|\mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
-      &=& \left( \int \Pr(\mathbf{q}, \tau^{(x)}|x, \mathbf{t}, \mathbf{d}, \mathbf{s}) \mathrm{d}\tau^{(x)} \right) 
-      \Pr(x|\mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
-      &=& \left( \int \Pr(\mathbf{q}|\tau^{(x)}, x, \mathbf{t}, \mathbf{d}, \mathbf{s}) 
-      \Pr(\tau^{(x)}|x, \mathbf{t}, \mathbf{d}, \mathbf{s}) \mathrm{d}\tau^{(x)} \right) 
-      \Pr(x|\mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
-      &=& \int \Pr(\mathbf{q}|\tau^{(x)}, x) \Pr(\tau^{(x)}|d_x, \mathbf{t}_x) \mathrm{d}\tau^{(x)} \Pr(x) \label{eq:second}
-    \end{eqnarray}
-  }
-}
-
-\f{Inference: Step by Step}{
-  \ul{Conjugate priors}{
-    \item In Bayesian theory, the prior $\Pr(\theta)$ and posterior $\Pr(\theta|x)$
-    are called conjugate distributions, if the posterior are in the same family as the prior
-    \item Usually, it can be viewed as updating the prior belief on
-    $\theta$ after observing a sequence of outcome $x$.
-    \item Conjugate prior is an algebraically ``syntactic sugar'' to simplify inference
-    \item Fast fact: Dirichlets are conjugate to multinomials \ull{
-      \item $\Pr(\phi^{(x)}|x, y, d_x, \mathbf{s}_x) \sim \mathrm{Dirichlet}(\{\beta_k + c_{k,x}; \forall k\})$
-      \item $\Pr(\tau^{(x)}|x, \mathbf{q}, d_x, \mathbf{t}_x) \sim \mathrm{Dirichlet}(\{\alpha_i + c_{i,x} + c_{i,q}; \forall i\})$
-    }
-  }
-  \par
-  \ul{Care for going into details?}{
-    \item Detailed derivation is too terrifying/boring to be presented here
-    \item Check out Gelman et al. for good reference on Bayesian statistics
-  }
-}
-
-\f{Inference: Revisited}{
-  \mydef[Integrating out the prior]{
-    \begin{eqnarray}
-    \int \Pr(y|x, \phi^{(x)}) \Pr(\phi^{(x)}|d_x, \mathbf{s_x}) \mathrm{d}\phi^{(x)} 
-    &=& \frac{\beta_y + c_{y,x}}{\sum_k \beta_k + c_{k,x}} \\
-    \int \Pr(\mathbf{q}| x, \tau^{(x)}) \Pr(\tau^{(x)}|d_x, \mathbf{t_x})\mathrm{d}\tau^{(x)} 
-    &=& \frac{\mathcal{B}(\{\alpha_i + c_{i,x} + c_{i,q} \})}{\mathcal{B}(\{\alpha_i + c_{i,x} \})} 
-    \end{eqnarray}
-  }
-  \par
-  \mydef[Voila!]{
-    \begin{eqnarray}
-      \Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) 
-      &=& \sum_{x \in [1, N]} \Pr(y|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \Pr(x|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
-      &\propto& \alert{\sum_{x \in [1, N]} \frac{\beta_y + c_{y,x}}{\sum_k \beta_k + c_{k,x}} \frac{\mathcal{B}(\{\alpha_i + c_{i,x} + c_{i,q} \})}{\mathcal{B}(\{\alpha_i + c_{i,x} \})} \Pr(x)} \label{eq:forward-solution}
-    \end{eqnarray}
-  }
-}
-
-%--------------------------------------------------
-%     \item For example, Dirichlets are conjugate to multinomials 
-%     \item $\Pr(\phi^{(x)}|x, y, d_x, \mathbf{s}_x) \sim \mathrm{Dirichlet}(\{\beta_k + c_{k,x}; \forall k\})$
-%     \item $\Pr(\tau^{(x)}|x, \mathbf{q}, d_x, \mathbf{t}_x) \sim \mathrm{Dirichlet}(\{\alpha_i + c_{i,x} + c_{i,q}; \forall i\})$
-%-------------------------------------------------- 
+  \begin{itemize}
+    \item $\mathcal{B}(\cdot)$ is the multinomial beta
+    function defined by $\mathcal{B}(a_1, \ldots, a_n) = (\prod_i
+    \Gamma(a_i)) / \Gamma(\sum_i a_i)$
+  \end{itemize}
 }
 
 \subsection{Hyperparameters and the Index Structure}
@@ -440,7 +327,7 @@ term domain) from the collection by viewing the entire collection as one languag
     \item For each $s_k$, we calculated its \emph{expectation} $E(s_k|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})$
     \item The expectation can be seen as the number of occurrence for $s_k$
     \item The resulting language model is: \[
-      x^{*} &=& \arg\max_x \prod_k \Pr(s_k|x)^{E(s_k|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})}
+      x^{*} = \arg\max_x \prod_k \Pr(s_k|x)^{E(s_k|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})}
     \]
     \item This simple technique reduces to KL-divergence retrieval framework \cite{zhai2001language}
   }
@@ -519,10 +406,10 @@ term domain) from the collection by viewing the entire collection as one languag
     \item Facets are sorted in descending order of the number of counts
     \item It is easy to implement (one more pass through the forward index)
     \item It treats all the facet count as equally importatnt \ull{
-      \item e.g., A facet count in document #1 is as good as in document #100
+      \item e.g., A facet count in document \#1 is as good as in document \#100
     }
-    \item Critics #1: It disregards the notion of relevance
-    \item Critics #2: Users can be mislead when consulting the results to guide the subsequence exploratory search
+    \item Critics \#1: It disregards the notion of relevance
+    \item Critics \#2: Users can be mislead when consulting the results to guide the subsequence exploratory search
   }
 }
 
@@ -596,50 +483,89 @@ term domain) from the collection by viewing the entire collection as one languag
   }
 }
 
-%--------------------------------------------------
-% \section{Background}
-% \subsection{Graph-Theoretical Concepts}
-% \f{Graph}{
-%   \ul{Basic Concepts}{
-%     \item An undirected graph $G = (V, E)$ is a collection of nodes $V$ and edges $E$.
-%     \item Two nodes $i, j \in V$ are \emph{neighbors} if $(i, j) \in E$.
-%     \item Neighborhood of a node $i$: $\{j \mid (i, j) \in E\}$.
-%     \item A node is not a neighbor of itself, i.e., $(i, i) \notin E$.
-%     \item A clique of $G$ is either a single node or a complete subgraph of $G$.
-%   }
-%   \begin{figure}
-%     \centering
-%     \includegraphics[width=100pt]{clique}
-%   \end{figure}
-% }
-% 
-% \subsection{Random Fields}
-% \f{Random Fields}{
-%   \mydef[Random Fields]{
-%     Let $F = \{X_1, \ldots, X_m\}$ be a set of random variables defined on the
-%     sample space $\Omega$, in which each $X_i$ takes a value $x_i \in
-%     \mathcal{L}$.  A probability measure $p$ is a \emph{random field} if
-%     $p(\omega) > 0$ for all $\omega \in \Omega$.
-%   }
-%   \vskip1em
-%   \ul{Random Fields on $G$}{
-%     \item Assign each random variable $X_i$ to a node of $G$.
-%     \item Values of random variables are usually spatially correlated.
-%   }
-%   \begin{figure}
-%     \centering
-%     \includegraphics[width=100pt]{rf}
-%   \end{figure}
-% }
-%-------------------------------------------------- 
 \section<presentation>*{\appendixname}
 
 \begin{frame}[allowframebreaks]
   \frametitle{References}
   \small
-  \bibliography{report}
+  \bibliography{slides}
   \bibliographystyle{alpha}
 \end{frame}
+
+\f{Inference: Step by Step}{
+  \mydef[Inducing the first term in the summation]{
+    \begin{eqnarray}
+      \Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) &=& \sum_{x \in
+      [1, N]} \alert{\Pr(y|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})}
+      \Pr(x|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
+      && \nonumber\\
+      \Pr(y|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})
+      &=& \int \Pr(y, \phi^{(x)}|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \mathrm{d}\phi^{(x)} \nonumber\\
+      &=& \int \Pr(y|\phi^{(x)}, x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) 
+      \Pr(\phi^{(x)}|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \mathrm{d}\phi^{(x)} \nonumber\\
+      &=& \int \Pr(y|\phi^{(x)}, x) \Pr(\phi^{(x)}|d_x, \mathbf{s}_x) \mathrm{d}\phi^{(x)} \label{eq:first}
+    \end{eqnarray}
+  }
+}
+
+\f{Inference: Step by Step}{
+  \mydef[Inducing the second term in the summation]{
+    \begin{eqnarray}
+      \Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) &=& \sum_{x \in
+      [1, N]} \Pr(y|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})
+      \alert{\Pr(x|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})} \nonumber\\
+      && \nonumber\\
+      \Pr(x|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})
+      &=& \frac{\Pr(\mathbf{q}|x, \mathbf{t}, \mathbf{d}, \mathbf{s}) \Pr(x|\mathbf{t}, \mathbf{d}, \mathbf{s})}
+      {\Pr(\mathbf{q}|\mathbf{t}, \mathbf{d}, \mathbf{s})} \nonumber\\
+      &\propto& \Pr(\mathbf{q}|x, \mathbf{t}, \mathbf{d}, \mathbf{s}) \Pr(x|\mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
+      &=& \left( \int \Pr(\mathbf{q}, \tau^{(x)}|x, \mathbf{t}, \mathbf{d}, \mathbf{s}) \mathrm{d}\tau^{(x)} \right) 
+      \Pr(x|\mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
+      &=& \left( \int \Pr(\mathbf{q}|\tau^{(x)}, x, \mathbf{t}, \mathbf{d}, \mathbf{s}) 
+      \Pr(\tau^{(x)}|x, \mathbf{t}, \mathbf{d}, \mathbf{s}) \mathrm{d}\tau^{(x)} \right) 
+      \Pr(x|\mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
+      &=& \int \Pr(\mathbf{q}|\tau^{(x)}, x) \Pr(\tau^{(x)}|d_x, \mathbf{t}_x) \mathrm{d}\tau^{(x)} \Pr(x) \label{eq:second}
+    \end{eqnarray}
+  }
+}
+
+\f{Inference: Step by Step}{
+  \ul{Conjugate priors}{
+    \item In Bayesian theory, the prior $\Pr(\theta)$ and posterior $\Pr(\theta|x)$
+    are called conjugate distributions, if the posterior are in the same family as the prior
+    \item Usually, it can be viewed as updating the prior belief on
+    $\theta$ after observing a sequence of outcome $x$.
+    \item Conjugate prior is an algebraically ``syntactic sugar'' to simplify inference
+    \item Fast fact: Dirichlets are conjugate to multinomials \ull{
+      \item $\Pr(\phi^{(x)}|x, y, d_x, \mathbf{s}_x) \sim \mathrm{Dirichlet}(\{\beta_k + c_{k,x}; \forall k\})$
+      \item $\Pr(\tau^{(x)}|x, \mathbf{q}, d_x, \mathbf{t}_x) \sim \mathrm{Dirichlet}(\{\alpha_i + c_{i,x} + c_{i,q}; \forall i\})$
+    }
+  }
+  \par
+  \ul{Care for going into details?}{
+    \item Detailed derivation is too terrifying/boring to be presented here
+    \item Check out Gelman et al. for good reference on Bayesian statistics
+  }
+}
+
+\f{Inference: Revisited}{
+  \mydef[Integrating out the prior]{
+    \begin{eqnarray}
+    \int \Pr(y|x, \phi^{(x)}) \Pr(\phi^{(x)}|d_x, \mathbf{s_x}) \mathrm{d}\phi^{(x)} 
+    &=& \frac{\beta_y + c_{y,x}}{\sum_k \beta_k + c_{k,x}} \\
+    \int \Pr(\mathbf{q}| x, \tau^{(x)}) \Pr(\tau^{(x)}|d_x, \mathbf{t_x})\mathrm{d}\tau^{(x)} 
+    &=& \frac{\mathcal{B}(\{\alpha_i + c_{i,x} + c_{i,q} \})}{\mathcal{B}(\{\alpha_i + c_{i,x} \})} 
+    \end{eqnarray}
+  }
+  \par
+  \mydef[Voila!]{
+    \begin{eqnarray}
+      \Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) 
+      &=& \sum_{x \in [1, N]} \Pr(y|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \Pr(x|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
+      &\propto& \alert{\sum_{x \in [1, N]} \frac{\beta_y + c_{y,x}}{\sum_k \beta_k + c_{k,x}} \frac{\mathcal{B}(\{\alpha_i + c_{i,x} + c_{i,q} \})}{\mathcal{B}(\{\alpha_i + c_{i,x} \})} \Pr(x)}
+    \end{eqnarray}
+  }
+}
 
 \frame{
   \begin{center}
