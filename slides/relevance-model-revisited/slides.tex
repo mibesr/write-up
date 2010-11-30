@@ -12,6 +12,7 @@
   \setbeamerfont{institute}{size=\normalsize}
   \setbeamerfont{section in toc}{size=\large}
   \setbeamerfont{subsection in toc}{size=\normalsize}
+  \setbeamercovered{transparent}
   \setbeamertemplate{frametitle}{%
     \vskip 12pt
     \begin{centering}
@@ -43,7 +44,7 @@
 % \SetUnicodeOption{cjkbg5}#1\egroup}
 %-------------------------------------------------- 
 
-\title[]{Relevance Model Revisited: With Multiple Representation}
+\title[]{Relevance Model Revisited: With Multiple Document Representations}
 \author[]{Ruey-Cheng Chen {\tt \scriptsize <cobain@turing.csie.ntu.edu.tw>}\\
 Chiung-Min Tsai {\tt \scriptsize <cmtsai@mail.lis.ntu.edu.tw>}\\
 Jieh Hsiang {\tt \scriptsize <jhsiang@ntu.edu.tw>}}
@@ -160,8 +161,7 @@ National Taiwan University, Taiwan}
 \f{Related Work}{
   Our method is inspired by the recent advances on language modeling
   \begin{itemize}
-    \item Relevance model \cite{lavrenko2001relevance}
-    \item Smoothing in language modeling \cite{zhai2001language}
+    \item Relevance model \cite{lavrenko2001relevance, zhai2001language}
     \item Bayesian language model \cite{zaragorza2003bayesian}
   \end{itemize}
 
@@ -241,6 +241,288 @@ National Taiwan University, Taiwan}
 \subsection{Inference}
 
 \f{Exact Inference}{
+  Exact inference can be done with standard Bayesian approach
+  \begin{eqnarray*}
+    y^* &=& \arg\max_{y \in S} \sum_{x \in [1, N]} \Pr(y|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \Pr(x|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
+    \only<1>{
+      &=& \arg\max_{y \in S} \sum_{x \in [1, N]} \left\{ \int \Pr(y|x, \phi^{(x)}) \Pr(\phi^{(x)}|d_x, \mathbf{s_x}) \mathrm{d}\phi^{(x)} \right. \nonumber\\
+      && \left. \int \Pr(\mathbf{q}| x, \tau^{(x)}) \Pr(\tau^{(x)}|d_x, \mathbf{t_x})\mathrm{d}\tau^{(x)} \Pr(x) \right\} \nonumber\\
+    }
+    \only<2>{
+      &=& \arg\max_{y \in S} \sum_{x \in [1, N]} \frac{\beta_y + c_{y,x}}{\sum_k \beta_k + c_{k,x}} \frac{\mathcal{B}(\{\alpha_i + c_{i,x} + c_{i,q}; \forall i \})}{\mathcal{B}(\{\alpha_i + c_{i,x} ; \forall i\})} \Pr(x) \nonumber
+    }
+  \end{eqnarray*}
+
+  \begin{itemize}
+  \only<1>{
+    \item $\mathbf{t_x}, \mathbf{s_x}$: All the primary/secondary terms of $d_x$
+    \item $\phi^{(x)}, \tau^{(x)}$: The primary/secondary multinomials of $d_x$
+  }
+  \only<2>{
+    \item $c_{k,x}, c_{k,q}$: The counts of term $k$ in document $x$/query $\mathbf{q}$
+    \item $\mathcal{B}(\cdot)$: The multinomial beta
+    function\\
+    i.e., $\mathcal{B}(a_1, \ldots, a_n) = (\prod_i
+    \Gamma(a_i)) / \Gamma(\sum_i a_i)$
+  }
+  \end{itemize}
+}
+
+\f{Implication}{
+
+  The equation can be interpreted as an expectation of a weighted sum
+  \[ \sum_{x \in [1, N]} \overbrace{\frac{\beta_y + c_{y,x}}{\sum_k \beta_k +
+  c_{k,x}}}^\text{normalized count} \overbrace{\frac{\mathcal{B}(\{\alpha_i +
+  c_{i,x} + c_{i,q}; \forall i \})}{\mathcal{B}(\{\alpha_i + c_{i,x} ;
+  \forall i\})}}^\text{relevance} \Pr(x) \]
+
+  \begin{itemize}
+    \item Normalize the count of term $y$
+    \item Weight the normalized count by the document relevance 
+    \item The expectation can be achieved without knowing $x$
+  \end{itemize}
+
+}
+
+\subsection{Hyperparameters and the Index Structure}
+
+\f{Priors}{
+
+  Uniform prior
+  \begin{itemize}
+    \item $U(c) = (c, c, \ldots, c)$
+    \item Parameterized by some constant $c$
+  \end{itemize}
+  
+  \vskip1em
+  Smoothed-Dirichlet prior
+  \begin{itemize}
+    \item $D(\mu) = (\mu \Pr(w_1), \mu \Pr(w_2), \ldots, \mu \Pr(w_n))$ 
+    \item $\Pr(w_k)$: the probability of generating term $w_k$ (from either term space) from the collection 
+    \item Parameterized by some constant $\mu$
+    \item Widely-used smoothing method in IR \cite{zhai2004study}
+  \end{itemize}
+}
+
+\f{Language Model Integration}{
+
+  Given $\alpha = D(\mu)$ and $\Pr(x) = U(c)$, we have
+
+  \[ \Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \propto
+  \sum_{x \in [1, N]} \frac{\beta_y + c_{y,x}}{\sum_k \beta_k + c_{k,x}}
+  {\rm L}_{\rm LM}(\mathbf{q}|x) \]
+
+  \begin{itemize}
+
+    \item ${\rm L}_{\rm LM}(\mathbf{q}|x)$: The query likelihood score by using
+    language model with Dirichlet smoothing
+
+    \item It can be shown that document relevance is proportional to ${\rm
+    L}_{\rm LM}(\mathbf{q}|x)$ in this special case
+
+    \item Efficient computation is possible with a forward index over the
+    secondary terms
+
+  \end{itemize}
+}
+
+\section{Experimental Results}
+\subsection{Query Refinement Using the Secondary Representation}
+
+\f{Query Refinement Using the Secondary Representation}{
+  Idea: A two-stage retrieval approach
+  \begin{itemize}
+    \item Make an initial run over all the terms (primary)
+    \item Make a second run over only highly-discriminative terms (secondary)
+    \item Use the estimate $\Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})$ as the refined query
+  \end{itemize}
+}
+
+\f{Evaluation Setup}{
+  Chinese-to-Chinese monolingual document retrieval, NTCIR-4 CLIR Task
+  \begin{itemize}
+    \item 381,681 newswire articles, 59 test topics, title queries only
+    \item Primary: CJK-character bigrams + English word unigrams
+    \item Secondary: Top-500,000 high discriminative CJK-character bigrams \\
+      (ranked by tf-idf, with min. support 5)
+  \end{itemize}
+
+  \vskip 1em
+  Baseline
+  \begin{itemize}
+    \item tfidf/okapi + pseudo relevance feedback
+    \item indri + relevance model
+    \item The number of feedback documents/terms: 20/100
+  \end{itemize}
+}
+
+\f{Evaluation Result}{
+  \begin{table}
+    \scriptsize
+    \centering
+    \begin{tabular}{lllllllll}
+      & \multicolumn{4}{c}{Rigid Judgment} & \multicolumn{4}{c}{Relax Judgment} \\
+      \hline
+      Regular & MAP & (+\%) & P@5 & (+\%) & MAP & (+\%) & P@5 & (+\%) \\
+      \hline
+      {\tt tfidf} & 0.181 & & 0.264 & & 0.213 & & 0.335 & \\
+      {\tt okapi} & 0.185 & & 0.278 & & 0.223 & & 0.356 & \\
+      {\tt indri} & 0.174 & & 0.258 & & 0.216 & & 0.346 & \\
+      {\tt lm}    & 0.170 & & 0.251 & & 0.209 & & 0.322 & \\
+      \hline
+      Expansion & & & & & & & & \\
+      \hline
+      {\tt tfidf+PRF} & 0.217 & (+20\%) & 0.295 & (+12\%) & 0.264 & (+24\%) & 0.383 & (+14\%) \\
+      {\tt okapi+PRF} & \textbf<1>{0.224} & (+21\%) & \textbf<1>{0.315} & (+13\%) & \textbf<1>{0.270} & (+21\%) & \textbf<1>{0.400} & (+12\%) \\
+      {\tt indri+RM} & 0.180 & (+3\%) & 0.271 & (+5\%) & 0.222 & (+3\%) & 0.342 & (-1\%) \\
+      {\tt lm+BRM} & \textbf<2>{0.207} & (+22\%) & \textbf<2>{0.302} & (+20\%) & \textbf<2>{0.261} & (+25\%) & \textbf<2>{0.369} & (+15\%)
+    \end{tabular}
+  \end{table}
+
+  \begin{itemize}
+    \only<1>{
+      \item The overall best run is {\tt okapi+PRF}
+      \item Performance gap between tfidf-based and LM-based methods remains large 
+    }
+    \only<2>{
+      \item {\tt lm+BRM} outperforms {\tt indri+RM} by 17.6\% in MAP
+      \item {\tt lm+BRM} shows roughly comparable performance against that of {\tt tfidf+PRF}
+    }
+  \end{itemize}
+}
+
+\f{Analysis}{
+  The performance results on the top-50k bigram representation only
+  \begin{table}
+    \scriptsize
+    \centering
+    \begin{tabular}{p{3cm}p{1.5cm}p{1.5cm}p{1.5cm}l}
+      & \multicolumn{2}{c}{Rigid Judgment} & \multicolumn{2}{c}{Relax Judgment} \\
+      \hline
+      Method & MAP & P@5 & MAP & P@5 \\
+      \hline
+      {\tt tfidf+PRF.500k} & 0.190 & 0.288 & 0.241 & 0.373 \\
+      {\tt okapi+PRF.500k} & 0.196 & {\bf 0.302} & 0.247 & {\bf 0.383} \\
+      {\tt indri+RM.500k} & 0.155 & 0.248 & 0.197 & 0.309 \\
+      \multicolumn{5}{c}{({\it The above runs were indexed against top-50k bigrams only})} \\
+      \hline
+      {\tt lm+BRM} & {\bf 0.207} & {\bf 0.302} & {\bf 0.261} & 0.369 \\
+      \multicolumn{5}{c}{({\it This run was operated on both representations})}
+    \end{tabular}
+  \end{table}
+
+  \begin{itemize}
+    \item It leads to degraded performance
+    \item It favors our first-recall-then-precision idea 
+    \item Question: Can layered approach also be applied to tfidf-based methods?
+  \end{itemize}
+}
+
+\subsection{Retrieving Query-Relevant Facets}
+
+\f{Retrieving Query-Relevant Facets}{
+
+  In faceted search \cite{hearst2002finding,yee2003faceted,roy2008minimum},
+  facets are usually sorted in descending order of the number of counts
+  \begin{itemize}
+    \item Easy to implement (one pass through the forward index)
+    \item Critics \#1: It disregards the notion of relevance
+
+    \item Critics \#2: Users can be mislead when consulting the results to
+    guide the subsequence exploratory search
+
+  \end{itemize}
+
+  \vskip 1em Idea: Encode facets into the secondary representation and sort
+  them by using $\Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})$
+
+}
+
+\f{Evaluation Setup}{
+  Benchmark: Retrieving relevant facets on Tan-Hsin Corpus
+  \begin{itemize}
+    \item 15,314 historical documents, each with person name facets
+    \item Using 28 randomly-selected topics \\
+    (out of 105 query topics collected from query logs)
+    \item Relevance judgment was manually made on the top-100 facets returned
+  \end{itemize}
+
+  \vskip 1em
+  Participating runs include
+  \begin{itemize}
+    \item The count-based scheme (baseline)
+    \item The proposed method, using uniform prior for $\beta$
+    \item The proposed method, using smoothed Dirichlet prior for $\beta$ 
+  \end{itemize}
+}
+
+\f{Evaluation Result}{
+  \begin{table}
+    \scriptsize
+    \centering
+    \begin{tabular}{llll}
+      Method & & MAP & P@10 \\
+      \hline
+      {\tt baseline} & & 0.2996 & 0.3857 \\
+      {\tt uniform-prior} & $\beta = 0$ & 0.5775 & 0.6179\\
+      & $\beta = 1$ & \textbf{0.5899} & \textbf{0.6464} \\
+      & $\beta = 10$ & 0.5877 & \textbf{0.6464} \\
+      {\tt smoothed-prior} & $\mu = 0.01$ & 0.5781 & 0.6179 \\
+      & $\mu = 1$ & 0.5782 & 0.6214 \\
+      & $\mu = 100$ & 0.4956 & 0.5429 \\
+    \end{tabular}
+  \end{table}
+
+  \begin{itemize}
+    \item Proposed methods demote less informative facets 
+
+    \item Proposed methods outperform the baseline\\
+    (ranging from 30\% to 100\% in MAP)
+
+    \item Our model achieved comparable performance against LM-based method
+    \cite{balog2009language} (roughly a special case of {\tt uniform-prior}
+    with $\beta = 0$)
+
+    \item {\tt smoothed-prior} suffers from data sparsity
+  \end{itemize}
+}
+
+\section{Discussion and Concluding Remarks}
+\f{Concluding Remarks}{
+  Our proposed framework:
+  \begin{itemize}
+    \item Offers interoperability between two different term domains
+    \item Achieves satisfactory results in both applications
+    \item Serves as a stepping stone to explore the use of multiple document representations in IR
+  \end{itemize}
+
+  \vskip 1em
+  We are currently looking at these issues
+  \begin{itemize}
+    \item Can topic-biased priors be useful?
+    \item How do we generalize the first-recall-then-precision method?
+    \item How do we deal with data sparsity in facet ranking?
+  \end{itemize}
+}
+
+\section<presentation>*{\appendixname}
+
+\frame{
+  \begin{center}
+    \Huge{Thanks for your attention!}
+    \par
+    Any Question?
+  \end{center}
+}
+
+\begin{frame}[allowframebreaks]
+  \frametitle{References}
+  \small
+  \bibliography{slides}
+  \bibliographystyle{alpha}
+\end{frame}
+
+\f{Inference (For Impatient Readers)}{
   \begin{eqnarray}
     && \Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})
     = \sum_{x \in [1, N]} \Pr(y|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \Pr(x|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
@@ -255,74 +537,79 @@ National Taiwan University, Taiwan}
   \end{itemize}
 }
 
-\subsection{Hyperparameters and the Index Structure}
-
-\f{Hyperparameters}{
-  \ul{Prior distributions}{
-    \item Prior represents our belief on the distribution of the model parameters
-    \item General form: $(\beta_1, \beta_2, \ldots, \beta_{|S|})$
-  }
-  \par
-
-  \ul{Uniform prior}{ \item $(c, c, \ldots, c)$ \item We let $\beta_k = c$ for
-  each $k \in [1, |S|]$ and $c$ denote some constant }
-
-  \ul{Smoothed-Dirichlet}{
-    \item $(\mu \Pr(s_1|C), \mu \Pr(s_2|C), \ldots, \mu \Pr(s_{|S|}|C))$ 
-    \item $\Pr(s_k|C)$ denotes the probability of generating term $s_k$ (in the secondary
-term domain) from the collection by viewing the entire collection as one language model
-    \item $\mu$ represents some constant.
-    \item Widely-used as a smoothing method in the language modeling applications for information retrieval \cite{zhai2004study}
-  }
+\f{Inference: Step by Step}{
+  Inducing the first term in the summation
+  \begin{eqnarray}
+    \Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) &=& \sum_{x \in
+    [1, N]} \alert{\Pr(y|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})}
+    \Pr(x|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
+    && \nonumber\\
+    \Pr(y|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})
+    &=& \int \Pr(y, \phi^{(x)}|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \mathrm{d}\phi^{(x)} \nonumber\\
+    &=& \int \Pr(y|\phi^{(x)}, x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) 
+    \Pr(\phi^{(x)}|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \mathrm{d}\phi^{(x)} \nonumber\\
+    &=& \int \Pr(y|\phi^{(x)}, x) \Pr(\phi^{(x)}|d_x, \mathbf{s}_x) \mathrm{d}\phi^{(x)} \label{eq:first}
+  \end{eqnarray}
 }
 
-\f{Index Structure}{
-  \ul{Integration with the language model}{
-    \item One interesting feature of our model is the seamless integration
-    with the language-model-based retrieval method
-    \item It comes from
-    the fact we could further simplify Equations~\eqref{eq:forward-solution} by
-    assigning $\alpha$ as a smoothed-Dirichlet prior and $\Pr(x)$ as a uniform
-    prior
-    \item When $\alpha_i = \mu \Pr(t_i|C)$, it can be shown that: \[
-    \frac{\mathcal{B}(\{\alpha_i + c_{i,x} + c_{i,q} \})}{\mathcal{B}(\{\alpha_i +
-    c_{i,x} \})} \propto {\rm L}_{\rm LM}(\mathbf{q}|d), \] where ${\rm L}_{\rm
-    LM}(\mathbf{q}|d)$ denotes the query likelihood score in the language model
-    with Dirichlet smoothing scheme
-    
-    \item In this case, the model scores becomes:
-    \begin{eqnarray}
-      \Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) &\propto& 
-      \alert{\sum_{x \in [1, N]} \frac{\beta_y + c_{y,x}}{\sum_k \beta_k + c_{k,x}}
-      {\rm L}_{\rm LM}(\mathbf{q}|x)}
-    \end{eqnarray} 
-  }
+\f{Inference: Step by Step}{
+  Inducing the second term in the summation
+  \begin{eqnarray}
+    \Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) &=& \sum_{x \in
+    [1, N]} \Pr(y|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})
+    \alert{\Pr(x|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})} \nonumber\\
+    && \nonumber\\
+    \Pr(x|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})
+    &=& \frac{\Pr(\mathbf{q}|x, \mathbf{t}, \mathbf{d}, \mathbf{s}) \Pr(x|\mathbf{t}, \mathbf{d}, \mathbf{s})}
+    {\Pr(\mathbf{q}|\mathbf{t}, \mathbf{d}, \mathbf{s})} \nonumber\\
+    &\propto& \Pr(\mathbf{q}|x, \mathbf{t}, \mathbf{d}, \mathbf{s}) \Pr(x|\mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
+    &=& \left( \int \Pr(\mathbf{q}, \tau^{(x)}|x, \mathbf{t}, \mathbf{d}, \mathbf{s}) \mathrm{d}\tau^{(x)} \right) 
+    \Pr(x|\mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
+    &=& \left( \int \Pr(\mathbf{q}|\tau^{(x)}, x, \mathbf{t}, \mathbf{d}, \mathbf{s}) 
+    \Pr(\tau^{(x)}|x, \mathbf{t}, \mathbf{d}, \mathbf{s}) \mathrm{d}\tau^{(x)} \right) 
+    \Pr(x|\mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
+    &=& \int \Pr(\mathbf{q}|\tau^{(x)}, x) \Pr(\tau^{(x)}|d_x, \mathbf{t}_x) \mathrm{d}\tau^{(x)} \Pr(x) \label{eq:second}
+  \end{eqnarray}
 }
 
+\f{Inference: Conjugate Priors}{
+  In Bayesian theory, the prior $\Pr(\theta)$ and posterior $\Pr(\theta|x)$
+  are called conjugate distributions, if the posterior are in the same family as the prior
+  \begin{itemize}
+    \item Viewed as updating the prior belief on
+    $\theta$ after observing a sequence of outcome $x$
+    \item Algebraically ``syntactic sugar'' to simplify inference
+  \end{itemize}
 
-\section{Experimental Results}
-\subsection{Query Refinement Using the Secondary Representation}
+  \vskip 1em
+  Fast fact: Dirichlets are conjugate to multinomials (see Gelman et al.)
+  \begin{itemize}
+    \item $\Pr(\phi^{(x)}|x, y, d_x, \mathbf{s}_x) \sim \mathrm{Dirichlet}(\{\beta_k + c_{k,x}; \forall k\})$
+    \item $\Pr(\tau^{(x)}|x, \mathbf{q}, d_x, \mathbf{t}_x) \sim \mathrm{Dirichlet}(\{\alpha_i + c_{i,x} + c_{i,q}; \forall i\})$
+  \end{itemize}
+}
+
+\f{Inference: Revisited}{
+  Now, integrating out the priors
+  \begin{eqnarray}
+  \int \Pr(y|x, \phi^{(x)}) \Pr(\phi^{(x)}|d_x, \mathbf{s_x}) \mathrm{d}\phi^{(x)} 
+  &=& \frac{\beta_y + c_{y,x}}{\sum_k \beta_k + c_{k,x}} \\
+  \int \Pr(\mathbf{q}| x, \tau^{(x)}) \Pr(\tau^{(x)}|d_x, \mathbf{t_x})\mathrm{d}\tau^{(x)} 
+  &=& \frac{\mathcal{B}(\{\alpha_i + c_{i,x} + c_{i,q} \})}{\mathcal{B}(\{\alpha_i + c_{i,x} \})} 
+  \end{eqnarray}
+
+  \vskip 1em
+  We get to the closed-form solution
+  \begin{eqnarray}
+    \Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) 
+    &=& \sum_{x \in [1, N]} \Pr(y|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \Pr(x|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
+    &\propto& \alert{\sum_{x \in [1, N]} \frac{\beta_y + c_{y,x}}{\sum_k \beta_k + c_{k,x}} \frac{\mathcal{B}(\{\alpha_i + c_{i,x} + c_{i,q} \})}{\mathcal{B}(\{\alpha_i + c_{i,x} \})} \Pr(x)}
+  \end{eqnarray}
+}
 
 \f{Query Refinement Using the Secondary Representation}{
-  \ul{Idea}{
-    \item Make an initial retrieval run
-    \item Use the retrieved result to populate the refined model
-    \item Re-submit the model as a new query
-  }
-  \par
-  \ul{Why employing two-stage retrieval?}{
-    \item $\Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})$ can be seen as a refined query model
-    \item This technique was proposed in Lavrenko's work
-    \item The new model is refined in the secondary representation
-    \item The benefit of such a two-stage setup: \ull{
-      \item The first run is done in general language (good for recall)
-      \item The second run is done in specific language (good for precision)
-    }
-  }
-}
-
-\f{Query Refinement Using the Secondary Representation}{
-  \ul{Facilatating the second-run retrieval}{
+  Facilatating the second-run retrieval
+  \begin{itemize}
     \item The refined model is a probability distribution
     \item For each $s_k$, we calculated its \emph{expectation} $E(s_k|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})$
     \item The expectation can be seen as the number of occurrence for $s_k$
@@ -330,249 +617,8 @@ term domain) from the collection by viewing the entire collection as one languag
       x^{*} = \arg\max_x \prod_k \Pr(s_k|x)^{E(s_k|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})}
     \]
     \item This simple technique reduces to KL-divergence retrieval framework \cite{zhai2001language}
-  }
+  \end{itemize}
 }
 
-\f{Evaluation}{
-  \ul{Setup}{
-    \item Task: Chinese-to-Chinese monolingual document retrieval
-    \item The benchmark is available as part of NTCIR-4 Test Collection CLIR Task
-    \item 381,681 newswire articles and 59 test topics were involved
-    \item We used only title queries in the experiment 
-    \item Primary representation: CJK-character bigrams + English word unigrams
-    \item Secondary representation: High-discriminative CJK-character bigrams \ull{
-      \item I.e., top-500,000 CJK-character bigrams ranked by tf-idf scores
-      \item The minimum support for each bigram was 5
-      \item The number (500,000) was determined through experimentation
-    }
-  }
-}
-
-\f{Evaluation}{
-  \ul{Baseline methods}{
-    \item We used the Lemur toolkit to build up strong baselines
-    \item Participating runs include tf-idf, okapi, and indri (a language-model variant)
-    \item Query refinement/expansion for each run: \ull{
-      \item tf-idf: pseudo relevance-feedback
-      \item okapi: pseudo relevance-feedback
-      \item indri: adapted relevance model
-    }
-    \item The number of feedback documents: 20
-    \item The number of feedback terms: 100
-    \item Our refined model was truncated (preserving only top-100's)
-    \item Performance was measured in terms of mean average-precision and precision-at-5
-  }
-}
-
-\f{Evaluation Result}{
-  \begin{table}[ht!]
-    \scriptsize
-    \centering
-    \begin{tabular}{lllll}
-      Method & MAP (+\%) & P@5 (+\%) & MAP (+\%) & P@5 (+\%) \\
-      \hline
-      {\tt tfidf} & 0.181 & 0.264 & 0.213 & 0.335 \\
-      {\tt tfidf} + PRF & 0.217 (+19.9\%) & 0.295 (+11.7\%) & 0.264 (+23.9\%) & 0.383 (+14.3\%) \\
-      {\tt okapi} & 0.185 & 0.278 & 0.223 & 0.356 \\
-      {\tt okapi} + PRF & 0.224$^{**}$ (+21.1\%) & 0.315 (+13.3\%) & 0.270$^{**}$ (+21.1\%) & 0.400 (+12.4\%) \\
-      \hline
-      {\tt indri} & 0.174 & 0.258 & 0.216 & 0.346 \\
-      {\tt indri} + Relevance & 0.180 (+3.4\%) & 0.271 (+5.3\%) & 0.222 (+2.8\%) & 0.342 (-1.2\%) \\
-      {\tt lm} & 0.170 & 0.251 & 0.209 & 0.322 \\
-      {\tt lm} + Refinement & 0.207$^*$ (+21.8\%) & 0.302 (+20.3\%) & 0.261$^*$ (+24.9\%) & 0.369 (+14.6\%) \\
-      \\
-    \end{tabular}
-
-    \caption{The result for the query refinement task.  Retrieval methods listed in the
-    upper-half are tfidf-based, while those in the lower-half are
-    language-model-based.  The overall top-performer is indicated with two
-    asterisks in the superscript, while the best run in the language-modeling
-    side is indicated with one asterisk.}
-    \label{t:query-modeling}
-  \end{table}
-}
-
-\subsection{Retrieving Query-Relevant Facets}
-
-\f{Retrieving Query-Relevant Facets}{
-  \ul{Faceted search as a two-phase extension of the ordinary retrieval}{
-    \item See \cite{hearst2002finding,yee2003faceted,roy2008minimum} for detail about faceted search
-    \item One populates a set of documents by submitting the query
-    \item One discovers facets by exploiting the associations between facets and documents 
-    \item How do we present the facets?
-  }
-  \par
-  \ul{Count-based presentation schemes}{
-    \item Facets are sorted in descending order of the number of counts
-    \item It is easy to implement (one more pass through the forward index)
-    \item It treats all the facet count as equally importatnt \ull{
-      \item e.g., A facet count in document \#1 is as good as in document \#100
-    }
-    \item Critics \#1: It disregards the notion of relevance
-    \item Critics \#2: Users can be mislead when consulting the results to guide the subsequence exploratory search
-  }
-}
-
-\f{Retrieval Query-Relevant Facets}{
-  \ul{Idea}{
-    \item Encode facets in the secondary representations of the corresponding associated documents
-    \item Run the proposed model
-  }
-  \par
-  \ul{Why using the secondary representation?}{
-    \item This task is relevant to (but not equivalent to) expert finding 
-    \item Use $\Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})$ to sort the facets
-    \item Consider this method as a relevance-weighted version of the count-based approach
-    \item It is efficient: fast as ad-hoc retrieval (with a little overhead forwarding scores)
-  }
-}
-
-\f{Evaluation}{
-  \ul{Setup}{
-    \item Task: Retrieving relevant facets on Tan-Hsin Corpus
-    \item The test data comprises 15,314 historical documents, each with person name facets
-    \item 105 query topics are collected from the query logs 
-    \item 28 topics were randomly selected and used in the experiment
-    \item Relevance judgment was manually made for all the top 100 facets returned by the baseline retreiver
-  }
-  \par
-  \ul{Methods}{
-    \item \texttt{baseline}: The count-based scheme
-    \item \texttt{uniform-prior}: The proposed method, using uniform prior for $\beta$
-    \item \texttt{smoothed-prior}: The proposed method, using Dirichlet-smoothed prior for $\beta$
-  }
-}
-
-\f{Evaluation Result}{
-  \begin{table}[ht!]
-    \centering
-    \begin{tabular}{llll}
-      Method & & MAP & P@10 \\
-      \hline
-      {\tt baseline} & & 0.2996 & 0.3857 \\
-      {\tt uniform-prior} & $\beta = 0$ & 0.5775 & 0.6179\\
-      & $\beta = 1$ & 0.5899$^*$ & 0.6464$^*$ \\
-      & $\beta = 10$ & 0.5877 & 0.6464$^*$ \\
-      {\tt smoothed-prior} & $\mu = 0.01$ & 0.5781 & 0.6179 \\
-      & $\mu = 1$ & 0.5782 & 0.6214 \\
-      & $\mu = 100$ & 0.4956 & 0.5429 \\
-      \\
-    \end{tabular}
-    \caption{The performance results for all the test runs.  The top-performer is indicated by an asterisk in the superscript.}
-    \label{t:performance}
-  \end{table}
-}
-
-\section{Discussion and Concluding Remarks}
-\f{Discussion and Concluding Remarks}{
-  \ul{Our proposed framework...}{
-    \item Enables the use of a secondary document representation in language modeling
-    \item Offers interoperability between two different term domains
-    \item Exploits the index structure to achieve high efficiency
-  }
-
-  \ul{Evaluation results}{
-    \item Two applications were introduced in this work
-    \item In the first task, the model beaten the relevance model baseline by 17.6\% (rigid) and 22.7\% (relax) in 
-    MAP \ull{ 
-      \item It achieved comparable performance as {\tt tfidf} with pseudo-relevance feedback
-      \item The model alone improved the MAP of the regular language modeling run by 21.8\% (rigid) and 24.9\% (relax)
-    }
-    \item In the second application, the baseline performance was improved by
-    roughly 100\% in MAP.  
-  }
-}
-
-\section<presentation>*{\appendixname}
-
-\begin{frame}[allowframebreaks]
-  \frametitle{References}
-  \small
-  \bibliography{slides}
-  \bibliographystyle{alpha}
-\end{frame}
-
-\f{Inference: Step by Step}{
-  \mydef[Inducing the first term in the summation]{
-    \begin{eqnarray}
-      \Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) &=& \sum_{x \in
-      [1, N]} \alert{\Pr(y|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})}
-      \Pr(x|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
-      && \nonumber\\
-      \Pr(y|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})
-      &=& \int \Pr(y, \phi^{(x)}|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \mathrm{d}\phi^{(x)} \nonumber\\
-      &=& \int \Pr(y|\phi^{(x)}, x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) 
-      \Pr(\phi^{(x)}|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \mathrm{d}\phi^{(x)} \nonumber\\
-      &=& \int \Pr(y|\phi^{(x)}, x) \Pr(\phi^{(x)}|d_x, \mathbf{s}_x) \mathrm{d}\phi^{(x)} \label{eq:first}
-    \end{eqnarray}
-  }
-}
-
-\f{Inference: Step by Step}{
-  \mydef[Inducing the second term in the summation]{
-    \begin{eqnarray}
-      \Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) &=& \sum_{x \in
-      [1, N]} \Pr(y|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})
-      \alert{\Pr(x|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})} \nonumber\\
-      && \nonumber\\
-      \Pr(x|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})
-      &=& \frac{\Pr(\mathbf{q}|x, \mathbf{t}, \mathbf{d}, \mathbf{s}) \Pr(x|\mathbf{t}, \mathbf{d}, \mathbf{s})}
-      {\Pr(\mathbf{q}|\mathbf{t}, \mathbf{d}, \mathbf{s})} \nonumber\\
-      &\propto& \Pr(\mathbf{q}|x, \mathbf{t}, \mathbf{d}, \mathbf{s}) \Pr(x|\mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
-      &=& \left( \int \Pr(\mathbf{q}, \tau^{(x)}|x, \mathbf{t}, \mathbf{d}, \mathbf{s}) \mathrm{d}\tau^{(x)} \right) 
-      \Pr(x|\mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
-      &=& \left( \int \Pr(\mathbf{q}|\tau^{(x)}, x, \mathbf{t}, \mathbf{d}, \mathbf{s}) 
-      \Pr(\tau^{(x)}|x, \mathbf{t}, \mathbf{d}, \mathbf{s}) \mathrm{d}\tau^{(x)} \right) 
-      \Pr(x|\mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
-      &=& \int \Pr(\mathbf{q}|\tau^{(x)}, x) \Pr(\tau^{(x)}|d_x, \mathbf{t}_x) \mathrm{d}\tau^{(x)} \Pr(x) \label{eq:second}
-    \end{eqnarray}
-  }
-}
-
-\f{Inference: Step by Step}{
-  \ul{Conjugate priors}{
-    \item In Bayesian theory, the prior $\Pr(\theta)$ and posterior $\Pr(\theta|x)$
-    are called conjugate distributions, if the posterior are in the same family as the prior
-    \item Usually, it can be viewed as updating the prior belief on
-    $\theta$ after observing a sequence of outcome $x$.
-    \item Conjugate prior is an algebraically ``syntactic sugar'' to simplify inference
-    \item Fast fact: Dirichlets are conjugate to multinomials \ull{
-      \item $\Pr(\phi^{(x)}|x, y, d_x, \mathbf{s}_x) \sim \mathrm{Dirichlet}(\{\beta_k + c_{k,x}; \forall k\})$
-      \item $\Pr(\tau^{(x)}|x, \mathbf{q}, d_x, \mathbf{t}_x) \sim \mathrm{Dirichlet}(\{\alpha_i + c_{i,x} + c_{i,q}; \forall i\})$
-    }
-  }
-  \par
-  \ul{Care for going into details?}{
-    \item Detailed derivation is too terrifying/boring to be presented here
-    \item Check out Gelman et al. for good reference on Bayesian statistics
-  }
-}
-
-\f{Inference: Revisited}{
-  \mydef[Integrating out the prior]{
-    \begin{eqnarray}
-    \int \Pr(y|x, \phi^{(x)}) \Pr(\phi^{(x)}|d_x, \mathbf{s_x}) \mathrm{d}\phi^{(x)} 
-    &=& \frac{\beta_y + c_{y,x}}{\sum_k \beta_k + c_{k,x}} \\
-    \int \Pr(\mathbf{q}| x, \tau^{(x)}) \Pr(\tau^{(x)}|d_x, \mathbf{t_x})\mathrm{d}\tau^{(x)} 
-    &=& \frac{\mathcal{B}(\{\alpha_i + c_{i,x} + c_{i,q} \})}{\mathcal{B}(\{\alpha_i + c_{i,x} \})} 
-    \end{eqnarray}
-  }
-  \par
-  \mydef[Voila!]{
-    \begin{eqnarray}
-      \Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) 
-      &=& \sum_{x \in [1, N]} \Pr(y|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \Pr(x|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
-      &\propto& \alert{\sum_{x \in [1, N]} \frac{\beta_y + c_{y,x}}{\sum_k \beta_k + c_{k,x}} \frac{\mathcal{B}(\{\alpha_i + c_{i,x} + c_{i,q} \})}{\mathcal{B}(\{\alpha_i + c_{i,x} \})} \Pr(x)}
-    \end{eqnarray}
-  }
-}
-
-\frame{
-  \begin{center}
-    \Huge{Thanks for your attention!}
-    \par
-    Any Question?
-  \end{center}
-}
 
 \end{document}
