@@ -1,7 +1,9 @@
 \documentclass[bigger]{beamer}
 
+\usepackage{pst-all} % PSTricks
+\usepackage{tikz}
+\usetikzlibrary{arrows,shapes,trees}
 %--------------------------------------------------
-% \usepackage{pst-all} % PSTricks
 % \usepackage{com.braju.pstricks} % The package that really does the hard work
 % \usepackage{com.braju.graphicalmodels} % The package that really does the hard work
 %-------------------------------------------------- 
@@ -19,6 +21,7 @@
     \structure{\textbf{\insertframetitle}}\par
     \end{centering}
   }
+  \setbeamertemplate{footline}[page number]
 }
 
 \usepackage[english]{babel}
@@ -81,7 +84,7 @@ National Taiwan University, Taiwan}
 \f{Outline}{ \tableofcontents }
 
 \section{Introduction}
-\f{Homogeneous Assumption in IR}{
+\f{Homogeneity Assumption in IR}{
   
   Texts in a document is usually modeled as a set of terms, and every document
   possesses \textbf{only one} such representation
@@ -116,7 +119,7 @@ National Taiwan University, Taiwan}
   The data differ in scope, specificity, and semantics
 
   \begin{itemize}
-    \item Under the homogeneous assumption, a document needs to be represented as a weighted combination
+    \item Under the homogeneity assumption, a document needs to be represented as a weighted combination
     \item Is there any other way out?
   \end{itemize}
 }
@@ -128,7 +131,7 @@ National Taiwan University, Taiwan}
   \begin{itemize}
     \item It is easy to incorporate heterogeneous data
     \item Retrieval can then be operated in different semantic layers
-    \item Interoperation between layers is possible \\
+    \item Interoperability between layers is possible \\
     (and can be useful)
   \end{itemize}
 
@@ -141,18 +144,45 @@ National Taiwan University, Taiwan}
   \end{itemize}
 }
 
+\f{Example: Articles and Authors}{
+  \begin{table}
+    \centering
+    \footnotesize
+    \begin{tabular}{l|p{6cm}|p{3cm}}
+      & \textbf{Primary} (fulltext) & \textbf{Secondary} (author) \\
+      \hline
+      $\textrm{Article}_1$ & The sparsity which is implicit in MR images is exploited to significantly undersample
+      k-space. Some MR images such as angiograms... & $\textrm{Author}_1$, $\textrm{Author}_4$ \\
+      \hline
+      $\textrm{Article}_1$ & Recently, a new direction in signal processing ``Compressed Sensing'' is being actively
+      developed. A number of authors have pointed out... & $\textrm{Author}_2$, $\textrm{Author}_1$, $\textrm{Author}_3$ \\
+      \hline
+      $\ldots$ & $\ldots$ & $\ldots$
+    \end{tabular}
+  \end{table}
+
+  \only<1>{
+    Can we estimate this probability?
+    \[ \Pr(\underbrace{\textrm{Author}_3}_\text{secondary term} | \underbrace{\textrm{``language modeling''}}_\text{primary term}) \]
+  }
+  \only<2>{
+    Or, given a list of terminologies $T$, can we solve this?
+    \[ t^* = \arg\max_{t \in T} \Pr(\underbrace{\textrm{Author}_3}_\text{secondary term} | \underbrace{t}_\text{primary term}) \]
+  }
+}
+
 \f{Challenge: The Model}{
 
-  To estimate the probability $\Pr(s|t)$, given that a document is indexed in
+  Goal: To estimate the probability $\Pr(s|t)$, given that a document is indexed in
   two different vocabularies $T$ and $S$ (called the \emph{primary} and the
   \emph{secondary} term space, respectively)
 
   \vskip 1em
-  More specifically, we want to estimate $\Pr(s|\mathbf{q})$ given the user query $\mathbf{q} \subset T$ 
+  Specifically, we want to estimate $\Pr(s|\mathbf{q})$ given the user query $\mathbf{q} \subset T$ 
 
   \begin{itemize}
     \item $\Pr(s|t)$ is the key to enable interactions
-    \item It led us to a generalization of the relevance model \cite{lavrenko2001relevance}
+    \item It leads us to a generalization of the relevance model \cite{lavrenko2001relevance}
   \end{itemize}
 }
 
@@ -185,7 +215,7 @@ National Taiwan University, Taiwan}
   \vskip 1em
   Where do we go from here?
   \begin{itemize}
-    \item We introduce an adapation of the relevance model \cite{lavrenko2001relevance}
+    \item We introduce an adaptation of the relevance model \cite{lavrenko2001relevance}
     (to cases where two representations are appropriate)
     \item We derive the model using Bayesian generative approach
     \item Two applications are introduced to evaluate our work 
@@ -205,17 +235,13 @@ National Taiwan University, Taiwan}
   \begin{itemize}
 
     \only<1>{ \item Document $d_j$ is associated with two sets of terms $T_j$
-    and $S_j$  }
+    and $S_j$  \item Elements in $T_j$ and $S_j$ are drawn from two
+    multinomials $\tau^{(j)}$ and $\phi^{(j)}$, respectively }
     
-    \only<2>{ \item Elements in $T_j$ and $S_j$ are drawn from two multinomials
-    $\tau^{(j)}$ and $\phi^{(j)}$, respectively  }
+    \only<2>{ \item Two Dirichlets priors $\{\alpha_i; i \in [1, |T|]\}$ and
+    $\{\beta_k; k \in [1, |S|]\}$ are assumed \item Some unknown document has
+    generated $\mathbf{q}$ and $y$ }
     
-    \only<3>{ \item Two Dirichlets priors $\{\alpha_i; i \in [1, |T|]\}$ and
-    $\{\beta_k; k \in [1, |S|]\}$ are assumed }
-
-    \only<4>{ \item Some unknown document has generated $\mathbf{q}$ and $y$
-    (an unknown secondary term)}
-
   \end{itemize}
 
 \end{frame}
@@ -224,7 +250,7 @@ National Taiwan University, Taiwan}
   For each document $d_j$:
   \begin{enumerate}
     \item $\tau^{(j)} \sim \textrm{Dirichlet}(\alpha_i; i \in [1, |T|])$
-    \item $\phi^{(j)} \sim \textrm{Dirichlet}(\beta_k; i \in [1, |S|])$
+    \item $\phi^{(j)} \sim \textrm{Dirichlet}(\beta_k; k \in [1, |S|])$
     \item For $i \in \{ 1, \ldots, |T_j| \}$, $t_i \sim \textrm{Mult}(\tau^{(j)})$ 
     \item For $k \in \{ 1, \ldots, |S_j| \}$, $s_k \sim \textrm{Mult}(\phi^{(j)})$ 
   \end{enumerate}
@@ -291,7 +317,7 @@ National Taiwan University, Taiwan}
   Uniform prior
   \begin{itemize}
     \item $U(c) = (c, c, \ldots, c)$
-    \item Parameterized by some constant $c$
+    \item Parametrized by some constant $c$
   \end{itemize}
   
   \vskip1em
@@ -299,7 +325,7 @@ National Taiwan University, Taiwan}
   \begin{itemize}
     \item $D(\mu) = (\mu \Pr(w_1), \mu \Pr(w_2), \ldots, \mu \Pr(w_n))$ 
     \item $\Pr(w_k)$: the probability of generating term $w_k$ (from either term space) from the collection 
-    \item Parameterized by some constant $\mu$
+    \item Parametrized by some constant $\mu$
     \item Widely-used smoothing method in IR \cite{zhai2004study}
   \end{itemize}
 }
@@ -330,6 +356,11 @@ National Taiwan University, Taiwan}
 \subsection{Query Refinement Using the Secondary Representation}
 
 \f{Query Refinement Using the Secondary Representation}{
+  \begin{figure}
+    \centering
+    \includegraphics[width=8cm]{qr}
+  \end{figure}
+
   Idea: A two-stage retrieval approach
   \begin{itemize}
     \item Make an initial run over all the terms (primary)
@@ -429,7 +460,7 @@ National Taiwan University, Taiwan}
     \item Critics \#1: It disregards the notion of relevance
 
     \item Critics \#2: Users can be mislead when consulting the results to
-    guide the subsequence exploratory search
+    guide the subsequent exploratory search
 
   \end{itemize}
 
@@ -608,7 +639,7 @@ National Taiwan University, Taiwan}
 }
 
 \f{Query Refinement Using the Secondary Representation}{
-  Facilatating the second-run retrieval
+  Facilitating the second-run retrieval
   \begin{itemize}
     \item The refined model is a probability distribution
     \item For each $s_k$, we calculated its \emph{expectation} $E(s_k|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})$
