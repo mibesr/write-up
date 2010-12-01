@@ -73,7 +73,7 @@ export LC_ALL		?= C
 #includes.xvg		?=
 #includes.svg		?=
 #includes.eps.gz	?=
-#includes.eps		?=
+includes.eps		?= model.eps qr.eps
 #
 # If you list files or wildcards here, they will *not* be cleaned - default is
 # to allow everything to be cleaned.
