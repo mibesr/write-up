@@ -570,7 +570,7 @@ National Taiwan University, Taiwan}
 
 \f{Inference: Step by Step}{
   Inducing the first term in the summation
-  \begin{eqnarray}
+  \begin{eqnarray*}
     \Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) &=& \sum_{x \in
     [1, N]} \alert{\Pr(y|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})}
     \Pr(x|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
@@ -580,27 +580,29 @@ National Taiwan University, Taiwan}
     &=& \int \Pr(y|\phi^{(x)}, x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) 
     \Pr(\phi^{(x)}|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \mathrm{d}\phi^{(x)} \nonumber\\
     &=& \int \Pr(y|\phi^{(x)}, x) \Pr(\phi^{(x)}|d_x, \mathbf{s}_x) \mathrm{d}\phi^{(x)} \label{eq:first}
-  \end{eqnarray}
+  \end{eqnarray*}
 }
 
 \f{Inference: Step by Step}{
   Inducing the second term in the summation
-  \begin{eqnarray}
+  \begin{eqnarray*}
     \Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) &=& \sum_{x \in
     [1, N]} \Pr(y|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})
     \alert{\Pr(x|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})} \nonumber\\
     && \nonumber\\
     \Pr(x|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s})
-    &=& \frac{\Pr(\mathbf{q}|x, \mathbf{t}, \mathbf{d}, \mathbf{s}) \Pr(x|\mathbf{t}, \mathbf{d}, \mathbf{s})}
-    {\Pr(\mathbf{q}|\mathbf{t}, \mathbf{d}, \mathbf{s})} \nonumber\\
+%--------------------------------------------------
+%     &=& \frac{\Pr(\mathbf{q}|x, \mathbf{t}, \mathbf{d}, \mathbf{s}) \Pr(x|\mathbf{t}, \mathbf{d}, \mathbf{s})}
+%     {\Pr(\mathbf{q}|\mathbf{t}, \mathbf{d}, \mathbf{s})} \nonumber\\
+%-------------------------------------------------- 
     &\propto& \Pr(\mathbf{q}|x, \mathbf{t}, \mathbf{d}, \mathbf{s}) \Pr(x|\mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
     &=& \left( \int \Pr(\mathbf{q}, \tau^{(x)}|x, \mathbf{t}, \mathbf{d}, \mathbf{s}) \mathrm{d}\tau^{(x)} \right) 
     \Pr(x|\mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
     &=& \left( \int \Pr(\mathbf{q}|\tau^{(x)}, x, \mathbf{t}, \mathbf{d}, \mathbf{s}) 
-    \Pr(\tau^{(x)}|x, \mathbf{t}, \mathbf{d}, \mathbf{s}) \mathrm{d}\tau^{(x)} \right) 
-    \Pr(x|\mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
+    \Pr(\tau^{(x)}|x, \mathbf{t}, \mathbf{d}, \mathbf{s}) \mathrm{d}\tau^{(x)} \right) \nonumber\\
+    && \Pr(x|\mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
     &=& \int \Pr(\mathbf{q}|\tau^{(x)}, x) \Pr(\tau^{(x)}|d_x, \mathbf{t}_x) \mathrm{d}\tau^{(x)} \Pr(x) \label{eq:second}
-  \end{eqnarray}
+  \end{eqnarray*}
 }
 
 \f{Inference: Conjugate Priors}{
@@ -622,20 +624,20 @@ National Taiwan University, Taiwan}
 
 \f{Inference: Revisited}{
   Now, integrating out the priors
-  \begin{eqnarray}
+  \begin{eqnarray*}
   \int \Pr(y|x, \phi^{(x)}) \Pr(\phi^{(x)}|d_x, \mathbf{s_x}) \mathrm{d}\phi^{(x)} 
   &=& \frac{\beta_y + c_{y,x}}{\sum_k \beta_k + c_{k,x}} \\
   \int \Pr(\mathbf{q}| x, \tau^{(x)}) \Pr(\tau^{(x)}|d_x, \mathbf{t_x})\mathrm{d}\tau^{(x)} 
   &=& \frac{\mathcal{B}(\{\alpha_i + c_{i,x} + c_{i,q} \})}{\mathcal{B}(\{\alpha_i + c_{i,x} \})} 
-  \end{eqnarray}
+  \end{eqnarray*}
 
   \vskip 1em
-  We get to the closed-form solution
-  \begin{eqnarray}
+  We obtain the closed-form solution
+  \begin{eqnarray*}
     \Pr(y|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) 
     &=& \sum_{x \in [1, N]} \Pr(y|x, \mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \Pr(x|\mathbf{q}, \mathbf{t}, \mathbf{d}, \mathbf{s}) \nonumber\\
     &\propto& \alert{\sum_{x \in [1, N]} \frac{\beta_y + c_{y,x}}{\sum_k \beta_k + c_{k,x}} \frac{\mathcal{B}(\{\alpha_i + c_{i,x} + c_{i,q} \})}{\mathcal{B}(\{\alpha_i + c_{i,x} \})} \Pr(x)}
-  \end{eqnarray}
+  \end{eqnarray*}
 }
 
 \f{Query Refinement Using the Secondary Representation}{
