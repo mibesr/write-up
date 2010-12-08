@@ -1,0 +1,124 @@
+\documentclass{article}
+
+\begin{document}
+\author{Ruey-Cheng Chen {\tt <cobain@turing.csie.ntu.edu.tw>}}
+\title{Effective STL: For Impatients}
+\maketitle
+
+\section{Containers}
+
+\paragraph{Choose your containers with care.}  Read the fabulous manual before
+making your choice.  Containers come with subtle differences.  There is no such
+thing called the default container.
+
+\paragraph{Beware the illusion of container-independent code.} Containers are
+not designed for interchangable use.  Pick one design and stick with it.
+
+\paragraph{Make copying cheap and correct for objects in containers.} Use {\tt
+vector} to prevent constructing a large number of objects
+when the container is created.  Or store {\tt T*} in array instead.
+
+\paragraph{Call {\tt empty} instead of checking {\tt size()} against zero.} For
+certain containers, checking {\tt size()} is not a constant-time operation.
+
+\paragraph{Prefer range member functions to their single-element counterparts.}
+Avoid writing the loop by yourself.  Range member functions (i.e., range
+constructor, {\tt insert()}, {\tt erase()}, {\tt assign()}) can be rather
+straightfoward and efficient.  
+
+\paragraph{Be alert for C++'s most vexing parse.}  Here it is:
+\begin{verbatim}
+  ifstream dataFile("ints.dat");
+  list<int> data(istream_iterator<int>(dataFile),
+                 istream_iterator<int>());
+\end{verbatim}
+
+\paragraph{When using containers of {\tt new}ed pointers, remember to {\tt
+delete} the pointers before the container is destroyed.}  The container has no
+right to delete these objects for you.  Write a {\tt for\_each} or use {\tt
+boost::shared\_ptr} to work around.
+
+\paragraph{Never create containers of {\tt auto\_ptr}s.}  Because 1) it can
+cause problems and 2) it is prohibited in the standard.
+
+\paragraph{Choose carefully among erasing options.} Beware iterator
+invalidation when erasing elements.  Also note that the after-erase iterator
+position can be a bit tricky to handle.  Here is the rule of thumbs.
+
+\begin{itemize} \item Erase a certain value: use the erase-remove idiom, {\tt
+list::remove} (if using {\tt list}), or container's {\tt erase} function.
+\item Erase values that satisfy certain condition: use the erase-remove\_if idoim, {\tt
+list::remove\_if}, or {\tt remove\_copy\_if} and then {\tt swap}.  \item Loop:
+Update the iterator every time for sequence containers, or postincrement the
+iterator for associative containers \end{itemize}
+
+\paragraph{Be aware of allocator conventions and restrictions.}
+
+\paragraph{Understand the legitimate uses of custom allocators.}
+
+\paragraph{Have realistic expectations about the thread safety of STL
+containers.}  Multi-read and multi-write are safe.  Otherwise, use something
+like {\tt boost::mutex} just to be sure.
+
+\section{{\tt vector} and {\tt string}}
+
+\paragraph{Prefer {\tt vector} and {\tt string} to dynamically allocated arrays.}
+
+\paragraph{Use {\tt reserve} to avoid unnecessary reallocations.}
+
+\paragraph{Be aware of variations in {\tt string} implementations.}
+
+\paragraph{Know how to pass {\tt vector} and {\tt string} data to legacy APIs.}
+
+\paragraph{Use ``the {\tt swap} trick'' to trim excess capacity.}
+
+\paragraph{Avoid using {\tt vector<bool>}.}
+
+\section{Associative Containers}
+
+\paragraph{Understand the difference between equality and equivalence.}
+\paragraph{Specify comparison types for associative containers of pointers.}
+\paragraph{Always have comparison functions return {\tt false} for equal values.}
+\paragraph{Avoid in-place key modification in {\tt set} and {\tt multiset}.}
+\paragraph{Consider replacing associative containers with sorted {\tt vector}s.}
+\paragraph{Choose carefully between {\tt map::operator[]} and {\tt map::insert} when efficiency is important.}
+\paragraph{Familiarize yourself with the nonstandard hashed containers.}
+
+\section{Iterators}
+
+\paragraph{Prefer {\tt iterator} to {\tt const\_iterator}, {\tt reverse\_iterator}, and {\tt const\_reverse\_iterator}.}
+\paragraph{Use {\tt distance} and {\tt advance} to convert a container's {\tt const\_iterator}s to {\tt iterator}s.}
+\paragraph{Understand how to use a {\tt reverse\_iterator}'s base {\tt iterator}.}
+\paragraph{Consider {\tt istreambuf\_iterator}s for character-by-character input.}
+
+\section{Algorithms}
+
+\paragraph{Make sure destination ranges are big enough.}
+\paragraph{Know your sorting options.}
+\paragraph{Follow {\tt remove}-like algorithms by {\tt erase} if you really want to remove something.}
+\paragraph{Be wary of {\tt remove}-like algorithms on containers of pointers.}
+\paragraph{Note which algorithms expect sorted ranges.}
+\paragraph{implement simple case-insensitive string comparisons via {\tt mismatch} or {\tt lexicographical\_compare}.}
+\paragraph{Understand the proper implementation of {\tt copy\_if}.}
+\paragraph{Use {\tt accumulate} or {\tt for\_each} to summarize ranges.}
+
+\section{Functors, Functor Classes, Functions, etc.}
+
+\paragraph{Design functor classes for pass-by-value.}
+\paragraph{Make predicates pure functions.}
+\paragraph{Make functor classes adaptable.}
+\paragraph{Understand the reasons for {\tt ptr\_fun}, {\tt mem\_fun}, and {\tt mem\_fun\_ref}.}
+\paragraph{Make sure {\tt less<T>} means {\tt operator<}.}
+
+\section{Programming with the STL}
+
+\paragraph{Prefer algorithm calls to hand-written loops.}
+\paragraph{Prefer memeber functions to algorithms with teh same names.}
+\paragraph{Distinguish among {\tt count}, {\tt find}, {\tt binary\_search}, {\tt lower\_bound}, {\tt upper\_bound}, and {\tt equal\_range}.}
+\paragraph{Consider function objects instead of functions as algorithm parameters.}
+\paragraph{Avoid producing write-only code.}
+\paragraph{Always {\tt \#include} the proper headers.}
+\paragraph{Learn to decipher STL-related compiler diagnostics.}
+\paragraph{Familiarize yourself with STL-related web sites.}
+
+\end{document}
