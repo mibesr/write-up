@@ -1,3 +1,7 @@
 *.dvi
 *.pdf
 *.ps
+*.log
+*.aux*
+*.d
+*.fls
