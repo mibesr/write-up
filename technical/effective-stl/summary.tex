@@ -2,8 +2,12 @@
 
 \begin{document}
 \author{Ruey-Cheng Chen {\tt <cobain@turing.csie.ntu.edu.tw>}}
-\title{Effective STL: For Impatients}
+\title{Instant Refresher for {\it Effective STL}}
 \maketitle
+
+\begin{abstract}
+This write-up is intensionally kept short, biased, and unorganized.
+\end{abstract}
 
 \section{Containers}
 
@@ -56,23 +60,41 @@ iterator for associative containers \end{itemize}
 
 \paragraph{Understand the legitimate uses of custom allocators.}
 
-{\bf Have realistic expectations about the thread safety of STL
+\paragraph{Have realistic expectations about the thread safety of STL
 containers.}  Multi-read and multi-write are safe.  Otherwise, use something
 like {\tt boost::mutex} just to be sure.
 
 \section{{\tt vector} and {\tt string}}
 
-\paragraph{Prefer {\tt vector} and {\tt string} to dynamically allocated arrays.}
+\paragraph{Prefer {\tt vector} and {\tt string} to dynamically allocated
+arrays.} The title pretty much explains everything.
 
-\paragraph{Use {\tt reserve} to avoid unnecessary reallocations.}
+\paragraph{Use {\tt reserve} to avoid unnecessary reallocations.}  Think about
+the algorithm that keeps a dynamic-vector growing.  This can be rather
+intuitive if you expect the number of elements to be pushed into the vector go
+high.
 
 \paragraph{Be aware of variations in {\tt string} implementations.}
+Different implementations returns different values for {\tt sizeof(string)}. 
 
 \paragraph{Know how to pass {\tt vector} and {\tt string} data to legacy APIs.}
+Retrieve a legacy-friendly {\tt const} string pointer by using {\tt
+string::c\_str()}.  Since the internal structure of a {\tt vector} has to be
+contiguous, try taking advantage of that, e.g., {\tt fillArray(\&v[0],
+v.size())}.
 
 \paragraph{Use ``the {\tt swap} trick'' to trim excess capacity.}
+This is the fabulous trick:
+\begin{verbatim}
+  vector<Contestant> v;
+  string s;
+  ...
+  vector<Contestant>().swap(v);
+  string().swap(s);
+\end{verbatim}
 
-\paragraph{Avoid using {\tt vector<bool>}.}
+\paragraph{Avoid using {\tt vector<bool>}.} Because it is not an STL container
+and it does not hold {\tt bool}s.
 
 \section{Associative Containers}
 
