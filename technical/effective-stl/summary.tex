@@ -61,8 +61,8 @@ iterator for associative containers \end{itemize}
 \paragraph{Understand the legitimate uses of custom allocators.}
 
 \paragraph{Have realistic expectations about the thread safety of STL
-containers.}  Multi-read and multi-write are safe.  Otherwise, use something
-like {\tt boost::mutex} just to be sure.
+containers.}  Multi-read and multi-write are safe.  Otherwise, use 
+{\tt boost::mutex} just to be sure.
 
 \section{{\tt vector} and {\tt string}}
 
@@ -98,49 +98,138 @@ and it does not hold {\tt bool}s.
 
 \section{Associative Containers}
 
-\paragraph{Understand the difference between equality and equivalence.}
+\paragraph{Understand the difference between equality and equivalence.} Note
+the difference between equality ({\tt operator==}) and equivalence (
+{\tt operator<} or comparison functors).
+
 \paragraph{Specify comparison types for associative containers of pointers.}
-\paragraph{Always have comparison functions return {\tt false} for equal values.}
+The default comparison function for {\tt std::set<T*>} is {\tt std::less<T*>},
+which might not be what you want.  
+
+\paragraph{Always have comparison functions return {\tt false} for equal
+values.} Conventionally, checking for equivalence is done by evaluating {\tt
+!less(a, b) \&\& !less(b, a) }.  Replacing {\tt less} with {\tt less\_equal} can
+break things.
+
 \paragraph{Avoid in-place key modification in {\tt set} and {\tt multiset}.}
-\paragraph{Consider replacing associative containers with sorted {\tt vector}s.}
-\paragraph{Choose carefully between {\tt map::operator[]} and {\tt map::insert} when efficiency is important.}
+Key modification can affect the element order.  Containers do not automatically
+renew its structure if you do so.
+
+\paragraph{Consider replacing associative containers with sorted {\tt
+vector}s.} This is purely for efficiency.  A lot of tasks can still be done by
+operating on top of a sorted {\tt vector} (e.g., {\tt binary\_search}, {\tt
+nth\_element}).
+
+\paragraph{Choose carefully between {\tt map::operator[]} and {\tt map::insert}
+when efficiency is important.}  Prefer {\tt map::insert} if you only need to
+insert an element.  Also check out the goodies in this item: {\tt
+efficientAddOrUpdate(m, k, v)}.
+
 \paragraph{Familiarize yourself with the nonstandard hashed containers.}
+Check on {\tt std::unordered\_map} and {\tt std::unordered\_set}.
 
 \section{Iterators}
 
-\paragraph{Prefer {\tt iterator} to {\tt const\_iterator}, {\tt reverse\_iterator}, and {\tt const\_reverse\_iterator}.}
-\paragraph{Use {\tt distance} and {\tt advance} to convert a container's {\tt const\_iterator}s to {\tt iterator}s.}
+\paragraph{Prefer {\tt iterator} to {\tt const\_iterator}, {\tt
+reverse\_iterator}, and\\
+{\tt const\_reverse\_iterator}.}  Stick to {\tt
+iterator} if you do not have a preference.  An {\tt iterator} can be implicitly
+converted to any of the others.
+
+\paragraph{Use {\tt distance} and {\tt advance} to convert a container's {\tt
+const\_iterator}s to {\tt iterator}s.}  This is how it's done.
+\begin{verbatim}
+  advance(i, distance<T::const_iterator>(i, ci);
+\end{verbatim}
+
 \paragraph{Understand how to use a {\tt reverse\_iterator}'s base {\tt iterator}.}
+
 \paragraph{Consider {\tt istreambuf\_iterator}s for character-by-character input.}
+Get familiar with this super-cool {\tt istream\_iterator} sibling.
 
 \section{Algorithms}
 
-\paragraph{Make sure destination ranges are big enough.}
-\paragraph{Know your sorting options.}
-\paragraph{Follow {\tt remove}-like algorithms by {\tt erase} if you really want to remove something.}
+\paragraph{Make sure destination ranges are big enough.}  Use {\tt inserter}s
+to simplify the insertion into a {\tt vector}.  Calling {\tt reserve} in
+advance might also be a good idea.
+
+\paragraph{Know your sorting options.} In short, pick the right algorithm for
+your task.  Here is a list of algorithms sorted in descending order of
+computational efficiency: {\tt partition}, {\tt stable\_partition}, {\tt
+nth\_element}, {\tt partial\_sort}, {\tt sort}, and {\tt stable\_sort}.
+
+\paragraph{Follow {\tt remove}-like algorithms by {\tt erase} if you really
+want to remove something.}  As in:
+\begin{verbatim}
+  vector<int> v;
+  ...
+  v.erase(remove(v.begin(), v.end(), 99), v.end());
+\end{verbatim}
+
 \paragraph{Be wary of {\tt remove}-like algorithms on containers of pointers.}
-\paragraph{Note which algorithms expect sorted ranges.}
-\paragraph{implement simple case-insensitive string comparisons via {\tt mismatch} or {\tt lexicographical\_compare}.}
-\paragraph{Understand the proper implementation of {\tt copy\_if}.}
-\paragraph{Use {\tt accumulate} or {\tt for\_each} to summarize ranges.}
+It might cause memory leak.  Consider nullify the pointers of interest in
+advance (with a {\tt for\_each}) and then apply the {\tt remove}-{\tt erase}
+idiom.
+
+\paragraph{Note which algorithms expect sorted ranges.} Keep the STL manual in
+reach.
+
+\paragraph{Implement simple case-insensitive string comparisons via {\tt
+mismatch} or {\tt lexicographical\_compare}.}  Put this down on the
+corresponding manual pages for both algorithms.
+
+\paragraph{Understand the proper implementation of {\tt copy\_if}.} Write your
+own {\tt copy\_if}.
+
+\paragraph{Use {\tt accumulate} or {\tt for\_each} to summarize ranges.} One
+best thing about {\tt for\_each} is that it returns the functor.  Make it
+stateful.
 
 \section{Functors, Functor Classes, Functions, etc.}
 
-\paragraph{Design functor classes for pass-by-value.}
-\paragraph{Make predicates pure functions.}
-\paragraph{Make functor classes adaptable.}
-\paragraph{Understand the reasons for {\tt ptr\_fun}, {\tt mem\_fun}, and {\tt mem\_fun\_ref}.}
-\paragraph{Make sure {\tt less<T>} means {\tt operator<}.}
+\paragraph{Design functor classes for pass-by-value.} It means the functors
+have to be small and monomorphic.  Try ``pimpl'' idiom to wrap things up.
+
+\paragraph{Make predicates pure functions.} Because you want the predicates to
+be stateless.
+
+\paragraph{Make functor classes adaptable.} Implement the traits, or do public
+inheritence from {\tt std::unary\_function} or {\tt std::binary\_function}.
+
+\paragraph{Understand the reasons for {\tt ptr\_fun}, {\tt mem\_fun}, and {\tt
+mem\_fun\_ref}.} Because they rock, dude.
+
+\paragraph{Make sure {\tt less<T>} means {\tt operator<}.} Do not mess with
+{\tt std::*}.  Do it with {\tt operator<}.
 
 \section{Programming with the STL}
 
-\paragraph{Prefer algorithm calls to hand-written loops.}
-\paragraph{Prefer memeber functions to algorithms with teh same names.}
-\paragraph{Distinguish among {\tt count}, {\tt find}, {\tt binary\_search}, {\tt lower\_bound}, {\tt upper\_bound}, and {\tt equal\_range}.}
-\paragraph{Consider function objects instead of functions as algorithm parameters.}
-\paragraph{Avoid producing write-only code.}
-\paragraph{Always {\tt \#include} the proper headers.}
+\paragraph{Prefer algorithm calls to hand-written loops.}  In STL
+algorithms we trust.
+
+\paragraph{Prefer member functions to algorithms with the same names.} They are
+definitely more efficient (with regard to this particular container) than the
+generic algorithms.  Otherwise, those functions wouldn't be there in the first
+place.
+
+\paragraph{Distinguish among {\tt count}, {\tt find}, {\tt binary\_search},
+{\tt lower\_bound}, {\tt upper\_bound}, and {\tt equal\_range}.}  Make yourself
+an STL cheatsheet so that you know what to do.
+
+\paragraph{Consider function objects instead of functions as algorithm
+parameters.} The compiler can recognize the functor and inline it for you.  And
+using functors sometimes can avoid certain language pitfalls.
+
+\paragraph{Avoid producing write-only code.}  But that's what I'm really good
+at.
+
+\paragraph{Always {\tt \#include} the proper headers.} Again, check the manual
+(or grep it through the directories).
+
 \paragraph{Learn to decipher STL-related compiler diagnostics.}
-\paragraph{Familiarize yourself with STL-related web sites.}
+Use your force.
+
+\paragraph{Familiarize yourself with STL-related web sites.} SGI STL, STLport,
+and Boost.
 
 \end{document}
